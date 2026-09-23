@@ -20,7 +20,10 @@ Lire ce fichier avant de modifier le dépôt.
 - Ne pas implémenter de stratégie réelle avant **P2**.
 - Ne pas connecter de broker avant **P6**.
 - Toute décision technique figée → **Decision Record** dans `docs/adr/`.
-- P0 est **clos** — ne pas démarrer P1 sans GO explicite.
+- P0 est **clos** (HAT PASS, commit `a4c55b9`).
+- **P1 / I01** est ouvert — protocole SCI voisinage géométrique.
+- **Ne pas implémenter** I01 avant revue protocole + DATA-REQ-I01 + ADR data.
+- **Ne pas choisir d'API** avant que les besoins data soient dérivés du protocole.
 
 ## Protocol
 

@@ -1,0 +1,103 @@
+# I01 — Configuration figée (v0.1)
+# Status: OPEN — paramètres numériques, pas de source data
+# Authority: research/I01/protocol.md
+
+investigation:
+  id: I01
+  name: Classical Geometric Neighborhood
+  protocol_version: "0.1"
+  baseline_commit: a4c55b9
+
+experiment:
+  contract: C01
+  contract_version: "1.0"
+  protocol: statistical
+  baselines: [B0]
+
+# --- Population ---
+population:
+  instrument_class: us_large_cap_etf
+  instrument_example: SPY  # indicatif — non contractuel
+  count: 1
+  bar_frequency: 1d
+  price_field: adjusted_close
+
+# --- Objets mathématiques (hypothesis.md) ---
+state_X:
+  window_W: 20
+  standardization_M: 252
+  epsilon: 1.0e-8
+  components: [standardized_log_returns]
+
+future_Y:
+  horizon_h: 10
+  components: [forward_log_returns]
+  scalar_summary: cumulative_log_return
+
+metric_d:
+  name: euclidean_l2
+  space: R^W
+
+neighborhood:
+  k: 50
+  method_geo: k_nearest_l2
+  embargo_tau: 20  # must be >= W
+
+baseline_B0:
+  id: B0
+  method: uniform_random
+  mc_repetitions_R: 200
+  seed: 42
+
+# --- Homogénéité ---
+homogeneity:
+  primary: mean_pairwise_l2  # H_mpd
+  auxiliary: [var_cumulative_return, iqr_cumulative_return]
+
+# --- Splits temporels (dates TBD at DatasetSnapshot) ---
+splits:
+  method: chronological
+  train_fraction: 0.60
+  validation_fraction: 0.20
+  test_fraction: 0.20
+  # dates filled when C02 snapshot is created:
+  train_end: null
+  validation_end: null
+  test_end: null
+
+# --- Statistiques ---
+statistics:
+  alpha: 0.05
+  primary_test: paired_t_test_one_sided
+  permutation:
+    enabled: true
+    n_perm: 1000
+    seed: 123
+  n_eval_test_min: 100  # below → SCI-001 INCONCLUSIVE
+
+# --- Sensibilité (validation split only) ---
+sensitivity:
+  W_grid: [10, 20, 40]
+  k_grid: [25, 50, 100]
+  h_grid: [5, 10, 20]
+  pass_threshold: 5  # of 9 configs same sign
+
+# --- Gates ---
+gates:
+  - id: SCI-000
+    description: Baseline B0 executed
+  - id: SCI-001
+    description: Primary homogeneity geo > B0 on test split
+  - id: SCI-002
+    description: Effect not concentrated in one tertile
+  - id: SCI-003
+    description: Sensitivity mostly consistent on validation
+  - id: SCI-004
+    description: Anti-leakage controls satisfied
+
+# --- Data requirements (derived — see protocol.md §9) ---
+data_requirements:
+  min_trading_days: 1500
+  recommended_trading_days: 2520
+  fields: [timestamp, adjusted_close]
+  api_selected: false  # explicitly deferred

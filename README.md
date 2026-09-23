@@ -1,17 +1,19 @@
 # Quant — système de trading quantitatif géostatistique
 
-> **Phase actuelle :** P0 — Fondation (CLOSED)
+> **Phase actuelle :** P1 — Géométrie classique (OPEN — I01 cadrage)
 > **Protocol :** QDP v0.1
 
 Plateforme expérimentale de trading quantitatif fondée sur la géométrie, les statistiques
 et la validation reproductible. Le Risk Engine est souverain ; **NO_TRADE** est un résultat
 de première classe.
 
-## État P0
+## État du projet
 
-- Spécification : [docs/foundation/P0-specification.md](docs/foundation/P0-specification.md)
-- Contrats : [specs/contracts/](specs/contracts/)
-- Rapport de clôture : [docs/foundation/P0-closure-report.md](docs/foundation/P0-closure-report.md)
+| Phase | Statut | Document |
+|-------|--------|----------|
+| P0 Fondation | CLOSED (HAT PASS) | [P0-closure-report.md](docs/foundation/P0-closure-report.md) |
+| P1 Géométrie classique | OPEN | [P1-cadrage.md](docs/foundation/P1-cadrage.md) |
+| I01 Voisinage géométrique | Protocol draft | [research/I01/](research/I01/) |
 
 ## Installation (développement)
 
@@ -34,6 +36,9 @@ pytest
 - Connexion broker ou paper trading
 - Branches p-adique / dynamique (frontière architecturale seulement)
 
-## Prochaine phase
+## Prochaine étape
 
-**P1 — Géométrie classique** — uniquement après GO explicite (voir rapport P0).
+1. Revue protocole I01 → [evaluation_protocol_review.md](research/I01/evaluation_protocol_review.md)
+2. Dérivation besoins data → `DATA-REQ-I01.md`
+3. ADR source de données (si applicable)
+4. Implémentation pipeline I01 (interdit avant 1–3)
