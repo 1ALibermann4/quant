@@ -1,18 +1,26 @@
-# I01 — Configuration figée (v0.1)
-# Status: OPEN — paramètres numériques, pas de source data
+# I01 — Configuration figée (v0.2)
+# Status: ACCEPTED — post review_decisions.md
 # Authority: research/I01/protocol.md
 
 investigation:
   id: I01
   name: Classical Geometric Neighborhood
-  protocol_version: "0.1"
+  protocol_version: "0.2"
+  hypothesis_version: "0.2"
   baseline_commit: a4c55b9
+  decisions_ref: review_decisions.md
 
 experiment:
   contract: C01
   contract_version: "1.0"
   protocol: statistical
   baselines: [B0]
+
+# --- Convention temporelle (DEC-04) ---
+temporal_convention:
+  observation: after_close_of_t
+  r_t_included_in_X: true
+  Y_starts_at: t_plus_1
 
 # --- Population ---
 population:
@@ -22,11 +30,12 @@ population:
   bar_frequency: 1d
   price_field: adjusted_close
 
-# --- Objets mathématiques (hypothesis.md) ---
+# --- Objets mathématiques ---
 state_X:
   window_W: 20
   standardization_M: 252
   epsilon: 1.0e-8
+  mu_sigma_window: [t-M+1, t]  # inclusive — r_t included
   components: [standardized_log_returns]
 
 future_Y:
@@ -41,7 +50,9 @@ metric_d:
 neighborhood:
   k: 50
   method_geo: k_nearest_l2
-  embargo_tau: 20  # must be >= W
+  embargo_tau: 20
+  hard_constraint: s_plus_h_leq_t  # DEC-02
+  L_min: 150  # 3*k — DEC-07
 
 baseline_B0:
   id: B0
@@ -49,55 +60,77 @@ baseline_B0:
   mc_repetitions_R: 200
   seed: 42
 
-# --- Homogénéité ---
+# --- Homogénéité (DEC-03) ---
 homogeneity:
-  primary: mean_pairwise_l2  # H_mpd
-  auxiliary: [var_cumulative_return, iqr_cumulative_return]
+  primary_endpoint: H_raw  # SCI-001 gate only
+  mandatory_diagnostics:
+    - H_vol
+    - H_shape
+  cherry_picking_forbidden: true
 
-# --- Splits temporels (dates TBD at DatasetSnapshot) ---
+# --- Splits (DEC-08) ---
 splits:
   method: chronological
   train_fraction: 0.60
+  train_usage: descriptive_only
   validation_fraction: 0.20
   test_fraction: 0.20
-  # dates filled when C02 snapshot is created:
   train_end: null
   validation_end: null
   test_end: null
 
-# --- Statistiques ---
+# --- Inférence SCI-001 (DEC-01) ---
 statistics:
+  primary_method: block_bootstrap
+  forbidden_methods: [paired_t_test_iid, t_test_iid_as_confirmatory_gate]
   alpha: 0.05
-  primary_test: paired_t_test_one_sided
-  permutation:
-    enabled: true
-    n_perm: 1000
-    seed: 123
-  n_eval_test_min: 100  # below → SCI-001 INCONCLUSIVE
+  block_bootstrap:
+    L_default: 30
+    L_min: 20  # max(W,h)
+    L_sensitivity_grid: [20, 30, 40, 60]
+    n_boot: 5000
+    seed: 456
+    rule: never_select_L_by_pvalue
+    instability_verdict: INCONCLUSIVE
+  n_eval_test_min: 60
+  confirmatory_min_history_days: 2520  # ~10 years — DEC-05
 
-# --- Sensibilité (validation split only) ---
+# --- Sensibilité paramétrique (validation, diagnostic) ---
 sensitivity:
   W_grid: [10, 20, 40]
   k_grid: [25, 50, 100]
   h_grid: [5, 10, 20]
-  pass_threshold: 5  # of 9 configs same sign
+  pass_threshold: 5  # of 9 — diagnostic only (SCI-003)
 
 # --- Gates ---
+gate_roles:
+  primary: [SCI-001]
+  confirmatory: [SCI-002, SCI-004]
+  diagnostic: [SCI-003, SCI-DIAG-1, SCI-DIAG-2, SCI-DIAG-3]
+
 gates:
   - id: SCI-000
     description: Baseline B0 executed
   - id: SCI-001
-    description: Primary homogeneity geo > B0 on test split
+    description: H_raw homogeneity geo > B0 — block bootstrap on test
   - id: SCI-002
     description: Effect not concentrated in one tertile
   - id: SCI-003
-    description: Sensitivity mostly consistent on validation
+    description: Parameter sensitivity on validation (diagnostic)
   - id: SCI-004
-    description: Anti-leakage controls satisfied
+    description: Anti-leakage including s+h<=t invariant
+  - id: SCI-DIAG-1
+    description: Temporal distance distribution geo vs B0
+  - id: SCI-DIAG-2
+    description: H_vol and H_shape deltas on test
+  - id: SCI-DIAG-3
+    description: Cross-read raw/vol/shape table
 
-# --- Data requirements (derived — see protocol.md §9) ---
+# --- Data requirements (DEC-05) — not API ---
 data_requirements:
-  min_trading_days: 1500
-  recommended_trading_days: 2520
+  min_trading_days_technical: 1500
+  confirmatory_target_days: 2520
+  preferred_days: [3780, 5040]
   fields: [timestamp, adjusted_close]
-  api_selected: false  # explicitly deferred
+  c02_required_metadata: [adjustment_policy, vendor_revision, fingerprint]
+  api_selected: false

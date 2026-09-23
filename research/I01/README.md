@@ -1,7 +1,7 @@
 # I01 — Classical Geometric Neighborhood
 
 > **Identifier :** I01
-> **Status :** OPEN — protocol draft
+> **Status :** ACCEPTED — protocol v0.2 (post review)
 > **Authority class :** RESEARCH
 > **Protocol :** QDP v0.1
 > **Phase :** P1

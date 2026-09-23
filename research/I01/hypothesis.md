@@ -1,9 +1,10 @@
 # I01 — Hypothèses et objets mathématiques
 
-> **Identifier :** I01-HYP-v0.1
-> **Status :** OPEN
+> **Identifier :** I01-HYP-v0.2
+> **Status :** ACCEPTED
 > **Authority class :** RESEARCH
 > **Protocol :** QDP v0.1
+> **Decisions :** [review_decisions.md](review_decisions.md)
 
 ---
 
@@ -20,23 +21,20 @@ sur leurs comportements futurs — au-delà du hasard ?**
 
 ### H₀ (nulle)
 
-La proximité géométrique n'apporte **aucune information supplémentaire** sur les futurs :
+La proximité géométrique n'apporte **aucune information supplémentaire** sur l'homogénéité
+L2 brute des futurs :
 
 $$
-\mathbb{E}\big[ \mathcal{H}(Y \mid N_k^{\text{geo}}(X_t)) \big]
+\mathbb{E}\big[ \mathcal{H}_\text{raw}(Y \mid N_k^{\text{geo}}(X_t)) \big]
 =
-\mathbb{E}\big[ \mathcal{H}(Y \mid N_k^{\text{B0}}(X_t)) \big]
+\mathbb{E}\big[ \mathcal{H}_\text{raw}(Y \mid N_k^{\text{B0}}(X_t)) \big]
 $$
 
-où $\mathcal{H}$ est une mesure d'hétérogénéité des futurs (§4) et $N_k^{\text{B0}}$ est
-le voisinage contrôle aléatoire (baseline B0).
-
-Équivalent opérationnel : la distribution des futurs conditionnée aux voisins géométriques
-n'est **pas** significativement plus homogène que sous B0.
+où $\mathcal{H}_\text{raw}$ est la mean pairwise L2 (§4.2) et $N_k^{\text{B0}}$ la baseline B0.
 
 ### H₁ (alternative)
 
-Une distance faible implique des futurs plus homogènes :
+Une distance faible implique des futurs plus homogènes (L2 brute) :
 
 $$
 d(X_i, X_j) \text{ faible}
@@ -44,216 +42,231 @@ d(X_i, X_j) \text{ faible}
 D(Y_i^{(h)}, Y_j^{(h)}) \text{ statistiquement plus faible}
 $$
 
-où $D$ mesure la dissimilarité entre trajectoires futures (§4).
+où $D(Y_i,Y_j) = \|Y_i^{(h)} - Y_j^{(h)}\|_2$.
 
 **H₁ ne postule pas** un signe de rendement, un alpha tradable, ni une causalité —
-seulement une **structure de similarité conditionnelle** dans les futurs.
+seulement une **structure de similarité conditionnelle** dans les futurs bruts.
 
 ---
 
-## 3. Objets mathématiques
+## 3. Convention temporelle (DEC-04)
 
-### 3.1 Temps et ensemble d'évaluation
+> **I01 observe le marché après la clôture de la séance $t$.**
 
-- Calendrier de trading : $\mathcal{T} = \{t_1, \ldots, t_T\}$ (dates croissantes).
-- Horizon futur : $h \in \mathbb{N}^+$ (jours de bourse).
-- Chaque date $t \in \mathcal{T}_\text{eval}$ est un **point d'évaluation** (§5 du protocole).
+- $P_t$ et $r_t = \ln(P_t/P_{t-1})$ sont **connus** et appartiennent à $\mathcal{O}_{\leq t}$.
+- $X_t$ est construit avec cette information.
+- $Y_t^{(h)}$ commence **strictement** à $t+1$ : $(r_{t+1}, \ldots, r_{t+h})$.
 
-### 3.2 État observable $X_t$
+Cette convention est normative pour I01 v0.1 (daily). Toute extension intraday
+requerra un nouveau protocole.
+
+---
+
+## 4. Objets mathématiques
+
+### 4.1 Temps et ensemble d'évaluation
+
+- Calendrier : $\mathcal{T} = \{t_1, \ldots, t_T\}$ (dates croissantes).
+- Horizon : $h = 10$ jours de bourse (figé v0.1).
+- Points d'évaluation :
+
+$$
+\mathcal{T}_\text{eval} = \left\{ t \in \mathcal{T} :
+  X_t \text{ valide},\ Y_t^{(h)} \text{ complet},\ |\mathcal{L}_t| \geq L_\min \right\}
+$$
+
+avec $L_\min = 3k$ (DEC-07).
+
+### 4.2 État observable $X_t$
 
 $$
 X_t = \phi(\mathcal{O}_{\leq t})
 $$
 
-$X_t$ est la **représentation de l'information disponible au temps $t$**,
-fonction des observations $\mathcal{O}_{\leq t}$ uniquement.
-
-**Choix I01 v0.1 (minimal, classique) :**
-
-Pour l'actif $a$ à la date $t$, soit $r_{t-w+1}, \ldots, r_t$ les rendements
-logarithmiques quotidiens sur une fenêtre $W$ :
+Rendements log :
 
 $$
-r_\tau = \ln\frac{P_\tau}{P_{\tau-1}}
+r_\tau = \ln\frac{P_\tau}{P_{\tau-1}}, \quad P_\tau \text{ adjusted close connu à } t
 $$
 
-où $P_\tau$ est le prix ajusté (splits/dividendes) connu à $t$.
-
-Standardisation **causale** (paramètres estimés sur $\leq t$ uniquement) :
+Standardisation causale **inclusive de $r_t$** (DEC-04) :
 
 $$
-\tilde{r}_\tau = \frac{r_\tau - \hat{\mu}_t}{\hat{\sigma}_t + \epsilon},
-\quad \hat{\mu}_t, \hat{\sigma}_t \text{ calculés sur } [\max(t_0, t-M+1), t]
+\hat{\mu}_t = \frac{1}{M}\sum_{u=t-M+1}^{t} r_u,
+\quad
+\hat{\sigma}_t = \sqrt{\frac{1}{M-1}\sum_{u=t-M+1}^{t}(r_u - \hat{\mu}_t)^2}
 $$
 
-Vecteur d'état :
-
 $$
-X_t^{(a)} = \big(\tilde{r}_{t-W+1}, \ldots, \tilde{r}_t\big) \in \mathbb{R}^W
-$$
-
-| Paramètre | Symbole | Valeur initiale | Rôle |
-|-----------|---------|-----------------|------|
-| Fenêtre d'état | $W$ | 20 | Forme récente de la trajectoire |
-| Fenêtre standardisation | $M$ | 252 | Échelle locale comparable |
-| Stabilisateur | $\epsilon$ | $10^{-8}$ | Éviter division par zéro |
-
-**Justification du minimalisme :** I01 teste la **proximité géométrique**, pas la
-richesse des features. Enrichir $X_t$ (volatilité, pente, etc.) = investigation I02+.
-
-**Extension multi-actif (hors scope I01 v0.1) :** $X_t$ marché = concaténation ou
-embedding cross-sectionnel — différé.
-
-### 3.3 Futur observable $Y_t^{(h)}$
-
-$$
-Y_t^{(h)} = \psi\big(\mathcal{O}_{t+1:t+h}\big)
+\tilde{r}_u = \frac{r_u - \hat{\mu}_t}{\hat{\sigma}_t + \epsilon},
+\quad u \in [t-W+1, t]
 $$
 
-**Choix I01 v0.1 :** vecteur des rendements log futurs :
+$$
+X_t = (\tilde{r}_{t-W+1}, \ldots, \tilde{r}_t) \in \mathbb{R}^W, \quad W=20,\ M=252,\ \epsilon=10^{-8}
+$$
+
+### 4.3 Futur observable $Y_t^{(h)}$
 
 $$
 Y_t^{(h)} = (r_{t+1}, r_{t+2}, \ldots, r_{t+h}) \in \mathbb{R}^h
 $$
 
-**Scalarisation auxiliaire** (métrique secondaire) :
+Scalarisation auxiliaire :
 
 $$
 y_t^{(h)} = \sum_{j=1}^{h} r_{t+j}
-\quad \text{(rendement cumulé log sur l'horizon)}
 $$
 
-$Y_t^{(h)}$ n'est utilisé qu'**après** $t$ — jamais dans la construction de $X_t$.
+$Y_t^{(h)}$ n'intervient **jamais** dans la sélection des voisins (AF-08).
 
-### 3.4 Métrique $d$ sur l'espace des états
-
-**Choix I01 v0.1 :** distance euclidienne :
+### 4.4 Métrique $d$
 
 $$
-d(X_i, X_j) = \| X_i - X_j \|_2
+d(X_i, X_j) = \| X_i - X_j \|_2 \quad \text{(L2, figé v0.1)}
 $$
 
-| Décision | Statut |
-|----------|--------|
-| Euclidean L2 | **Figé I01 v0.1** |
-| Mahalanobis, cosinus, DTW | Différé I02+ |
-
-La métrique est une **hypothèse scientifique**. Si I01 échoue sous L2, une investigation
-ultérieure peut tester d'autres métriques — sans modifier rétroactivement I01.
-
-### 3.5 Voisinage $N_k(X_t)$
+### 4.5 Bibliothèque admissible $\mathcal{L}_t$ (DEC-02)
 
 $$
-N_k^{\text{geo}}(X_t) = \arg\min_{S \subset \mathcal{L}_t,\ |S|=k} \sum_{j \in S} d(X_t, X_j)
+\mathcal{L}_t = \left\{ s \in \mathcal{T} :
+  s < t,\quad
+  s \notin \mathcal{E}_t,\quad
+  s + h \leq t,\quad
+  X_s \text{ valide},\ Y_s^{(h)} \text{ valide}
+\right\}
 $$
 
-où $\mathcal{L}_t$ est la **bibliothèque historique admissible** au temps $t$ (§6 protocole).
-
-En pratique : les $k$ états historiques $X_j$, $j \neq t$, minimisant $d(X_t, X_j)$.
-
-| Paramètre | Symbole | Valeur initiale |
-|-----------|---------|-----------------|
-| Nombre de voisins | $k$ | 50 |
-
-**Contraintes structurelles :**
-
-- $j \notin \mathcal{E}_t$ (embargo temporel autour de $t$)
-- $j < t$ strictement (pas de look-ahead)
-- Un voisin = un instant historique distinct (pas de doublons de date)
-
-### 3.6 Baseline B0 — $N_k^{\text{B0}}(X_t)$
+Embargo :
 
 $$
-N_k^{\text{B0}}(X_t) \sim \text{Uniform}\big(\mathcal{L}_t,\ k\big)
+\mathcal{E}_t = \{ s : |s - t| \leq \tau \}, \quad \tau = W = 20
 $$
 
-Tirage **uniforme sans remplacement** de $k$ dates dans $\mathcal{L}_t$,
-**indépendamment** de $d(X_t, \cdot)$.
+**Invariant anti-look-ahead (impl)** :
 
-Même cardinalité $k$, même bibliothèque $\mathcal{L}_t$, mêmes contraintes d'embargo.
-Seule la règle de sélection diffère.
+```text
+candidate.future_end <= query.information_cutoff
+```
 
-**Nombre de répétitions Monte Carlo B0 :** $R = 200$ (moyenne des métriques sur R tirages).
+où `candidate.future_end = s + h` et `query.information_cutoff = t`.
+
+Avec $\tau=W$ : $t-s \geq 21 > W-1$ ⇒ **zéro** rendement commun entre fenêtres $X_t$ et $X_s$.
+
+### 4.6 Voisinage $N_k^{\text{geo}}(X_t)$
+
+Les $k=50$ dates $s \in \mathcal{L}_t$ minimisant $d(X_t, X_s)$ (ties : date la plus ancienne).
+
+### 4.7 Baseline B0
+
+$k$ dates tirées uniformément sans remplacement dans $\mathcal{L}_t$, indépendamment de $d$.
+Moyenne Monte Carlo sur $R=200$ tirages (seed figée).
 
 ---
 
-## 4. Mesures de homogénéité / dissimilarité
+## 5. Mesures d'homogénéité (DEC-03)
 
-### 4.1 Dissimilarité entre futurs $D(Y_i, Y_j)$
+Pour un voisinage $N$ de cardinalité $k$, futurs $\{Y_j : j \in N\}$ :
 
-**Primaire (vectorielle) :**
-
-$$
-D(Y_i, Y_j) = \| Y_i^{(h)} - Y_j^{(h)} \|_2
-$$
-
-**Secondaire (scalaire, rendement cumulé) :**
+### 5.1 $\mathcal{H}_\text{raw}$ — endpoint confirmatoire SCI-001
 
 $$
-D_\text{sc}(y_i, y_j) = |y_i^{(h)} - y_j^{(h)}|
+D_\text{raw}(Y_i,Y_j) = \| Y_i^{(h)} - Y_j^{(h)} \|_2
 $$
 
-### 4.2 Hétérogénéité d'un voisinage $\mathcal{H}$
-
-Pour un voisinage $N$ de futurs $\{Y_j : j \in N\}$ :
-
-**Métrique primaire SCI — variance mean pairwise distance :**
-
 $$
-\mathcal{H}_\text{mpd}(N) = \frac{2}{k(k-1)} \sum_{\substack{i,j \in N \\ i < j}} D(Y_i, Y_j)
+\mathcal{H}_\text{raw}(N) = \frac{2}{k(k-1)} \sum_{i<j} D_\text{raw}(Y_i, Y_j)
 $$
 
-**Métrique auxiliaire — variance des rendements cumulés :**
+(Anciennement $\mathcal{H}_\text{mpd}$ — alias conservé dans artefacts.)
+
+### 5.2 $\mathcal{H}_\text{vol}$ — diagnostic obligatoire (non gate)
+
+Amplitude future par voisin : $v_j = \|Y_j^{(h)}\|_2$.
 
 $$
-\mathcal{H}_\text{var}(N) = \mathrm{Var}_{j \in N}\big(y_j^{(h)}\big)
+\mathcal{H}_\text{vol}(N) = \mathrm{Var}_{j \in N}(v_j)
 $$
 
-**Métrique auxiliaire — IQR des rendements cumulés :**
+Interprétation : homogénéité de **volatilité/amplitude** future dans le voisinage.
+
+### 5.3 $\mathcal{H}_\text{shape}$ — diagnostic obligatoire (non gate)
+
+Trajectoire normalisée : $\hat{Y}_j = Y_j / (\|Y_j\|_2 + \epsilon)$.
 
 $$
-\mathcal{H}_\text{iqr}(N) = Q_{0.75} - Q_{0.25}
+D_\text{shape}(\hat{Y}_i,\hat{Y}_j) = \| \hat{Y}_i - \hat{Y}_j \|_2
 $$
 
-### 4.3 Statistique de test par point d'évaluation
-
 $$
-\Delta_t = \mathcal{H}_\text{mpd}(N_k^{\text{B0}}(X_t)) - \mathcal{H}_\text{mpd}(N_k^{\text{geo}}(X_t))
+\mathcal{H}_\text{shape}(N) = \frac{2}{k(k-1)} \sum_{i<j} D_\text{shape}(\hat{Y}_i, \hat{Y}_j)
 $$
 
-$\Delta_t > 0$ : les voisins géométriques produisent des futurs **plus homogènes**
-(plus petit $\mathcal{H}$) que B0.
+Interprétation : homogénéité de **forme** indépendamment de l'échelle.
 
-Agrégation sur $\mathcal{T}_\text{eval}$ : voir [protocol.md §7](protocol.md).
+### 5.4 Statistique $\Delta_t$ (endpoint SCI-001)
+
+$$
+\bar{\mathcal{H}}_\text{B0,raw}(t) = \frac{1}{R}\sum_{r=1}^{R} \mathcal{H}_\text{raw}(N_{k,r}^{\text{B0}})
+$$
+
+$$
+\Delta_t^\text{raw} = \bar{\mathcal{H}}_\text{B0,raw}(t) - \mathcal{H}_\text{raw}(N_k^{\text{geo}})
+$$
+
+$\Delta_t^\text{raw} > 0$ ⇔ voisins géométriques **plus homogènes** (L2 brute) que B0.
+
+Diagnostics analogues : $\Delta_t^\text{vol}$, $\Delta_t^\text{shape}$ — **jamais** utilisés pour PASS/FAIL SCI-001.
+
+### 5.5 Lecture croisée (interprétation, pas gate)
+
+| Pattern | Lecture scientifique |
+|---------|---------------------|
+| raw ✓, vol ✓, shape ✗ | Info sur **régime d'amplitude** futur, pas forme |
+| raw ✓, vol faible, shape ✓ | Suspicion d'info **structurelle** sur trajectoires |
+| raw ✗ | Proximité L2 non informative (endpoint) |
 
 ---
 
-## 5. Ce que I01 ne teste pas
+## 6. Inférence (DEC-01)
+
+Série $\{\Delta_t^\text{raw}\}$ sur split **test** — **dépendance temporelle assumée**.
+
+Gate SCI-001 : **block bootstrap temporel** (pas t-test iid).
+
+- Longueur bloc $L \geq L_\min = \max(W,h) = 20$
+- Sensibilité pré-enregistrée sur $L$ ; **jamais** choisir $L$ selon p-value
+- Instabilité du verdict → **INCONCLUSIVE**
+
+Détail : [protocol.md §7](protocol.md).
+
+---
+
+## 7. Ce que I01 ne teste pas
 
 | Non-test | Raison |
 |----------|--------|
-| Signe ou magnitude du rendement | PRED / stratégie |
-| Profit après coûts | ECON |
-| Stabilité multi-régime | I02+ |
-| Supériorité vs B2/B3 | Hors scope SCI initial |
-| Optimalité de $(W, k, h)$ | Sensibilité documentée, pas optimisée pour PASS |
+| Signe / alpha | PRED |
+| Profit | ECON |
+| Stationnarité globale | NOTE — limitation assumée |
+| Optimalité $(W,k,h,L)$ | Sensibilité diagnostic |
 
 ---
 
-## 6. Succès / échec conceptuel
+## 8. Portée d'un SCI PASS (DEC-12)
 
-| Verdict SCI | Interprétation |
-|-------------|----------------|
-| **PASS** | H₀ rejetée avec contrôles satisfaits — information géométrique détectée |
-| **FAIL** | Pas de gain significatif vs B0 — proximité L2 non informative (I01) |
-| **INCONCLUSIVE** | Protocole ou données insuffisants — pas de conclusion |
+Un **SCI PASS** autorise **uniquement** :
 
-Un **FAIL** est un **résultat scientifique valide** : il empêche de construire une
-stratégie sur une proximité L2 naïve.
+> Pour l'instrument et la période testées, avec $X_t$ défini §4.2, $d$ L2, $h=10$,
+> la règle k-NN produit un voisinage dont $\mathcal{H}_\text{raw}$ est significativement
+> inférieure à B0 sous block bootstrap, anti-fuite validée.
+
+**N'autorise pas** : similarité de forme (sauf diagnostic shape), PRED, ECON, trading.
 
 ---
 
 ## Références
 
-- [protocol.md](protocol.md) — protocole opérationnel
-- [configuration.yaml](configuration.yaml) — valeurs numériques
+- [protocol.md](protocol.md)
+- [configuration.yaml](configuration.yaml)
+- [review_decisions.md](review_decisions.md)
