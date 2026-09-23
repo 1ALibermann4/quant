@@ -5,7 +5,7 @@ contract:
   contract_version: "1.1"
   supersedes: "1.0"
   compatibility: backward-compatible (additive) — see section `compatibility`
-  status: "corrected (CA-01) — HAT #2 pending"
+  status: "corrected (CA-02) — HAT #3 pending"
   protocol: QDP-v0.1
   decision_record: docs/adr/DR-004-c02-data-provenance-architecture.md
   resolves: [DATA-GAP-01, DATA-GAP-02]  # research/I01/DATA-REQ-I01.md §7.3
@@ -19,6 +19,16 @@ revisions:
       - C02-INV-18 reformulé sur la règle CRED-1 (garantie réelle et limites)
       - compatibility.behaviour_changes déclarés (BC-01…BC-07)
     report: docs/validation/C02-v1.1-CA-01-report.md
+  - revision: CA-02
+    trigger: "docs/validation/C02-v1.1-HAT-2.md (HAT #2 FAIL, 21f3dcd)"
+    changes:
+      - CRED-1 redéfini comme grammaire indépendante de la position (V1–V4) ; limites et faux positifs déclarés
+      - C02-INV-09 précisé (collection fournie à identifiants distincts ; vérification invariante par permutation)
+      - QCJ-1 / QCT-1 / QCC-1 — domaine explicite (années 0001–9999, précision décimale, heure locale à la seconde)
+      - C02-INV-05 et limitations — objets validés vs objets forgés ; frontières validantes (validation_boundaries)
+      - frontière de garantie de chaque invariant (invariant_enforcement), dont C02-INV-14
+      - BC-03, BC-06, BC-07 corrigés ; BC-08 à BC-11 déclarés
+    report: docs/validation/C02-v1.1-CA-02-report.md
 
 description: >
   Provenance vérifiable des données scientifiques : de l'artefact brut effectivement reçu
@@ -68,9 +78,11 @@ canonical_representations:
       - nombres non entiers INTERDITS (les encoder en chaîne décimale explicite)
       - NaN et ±Infinity interdits
       - booléens true/false ; null autorisé
-      - date → "YYYY-MM-DD"
-      - instant → UTC "YYYY-MM-DDTHH:MM:SS.ffffffZ" (6 décimales toujours) ; instant naïf interdit
-      - heure locale → "HH:MM:SS" ; heure avec fuseau interdite
+      - "date → YYYY-MM-DD ; année toujours sur 4 chiffres (domaine 0001–9999)"
+      - "instant → UTC YYYY-MM-DDTHH:MM:SS.ffffffZ (6 décimales toujours, année sur 4 chiffres) ; instant naïf
+        interdit ; instant dont la conversion UTC sort de 0001-01-01..9999-12-31 interdit"
+      - "heure locale → HH:MM:SS ; heure avec fuseau interdite ; heure à fraction de seconde non nulle interdite
+        (non représentable, collision d'identité)"
       - "listes : ordre conservé (l'ordre fait partie du contenu)"
   QCT-1:
     usage: table scientifique canonique d'un DatasetSnapshot (fingerprint)
@@ -85,7 +97,10 @@ canonical_representations:
       - decimal → notation positionnelle à échelle fixe TableSchema.columns[].scale ; séparateur ".",
         sans exposant, sans séparateur de milliers, "-" pour les négatifs, jamais "+" ;
         arrondi au pair le plus proche (ROUND_HALF_EVEN) appliqué à la valeur EXACTE de l'entrée
-        (valeur binaire exacte pour un flottant) ; zéro négatif normalisé en zéro positif
+        (valeur binaire exacte pour un flottant) ; zéro négatif normalisé en zéro positif ;
+        domaine — résultat d'au plus 28 chiffres significatifs (partie entière + scale), sinon rejet ;
+        calcul dans un contexte décimal explicite, indépendant du contexte global du processus
+      - "colonnes du schéma : noms uniques ; chaque cellule est validée (type, nullabilité) avant le tri"
       - integer → décimal sans zéro non significatif ; booléen interdit
       - string → caractères ',' '"' CR LF interdits
       - valeur manquante → champ vide, autorisé uniquement si la colonne est nullable
@@ -94,7 +109,7 @@ canonical_representations:
   QCC-1:
     usage: liste des séances d'un MarketCalendarSnapshot (sessions_fingerprint)
     rules:
-      - une date "YYYY-MM-DD" par ligne, strictement croissante, sans doublon
+      - une date "YYYY-MM-DD" (année sur 4 chiffres) par ligne, strictement croissante, sans doublon
       - '"\n" après chaque date, y compris la dernière ; UTF-8 ; liste vide interdite'
 
 credential_rules:
@@ -105,18 +120,40 @@ credential_rules:
       - ProviderArtifact.provenance_metadata — clés et valeurs
       - ProviderArtifact.provider_interface — valeur
       - TransformationRecord.parameters — clés et valeurs, récursivement (éléments de liste compris)
+    grammar: >
+      Chaque indicateur est une propriété lexicale de la valeur, détectée quelle que soit sa position
+      (début, milieu, fin, après ponctuation ou délimiteur) et quelle que soit la casse des mots-clés.
+      Une valeur est rejetée dès qu'un indicateur y figure ; les listes et mappings imbriqués sont
+      parcourus récursivement.
     indicators:
       K1: "nom de clé contenant token, api_key/apikey/api-key, secret, password/passwd, authorization,
-           bearer, credential, private_key, access_key (insensible à la casse)"
-      V1: "en-tête d'autorisation dans une valeur : « Authorization: … », « Proxy-Authorization=… »"
-      V2: "valeur entière de la forme « <bearer|basic|digest|token> <identifiant> »"
-      V3: "paramètre d'URL ou de requête (après ? & ; #) dont le nom satisfait K1 ou vaut key, auth, sig, signature"
-      V4: "identifiants dans une URL : « scheme://utilisateur:motdepasse@hôte »"
+           bearer, credential, private_key, access_key (sous-chaîne, insensible à la casse)"
+      V1: "sous-chaîne « authorization » suivie (espaces admis) de « : » ou « = », à toute position
+           (Authorization:, Proxy-Authorization=, hdr=Authorization:, x(Authorization:, proxyAuthorization:)"
+      V2: "mot de schéma bearer | basic | digest | token non précédé d'une lettre ou d'un chiffre, suivi
+           d'espaces et d'un jeton de forme identifiant, à toute position. Jeton = suite maximale de
+           caractères [A-Za-z0-9-._~+/] suivie de « = » éventuels ; forme identifiant = au moins 8
+           caractères après retrait de la ponctuation finale, et pas un mot naturel (lettres seules,
+           majuscule initiale au plus)"
+      V3: "paramètre « nom= » (espaces admis avant =), nom = suite maximale de caractères [lettres, chiffres,
+           _ . -], à toute position, dont le nom satisfait K1 ; si le nom suit ? & ; ou # (contexte d'URL ou
+           de requête), aussi les noms key, auth, sig, signature et tout nom dont le dernier segment
+           (séparé par - _ .) vaut sig ou signature (ex. X-Amz-Signature)"
+      V4: "userinfo avec mot de passe dans une URL : « scheme://[utilisateur]:[motdepasse]@ », utilisateur
+           et mot de passe éventuellement vides (ex. redis://:pw@host)"
     limits: >
       CRED-1 n'est PAS un détecteur universel de secrets. Ne sont pas détectés : un secret brut sans
-      marqueur structurel (ex. jeton sous une clé anodine), un secret encodé, fragmenté ou obfusqué,
-      un secret placé dans un champ hors périmètre. K1 privilégie le faux positif (une clé est
-      renommable) ; V1–V4 exigent une forme structurelle pour éviter les faux positifs sur du texte.
+      marqueur structurel (ex. jeton sous une clé anodine), un secret encodé, fragmenté ou obfusqué
+      (y compris par caractères Unicode visuellement équivalents), un secret placé dans un champ hors
+      périmètre. Frontière lexicale de V2 (faux négatifs déclarés) : jeton de moins de 8 caractères
+      (« Bearer abc »), jeton mot naturel (« Bearer abcdefghij »), schéma collé à une lettre
+      (« xBearer … ») ; ces formes restent détectées par V1 si elles suivent un en-tête Authorization.
+      Faux négatif déclaré de V4 : userinfo sans « : » (ex. ssh://git@host, jeton en nom d'utilisateur).
+      Hors frontière (non signalés) : « Basic Materials », « Token Ring », « bearer bond »,
+      « authorization_status: ok », « sort key=… » hors URL. Faux positifs déclarés (rejetés) : K1 sur
+      toute clé contenant un mot d'identification (« tokenizer ») ; V1 sur un mot se terminant par
+      authorization suivi de : ou = (« preauthorization: ») ; V2 sur un identifiant numérique de 8
+      caractères ou plus après un mot de schéma (« Basic 20221231 ») ; V3 sur un nom K1 (« token=3 »).
       L'obligation première reste de ne jamais transmettre de secret à ces champs.
 
 test_vectors:
@@ -349,16 +386,23 @@ invariants:
   C02-INV-03: fingerprint uniqueness enforced within experiment registry
   C02-INV-04: provenance.survivorship_bias_acknowledged is an explicit boolean
   C02-INV-05: >-
-              immuabilité transitive — tout objet C02 et tout objet ou conteneur atteignable depuis lui
-              est non modifiable par l'API publique (modèles gelés, séquences en tuple, mappings gelés) ;
-              aucune mutation atteignable ne modifie l'état ni une empreinte dérivée ; toute modification
-              = nouvel objet / nouveau snapshot_id. Hors garantie (contournements délibérés, objets non
-              validés) : object.__setattr__, attributs privés, model_construct, model_copy(update=…)
+              immuabilité transitive — tout objet C02 VALIDÉ (issu d'une frontière validante, voir
+              validation_boundaries) et tout objet ou conteneur atteignable depuis lui est non modifiable
+              par l'API publique (modèles gelés, séquences en tuple, mappings gelés) ; aucune mutation
+              atteignable ne modifie l'état ni une empreinte dérivée ; toute modification = nouvel objet /
+              nouveau snapshot_id. Hors garantie : les contournements délibérés (object.__setattr__,
+              attributs privés ou spéciaux tels que __dict__, __class__, __setstate__) et les objets FORGÉS
+              par une API de contournement (model_construct, model_copy(update=…)) tant qu'ils n'ont
+              franchi aucune frontière validante
   C02-INV-K01: Knowable — value présent ⇔ status = KNOWN
   C02-INV-06: représentations canoniques déterministes (QCJ-1, QCT-1, QCC-1) ; vecteurs de test reproduits
   C02-INV-07: table_schema présent ⇒ fingerprint = sha256(QCT-1(table)) au format sha256:<hex>
   C02-INV-08: source_artifacts non vide ⇔ raw_fingerprint présent ; raw_fingerprint = agrégat d'ensemble
-  C02-INV-09: artefacts référencés uniques (id et empreinte) ; références = artefacts (id, empreinte, licence)
+  C02-INV-09: >-
+              artefacts référencés uniques (id et empreinte) ; références = artefacts (id, empreinte,
+              licence). La collection d'artefacts fournie à la vérification doit avoir des artifact_id deux à
+              deux distincts (∀ i ≠ j, id_i ≠ id_j), sinon rejet déterministe ; le résultat de la vérification
+              (succès ou message) est invariant par permutation de la collection
   C02-INV-10: lignée — step_index 0…n-1 ; chaque entrée = artefact source, sortie antérieure ou dépendance
               auxiliaire déclarée (empreinte du calendrier référencé) ; chaque artefact source consommé ;
               sorties uniques et distinctes de leurs entrées ; sortie finale = fingerprint
@@ -377,6 +421,43 @@ invariants:
               aucun indicateur structurel de secret (règle CRED-1, indicateurs K1, V1–V4) dans les champs
               du périmètre CRED-1 ; garantie limitée aux indicateurs définis (voir CRED-1.limits)
   C02-INV-19: DataGateAssessment — REJECT ⇒ FAIL ; INCONCLUSIVE ⇒ pas PASS ; check_id uniques
+
+validation_boundaries:
+  decision: >
+    Toute frontière validante revalide PROFONDÉMENT les instances reçues (y compris imbriquées),
+    qu'elles aient été construites normalement ou forgées. Un objet forgé ne peut donc pas contaminer
+    un objet racine validé ni un rapport de profil ; il reste lui-même hors garantie tant qu'il n'a
+    franchi aucune frontière. Les instances imbriquées sont stockées comme copies revalidées (BC-09).
+  boundaries:
+    - constructeur et model_validate / model_validate_json de tout modèle C02
+    - DatasetSnapshot.verify_artifacts (artefacts fournis)
+    - DatasetSnapshot.verify_calendar (calendrier fourni)
+    - profiles.i01.validate_i01_snapshot (snapshot, évaluation ; calendrier et artefacts via verify_*)
+  bypass_apis: [model_construct, "model_copy(update=…)", object.__setattr__, attributs privés ou spéciaux]
+  not_boundaries: >
+    Les méthodes appelées sur un objet forgé lui-même (ex. forged.ref(), forged.verify_calendar(…))
+    opèrent sur un état non validé : hors garantie.
+
+invariant_enforcement:
+  construction: >
+    Vérifiés à toute frontière validante : C02-INV-01, INV-04 (type), INV-05, INV-K01, INV-07 (format
+    de l'empreinte), INV-08, INV-09 (unicité des références), INV-10, INV-13, INV-15, INV-16, INV-17,
+    INV-18, INV-19. INV-06 et INV-12 sont des propriétés des représentations canoniques (vecteurs de
+    test, exclusion des horodatages par construction des identités).
+  verification_functions:
+    C02-INV-07: DatasetSnapshot.verify_table(rows) — égalité de l'empreinte QCT-1 (la table n'est pas portée par le snapshot)
+    C02-INV-09: DatasetSnapshot.verify_artifacts(artifacts) — correspondance références = artefacts fournis
+    C02-INV-11: lineage.assert_deterministic(records) — entre lignées ou exécutions
+    C02-INV-14: >
+      DatasetSnapshot.verify_calendar(calendar) — le snapshot ne porte qu'une référence au calendrier ;
+      l'invariant n'est PAS vérifié à la construction du snapshot. Clauses conditionnelles : bornes
+      vérifiées si canonical_range est présent, comptage si expected_sessions est KNOWN, fuseau si
+      temporal_convention est présent. Le profil C02-I01 appelle verify_calendar et exige ces champs
+      (présents / KNOWN), ce qui rend l'invariant complet pour I01.
+  external:
+    C02-INV-02: vérifié par C03 (MarketState.as_of <= availability_cutoff)
+    C02-INV-03: registre d'expériences — non implémenté (DR-004 DEF-03)
+    postcondition_load: le fingerprint est vérifié au chargement par verify_table — aucun chargeur en v1.1
 
 # =====================================================================================
 # 6. Compatibilité
@@ -400,12 +481,16 @@ compatibility:
       la sortie JSON d'un objet v1.0 comporte en plus les clés v1.1 (null / []) — non identique
       octet à octet à la sortie du code v1.0 ; le code v1.0 la relit (clés inconnues ignorées)
     fingerprints: >
-      aucune empreinte modifiée par v1.1 ni par CA-01 (valeurs épinglées dans les tests)
-    python_api: NON totalement compatible — voir behaviour_changes BC-04 à BC-06
+      aucune empreinte modifiée par v1.1, CA-01 ni CA-02 (valeurs épinglées dans les tests)
+    python_api: NON totalement compatible — voir behaviour_changes BC-03 à BC-11
   behaviour_changes:
     BC-01: valeur par défaut de contract_version "1.0" → "1.1" (objet construit sans version explicite)
     BC-02: domaine de contract_version restreint à {"1.0", "1.1"} (valeur libre en v1.0)
-    BC-03: sortie JSON d'un objet v1.0 enrichie des clés v1.1 (voir compatibility_axes.json_output)
+    BC-03: >
+      sortie d'un objet v1.0 enrichie des 13 clés v1.1 — en JSON (null / []) comme en Python :
+      model_dump() contient aussi ces 13 clés (None, ou () pour les champs tuple source_artifacts et
+      lineage en mode python ; [] en mode json). Un consommateur comparant model_dump() à un dict v1.0
+      littéral n'obtient plus l'égalité
     BC-04: DatasetSnapshot gelé — réaffectation d'attribut rejetée
     BC-05: >
       Provenance et AdjustmentRecord gelés ; instruments, adjustments, quality_flags stockés en tuple
@@ -413,16 +498,42 @@ compatibility:
       snapshot.instruments == ("X",) est vrai
     BC-06: >
       mappings v1.1 (request_parameters, provenance_metadata, parameters) stockés en FrozenMap
-      (isinstance(…, dict) faux ; égalité avec un dict conservée) et leurs listes en tuple ;
-      DataGateAssessment.snapshot_ref stocké en FrozenDatasetSnapshotRef (sous-classe gelée de
-      DatasetSnapshotRef : isinstance conservé, égalité pydantic avec une DatasetSnapshotRef fausse)
-    BC-07: CRED-1 rejette des entrées v1.1 auparavant acceptées (nouvelles clés K1, indicateurs V1–V4)
+      (isinstance(…, dict) faux) et leurs listes imbriquées en tuple. L'égalité avec un dict n'est
+      vraie que si les listes imbriquées sont écrites en tuple : parameters == {"c": ["a"]} est FAUX,
+      parameters == {"c": ("a",)} est vrai ; model_dump() restitue des dict/list et reste égal au dict
+      d'origine. DataGateAssessment.snapshot_ref stocké en FrozenDatasetSnapshotRef (sous-classe gelée
+      de DatasetSnapshotRef : isinstance conservé, égalité pydantic avec une DatasetSnapshotRef fausse)
+    BC-07: >
+      CRED-1 rejette des entrées v1.1 auparavant acceptées (clés K1, indicateurs V1–V4 à toute
+      position). CA-02 : grammaire indépendante de la position ; « Basic Materials », « Token Ring »,
+      « bearer bond » et les jetons V2 de moins de 8 caractères ne sont plus signalés (frontière V2)
+    BC-08: >
+      les modèles C02 gelés sont hachables (sémantique pydantic frozen), de façon cohérente avec
+      l'égalité (a == b ⇒ hash(a) == hash(b)) ; la valeur de hachage n'est ni une identité ni stable
+      entre processus — les empreintes sha256 sont les seules identités
+    BC-09: >
+      une instance de modèle C02 passée à une frontière validante est revalidée et stockée comme
+      copie (égale, non identique : snapshot.lineage[0] is record est faux) ; une instance forgée
+      invalide est rejetée (validation_boundaries)
+    BC-10: >
+      domaine canonique explicite : heure locale à fraction de seconde non nulle rejetée par QCJ-1 ;
+      instant dont la conversion UTC sort de 0001–9999 rejeté ; décimal QCT-1 au-delà de 28 chiffres
+      significatifs rejeté par ValueError ; colonnes QCT-1 dupliquées rejetées ; collection d'artefacts
+      à identifiants dupliqués rejetée par verify_artifacts
+    BC-11: >
+      type d'exception : entrées auparavant rejetées par une exception interne (TypeError sur instants
+      naïfs et avec fuseau mélangés dans DatasetSnapshot, OverflowError, decimal.InvalidOperation,
+      TypeError/KeyError de tri QCT-1/QCC-1) le sont désormais par ValueError / ValidationError ;
+      aucune entrée auparavant acceptée n'est rejetée par ce changement
   behaviour_changes_rationale: >
     BC-04 à BC-06 suppriment des capacités de mutation que la postcondition v1.0 (« snapshot immutable
     after publish ») interdisait déjà : elles corrigent un défaut d'implémentation, pas le contrat.
     Aucun champ, aucune sérialisation d'entrée ni aucune empreinte n'est modifié ; la version reste
     MINOR (1.1). Un consommateur Python comparant ces champs à des list/dict littéraux doit comparer
-    des tuples ou convertir. Politique de version inchangée par CA-01.
+    des tuples ou convertir. Politique de version inchangée par CA-01. BC-07 à BC-11 (CA-02)
+    corrigent des défauts contre des règles déjà normatives (CRED-1, C02-INV-09, forme YYYY de QCJ-1,
+    INV-05) ou transforment des exceptions internes en erreurs de validation ; aucune empreinte
+    d'une entrée auparavant acceptée n'est modifiée. Politique de version inchangée par CA-02.
   exigences_investigation: >
     Les exigences propres à une investigation sont exprimées par des PROFILS de validation,
     pas par des champs obligatoires du contrat générique.
@@ -458,9 +569,11 @@ errata:
 
 limitations:
   - aucun chargeur, aucune acquisition, aucune source de calendrier dans ce contrat
-  - C02-INV-05 ne couvre pas les contournements délibérés (object.__setattr__, attributs privés)
-    ni les objets non validés (model_construct, model_copy(update=…)) ; la conformité d'un objet
-    s'établit par validation (model_validate)
+  - C02-INV-05 et C02-INV-18 ne couvrent ni les contournements délibérés (object.__setattr__,
+    attributs privés ou spéciaux) ni un objet forgé (model_construct, model_copy(update=…)) tant qu'il
+    n'a franchi aucune frontière validante ; toute frontière validante le revalide profondément
+    (validation_boundaries)
+  - C02-INV-14 n'est garanti qu'à la frontière verify_calendar (invariant_enforcement)
   - les objets portant une valeur Knowable ne sont pas sérialisables par pickle (classe générique
     paramétrée pydantic) ; limitation antérieure à CA-01, JSON est la sérialisation de référence
   - close_instant dépend de la base de fuseaux IANA de l'environnement (zoneinfo)
@@ -484,6 +597,11 @@ implementations:
       - tests/contracts/test_knowable.py
       - tests/contracts/test_canonical.py
       - tests/contracts/test_c02_immutability.py
+      - tests/contracts/test_canonical_domain.py
+      - tests/contracts/test_cred1_grammar.py
+      - tests/contracts/test_c02_permutation.py
+      - tests/contracts/test_c02_trust_boundary.py
+      - tests/contracts/test_c02_compatibility.py
       - tests/contracts/test_provider_artifact.py
       - tests/contracts/test_lineage.py
       - tests/contracts/test_market_calendar.py

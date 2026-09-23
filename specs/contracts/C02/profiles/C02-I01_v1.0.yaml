@@ -35,7 +35,7 @@ rules:
   # id: {requirement, source DATA-REQ, UNKNOWN →, NOT_APPLICABLE →}
   P-01: {rule: "contract_version = 1.1", source: "§7.2"}
   P-02: {rule: "table_schema présent ; primary_key = [session_date] ; colonnes ⊂ {session_date:date, adjusted_close:decimal, close:decimal, volume:integer|decimal} ; session_date et adjusted_close non nullables", source: "§3.1, TS-01"}
-  P-03: {rule: "source_artifacts non vide ; artefacts fournis = références", source: "§7.1"}
+  P-03: {rule: "source_artifacts non vide ; artefacts fournis = références (C02-INV-09 : artifact_id distincts, résultat invariant par permutation) ; si P-03 échoue, aucun contrôle par artefact (P-04 à P-06, ticker de P-07, P-24) n'est évalué", source: "§7.1"}
   P-04: {rule: "artifact.provider_interface_version", source: "§7.1, PA-14", unknown: blocking, not_applicable: error}
   P-05: {rule: "artifact.license.usage_basis_ref", source: "REP-05, DR-003 A-1", unknown: blocking, not_applicable: error}
   P-06: {rule: "artifact.license.raw_retention_permitted ; KNOWN false ⇒ error", source: "REP-05", unknown: blocking}
