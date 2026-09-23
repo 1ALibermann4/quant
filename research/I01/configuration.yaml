@@ -132,5 +132,6 @@ data_requirements:
   confirmatory_target_days: 2520
   preferred_days: [3780, 5040]
   fields: [timestamp, adjusted_close]
-  c02_required_metadata: [adjustment_policy, vendor_revision, fingerprint]
+  c02_contract_version: "1.1"  # DR-004
+  c02_profile: C02-I01 v1.0  # specs/contracts/C02/profiles/C02-I01_v1.0.yaml — supersedes c02_required_metadata
   api_selected: false

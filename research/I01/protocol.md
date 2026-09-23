@@ -294,9 +294,15 @@ DatasetSnapshot **doit** documenter :
 
 Point-in-time : reporté à DATA-REQ-I01.
 
+> Alignement C02 v1.1 : ces exigences sont désormais normalisées par
+> [C02 v1.1](../../specs/contracts/C02/C02_v1.1.yaml) et le profil
+> [C02-I01 v1.0](../../specs/contracts/C02/profiles/C02-I01_v1.0.yaml)
+> (`adjustment_methodology`, `ProviderArtifact.acquired_at` / `provenance_metadata`,
+> `fingerprint` QCT-1, `raw_fingerprint`), dérivés de DATA-REQ-I01 §7.1 ; voir DR-004.
+
 ### 9.4 DATA-REQ-I01
 
-Produit **après** revue protocole PASS. **Non produit** dans l'intervention courante.
+Produit : [DATA-REQ-I01.md](DATA-REQ-I01.md) v0.1 (commit `4e117e5`).
 
 ---
 
