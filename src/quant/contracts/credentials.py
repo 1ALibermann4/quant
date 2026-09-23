@@ -7,13 +7,17 @@ secrets : une valeur secrète dépourvue de marqueur structurel (jeton brut sous
 anodine, secret encodé ou fragmenté) n'est pas détectable. L'obligation première reste de ne
 jamais transmettre de secret à ces champs.
 
-Indicateurs détectés :
+Grammaire (indépendante de la position du marqueur dans la valeur, insensible à la casse
+des mots-clés) :
 
-- K1 — nom de clé d'identification (`token`, `api_key`, `secret`, `password`, …) ;
-- V1 — en-tête HTTP d'autorisation dans une valeur (`Authorization: …`) ;
-- V2 — valeur entière de la forme `<schéma> <identifiant>` (`Bearer …`, `Basic …`, …) ;
-- V3 — paramètre d'URL ou de requête d'identification (`?token=…`, `&api_key=…`) ;
-- V4 — identifiants dans l'URL (`scheme://user:password@host`).
+- K1 — nom de clé contenant un mot d'identification (`token`, `api_key`, `secret`, …) ;
+- V1 — sous-chaîne `authorization` suivie de `:` ou `=` (espaces admis), n'importe où ;
+- V2 — mot de schéma (`bearer`, `basic`, `digest`, `token`) non précédé d'une lettre ou d'un
+  chiffre, suivi d'espaces et d'un jeton de forme identifiant (`_is_credential_token`) ;
+- V3 — paramètre `nom=` où `nom` est une suite maximale de caractères `[\\w.-]` satisfaisant
+  K1 ; précédé de `?`, `&`, `;` ou `#` (contexte d'URL/requête), également `key`, `auth`,
+  `sig`, `signature` et tout nom dont le dernier segment (`-`, `_`, `.`) est `sig`/`signature` ;
+- V4 — userinfo avec mot de passe dans une URL : `scheme://[utilisateur]:[mot de passe]@`.
 """
 
 from __future__ import annotations
@@ -29,11 +33,20 @@ _CREDENTIAL_NAME = re.compile(
     r"|private[_-]?key|access[_-]?key)",
     re.IGNORECASE,
 )
-_CREDENTIAL_PARAM_EXACT = frozenset({"key", "auth", "sig", "signature"})
-_AUTH_HEADER = re.compile(r"(?:^|[\s;,{\"'])(?:proxy-)?authorization\s*[:=]", re.IGNORECASE)
-_AUTH_SCHEME_VALUE = re.compile(r"^\s*(?:bearer|basic|digest|token)\s+\S+\s*$", re.IGNORECASE)
-_QUERY_PARAM = re.compile(r"[?&;#]([^=&;#?\s]+)=")
-_URL_USERINFO = re.compile(r"[a-z][a-z0-9+.\-]*://[^/\s@:]+:[^/\s@]*@", re.IGNORECASE)
+_URL_PARAM_EXACT = frozenset({"key", "auth", "sig", "signature"})
+_URL_PARAM_SEGMENT_SUFFIX = frozenset({"sig", "signature"})
+
+_AUTH_HEADER = re.compile(r"authorization\s*[:=]", re.IGNORECASE)
+_AUTH_SCHEME = re.compile(
+    r"(?<![^\W_])(?:bearer|basic|digest|token)\s+([A-Za-z0-9\-._~+/]+=*)",
+    re.IGNORECASE,
+)
+_PARAM = re.compile(r"(?<![\w.\-])([\w.\-]+)\s*=")
+_URL_CONTEXT = frozenset("?&;#")
+_URL_USERINFO = re.compile(r"[a-z][a-z0-9+.\-]*://[^/\s@:?#]*:[^/\s@?#]*@", re.IGNORECASE)
+
+_MIN_TOKEN_LENGTH = 8
+_NATURAL_WORD = re.compile(r"^[A-Za-z][a-z]*$")
 
 
 def is_credential_name(name: str) -> bool:
@@ -41,21 +54,37 @@ def is_credential_name(name: str) -> bool:
     return bool(_CREDENTIAL_NAME.search(name))
 
 
-def _is_credential_param(name: str) -> bool:
-    # `key`, `sig`… ne sont des indicateurs que dans une URL : ce sont des clés de
-    # paramètres légitimes ailleurs (ex. clé de tri).
-    return is_credential_name(name) or name.lower() in _CREDENTIAL_PARAM_EXACT
+def _is_url_credential_param(name: str) -> bool:
+    lowered = name.lower()
+    if lowered in _URL_PARAM_EXACT:
+        return True
+    return re.split(r"[-_.]", lowered)[-1] in _URL_PARAM_SEGMENT_SUFFIX
+
+
+def _is_credential_token(token: str) -> bool:
+    """
+    Jeton de forme identifiant après un schéma V2.
+
+    Exclus (frontière lexicale) : jeton de moins de 8 caractères après retrait de la
+    ponctuation finale, ou mot du langage naturel (lettres seules, majuscule initiale au
+    plus). `Basic Materials`, `Token Ring`, `bearer bond` ne sont donc pas des indicateurs.
+    """
+    token = token.rstrip(".-_~+/")
+    return len(token) >= _MIN_TOKEN_LENGTH and not _NATURAL_WORD.match(token)
 
 
 def credential_indicator(text: str) -> str | None:
     """Premier indicateur V1–V4 trouvé dans une valeur textuelle, sinon None."""
     if _AUTH_HEADER.search(text):
         return "V1 authorization header"
-    if _AUTH_SCHEME_VALUE.match(text):
-        return "V2 authentication scheme value"
-    for match in _QUERY_PARAM.finditer(text):
-        if _is_credential_param(match.group(1)):
-            return f"V3 credential query parameter {match.group(1)!r}"
+    for match in _AUTH_SCHEME.finditer(text):
+        if _is_credential_token(match.group(1)):
+            return "V2 authentication scheme value"
+    for match in _PARAM.finditer(text):
+        name = match.group(1)
+        in_url = match.start() > 0 and text[match.start() - 1] in _URL_CONTEXT
+        if is_credential_name(name) or (in_url and _is_url_credential_param(name)):
+            return f"V3 credential query parameter {name!r}"
     if _URL_USERINFO.search(text):
         return "V4 credentials in URL"
     return None

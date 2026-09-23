@@ -52,7 +52,7 @@ def test_credentials_never_recorded(key):
 CREDENTIAL_VALUES = [
     ("Authorization: Bearer abc", "V1"),
     ("proxy-authorization=Basic Zm9vOmJhcg==", "V1"),
-    ("Bearer abc", "V2"),
+    ("Bearer abc123def", "V2"),
     ("Basic dXNlcjpwYXNz", "V2"),
     ("https://x/?token=abc", "V3"),
     ("https://api.example/v1/prices?format=csv&api_key=xyz", "V3"),

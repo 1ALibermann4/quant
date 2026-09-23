@@ -140,7 +140,7 @@ def test_parameters_reject_credentials_in_keys_and_values():
     with pytest.raises(ValidationError, match="V1"):
         record(0, [RAW], OUT, parameters={"note": "Authorization: Bearer x"})
     with pytest.raises(ValidationError, match="V2"):
-        record(0, [RAW], OUT, parameters={"cols": ["a", "Bearer zzz"]})
+        record(0, [RAW], OUT, parameters={"cols": ["a", "Bearer zzz.9876"]})
 
 
 def test_parameters_accept_ordinary_sort_key():
