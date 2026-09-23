@@ -3,7 +3,7 @@
 | Version | Fichier | Statut | Notes |
 |---------|---------|--------|-------|
 | 1.0 | [C02_v1.0.yaml](C02_v1.0.yaml) | Remplacée par 1.1 (objets 1.0 toujours valides) | Publiée en P0. Texte de précondition `availability_cutoff` erroné : voir erratum E-01 |
-| **1.1** | [C02_v1.1.yaml](C02_v1.1.yaml) | **Courante — OUVERTE** : HAT #2 FAIL, CA-02 à ouvrir | Rétrocompatible (voir `compatibility.behaviour_changes`). Résout DATA-GAP-01 et DATA-GAP-02 |
+| **1.1** | [C02_v1.1.yaml](C02_v1.1.yaml) | **Courante — OUVERTE** : corrigée par CA-02, HAT #3 en attente | Rétrocompatible (voir `compatibility.behaviour_changes`). Résout DATA-GAP-01 et DATA-GAP-02 |
 
 ## Historique de validation de la v1.1
 
@@ -13,7 +13,8 @@
 | HAT #1 | [C02-v1.1-HAT.md](../../../docs/validation/C02-v1.1-HAT.md) (`3c684b7`) | FAIL |
 | Action corrective CA-01 | [C02-v1.1-CA-01-report.md](../../../docs/validation/C02-v1.1-CA-01-report.md) | voir rapport |
 | HAT #2 | [C02-v1.1-HAT-2.md](../../../docs/validation/C02-v1.1-HAT-2.md) | FAIL |
-| Action corrective CA-02 | — | à ouvrir |
+| Action corrective CA-02 | [C02-v1.1-CA-02-report.md](../../../docs/validation/C02-v1.1-CA-02-report.md) | PASS (ne clôture pas) |
+| HAT #3 | — | à mener (indépendant) |
 
 ## Profils de validation
 
