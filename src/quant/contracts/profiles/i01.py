@@ -130,15 +130,21 @@ def _check_schema(snapshot: DatasetSnapshot, f: _Findings) -> None:
             f.errors.append(f"table_schema: column {name!r} must not be nullable")
 
 
+def _canonical_order(artifacts: list[ProviderArtifact]) -> list[ProviderArtifact]:
+    """Ordre de parcours indépendant de l'ordre fourni (identifiants uniques après P-03)."""
+    return sorted(artifacts, key=lambda a: a.artifact_id)
+
+
 def _check_artifacts(
     snapshot: DatasetSnapshot, artifacts: list[ProviderArtifact], f: _Findings
-) -> None:
+) -> bool:
+    """P-03 puis exigences par artefact ; False si les artefacts ne sont pas vérifiés."""
     if not snapshot.source_artifacts:
         f.errors.append("source_artifacts: missing (§7.1 raw fingerprint)")
-        return
+        return False
     if not f.guard("source_artifacts", lambda: snapshot.verify_artifacts(artifacts)):
-        return
-    for artifact in artifacts:
+        return False
+    for artifact in _canonical_order(artifacts):
         label = f"artifact {artifact.artifact_id}"
         f.required(artifact.provider_interface_version, f"{label}.provider_interface_version")
         f.required(artifact.license.usage_basis_ref, f"{label}.license.usage_basis_ref")
@@ -149,6 +155,7 @@ def _check_artifacts(
             f.required(retention, f"{label}.license.raw_retention_permitted")
         if snapshot.instrument is not None and artifact.instrument.ticker != snapshot.instrument.ticker:
             f.errors.append(f"{label}: instrument ticker differs from snapshot instrument")
+    return True
 
 
 def _check_instrument(snapshot: DatasetSnapshot, f: _Findings) -> None:
@@ -242,7 +249,7 @@ def _check_temporal_bounds(
         f.errors.append("provenance.time_range_end must equal the last session close")
     if snapshot.provenance.time_range_start != first_close:
         f.errors.append("provenance.time_range_start must equal the first session close")
-    for artifact in artifacts:
+    for artifact in _canonical_order(artifacts):
         acquired_local = artifact.acquired_at.astimezone(last_close.tzinfo).date()
         gap = calendar.sessions_between(rng.last_session + timedelta(days=1), acquired_local)
         if gap < 5:
@@ -292,7 +299,7 @@ def validate_i01_snapshot(
     if snapshot.contract_version != "1.1":
         f.errors.append("contract_version: I01 requires C02 v1.1")
     _check_schema(snapshot, f)
-    _check_artifacts(snapshot, artifacts, f)
+    artifacts_ok = _check_artifacts(snapshot, artifacts, f)
     _check_instrument(snapshot, f)
     _check_temporal(snapshot, f)
     calendar_ok = _check_calendar(snapshot, calendar, f)
@@ -303,7 +310,7 @@ def validate_i01_snapshot(
     if snapshot.intended_use not in INTENDED_USES:
         f.errors.append(f"intended_use: must be one of {sorted(INTENDED_USES)} (§4.3)")
     if calendar_ok:
-        _check_temporal_bounds(snapshot, calendar, artifacts, f)
+        _check_temporal_bounds(snapshot, calendar, artifacts if artifacts_ok else [], f)
 
     tier = None
     if snapshot.counts is not None and snapshot.canonical_range is not None:

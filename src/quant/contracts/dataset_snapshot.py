@@ -331,16 +331,27 @@ class DatasetSnapshot(BaseModel):
             raise ValueError(f"table fingerprint mismatch: {actual} != {self.fingerprint}")
 
     def verify_artifacts(self, artifacts: Iterable[ProviderArtifact]) -> None:
-        """Les artefacts fournis sont exactement ceux référencés (id, empreinte, licence)."""
-        provided = {a.artifact_id: a for a in artifacts}
+        """
+        Les artefacts fournis sont exactement ceux référencés (id, empreinte, licence).
+
+        Précondition : identifiants deux à deux distincts dans la collection fournie. Le
+        résultat (succès ou message d'erreur) est invariant par permutation de la collection.
+        """
+        artifacts = list(artifacts)
+        ids = [a.artifact_id for a in artifacts]
+        duplicates = sorted({i for i in ids if ids.count(i) > 1})
+        if duplicates:
+            raise ValueError(f"provided artifacts contain duplicate artifact_id: {duplicates}")
+        provided = dict(zip(ids, artifacts, strict=True))
         declared = {r.artifact_id: r for r in self.source_artifacts}
         if set(provided) != set(declared):
             raise ValueError(
                 f"artifact set mismatch: provided {sorted(provided)} vs declared {sorted(declared)}"
             )
-        for artifact_id, ref in declared.items():
-            if provided[artifact_id].ref() != ref:
-                raise ValueError(f"artifact {artifact_id!r} does not match its reference")
+        mismatched = sorted(i for i, ref in declared.items() if provided[i].ref() != ref)
+        if mismatched:
+            names = ", ".join(repr(i) for i in mismatched)
+            raise ValueError(f"artifact {names} does not match its reference")
 
     def verify_calendar(self, calendar: MarketCalendarSnapshot) -> None:
         """Référence valide + bornes et comptages cohérents avec le calendrier."""
