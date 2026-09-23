@@ -32,7 +32,7 @@ class DataVerdict(str, Enum):
 
 
 class CheckResult(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     check_id: str
     outcome: CheckOutcome
@@ -43,11 +43,11 @@ class CheckResult(BaseModel):
 class FrozenDatasetSnapshotRef(DatasetSnapshotRef):
     """`DatasetSnapshotRef` (C01, non gelé) figé pour l'état d'un objet C02."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
 
 class DataGateAssessment(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     contract_id: str = Field(default=CONTRACT_ID, frozen=True)
     contract_version: str = CONTRACT_VERSION

@@ -24,7 +24,7 @@ class Knowable(BaseModel, Generic[T]):
     Une information absente n'est jamais représentée par une valeur inventée.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     status: KnowledgeStatus
     value: T | None = None

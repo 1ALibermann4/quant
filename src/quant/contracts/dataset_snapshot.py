@@ -54,7 +54,7 @@ _COLUMN_NAME = re.compile(r"^[a-z][a-z0-9_]*$")
 
 
 class AdjustmentRecord(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     type: str
     description: str
@@ -62,7 +62,7 @@ class AdjustmentRecord(BaseModel):
 
 
 class Provenance(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     source_label: str
     universe_description: str
@@ -72,7 +72,7 @@ class Provenance(BaseModel):
 
 
 class ColumnSpec(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     name: str
     type: Literal["date", "datetime", "decimal", "integer", "string"]
@@ -94,7 +94,7 @@ class ColumnSpec(BaseModel):
 class TableSchema(BaseModel):
     """Schéma versionné de la table canonique ; porte la représentation QCT-1."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     schema_id: str
     schema_version: str
@@ -132,7 +132,7 @@ class TableSchema(BaseModel):
 
 
 class SessionRange(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     first_session: date
     last_session: date
@@ -153,7 +153,7 @@ class SessionRange(BaseModel):
 class TemporalConvention(BaseModel):
     """Fuseaux source/canonique et règle de dérivation de `session_date` (TS-01…TS-04)."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     source_timezone: Knowable[str]
     canonical_timezone: str
@@ -166,7 +166,7 @@ class TemporalConvention(BaseModel):
 
 
 class ObservationCounts(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     raw_observations: int = Field(ge=0)
     canonical_observations: int = Field(ge=0)
@@ -205,7 +205,7 @@ class AdjustmentReferenceDate(str, Enum):
 class AdjustmentMethodology(BaseModel):
     """Méthodologie d'ajustement, propriété du snapshot (DATA-REQ §3.3, §5)."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     events_covered: Knowable[tuple[str, ...]]
     method: Knowable[AdjustmentMethod]
@@ -225,7 +225,7 @@ class DatasetSnapshot(BaseModel):
     présent, c'est l'empreinte SHA-256 de la représentation QCT-1 de la table canonique.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     contract_id: str = Field(default=CONTRACT_ID, frozen=True)
     contract_version: str = Field(default=CONTRACT_VERSION)
@@ -258,12 +258,20 @@ class DatasetSnapshot(BaseModel):
 
     @model_validator(mode="after")
     def validate_temporal_bounds(self) -> DatasetSnapshot:
-        if self.availability_cutoff > self.as_of:
+        prov = self.provenance
+        try:
+            cutoff_after_as_of = self.availability_cutoff > self.as_of
+            range_inverted = prov.time_range_start >= prov.time_range_end
+        except TypeError as exc:
+            raise ValueError(
+                "as_of / availability_cutoff and provenance time_range_start / time_range_end "
+                "must be pairwise comparable (all timezone-aware or all naive)"
+            ) from exc
+        if cutoff_after_as_of:
             raise ValueError(
                 "availability_cutoff must be <= as_of (anti look-ahead)"
             )
-        prov = self.provenance
-        if prov.time_range_start >= prov.time_range_end:
+        if range_inverted:
             raise ValueError("time_range_start must be < time_range_end")
         return self
 
@@ -336,8 +344,9 @@ class DatasetSnapshot(BaseModel):
 
         Précondition : identifiants deux à deux distincts dans la collection fournie. Le
         résultat (succès ou message d'erreur) est invariant par permutation de la collection.
+        Chaque artefact fourni est revalidé (frontière validante).
         """
-        artifacts = list(artifacts)
+        artifacts = [ProviderArtifact.model_validate(a) for a in artifacts]
         ids = [a.artifact_id for a in artifacts]
         duplicates = sorted({i for i in ids if ids.count(i) > 1})
         if duplicates:
@@ -354,7 +363,13 @@ class DatasetSnapshot(BaseModel):
             raise ValueError(f"artifact {names} does not match its reference")
 
     def verify_calendar(self, calendar: MarketCalendarSnapshot) -> None:
-        """Référence valide + bornes et comptages cohérents avec le calendrier."""
+        """
+        C02-INV-14 : référence valide + bornes et comptages cohérents avec le calendrier.
+
+        Frontière de garantie de C02-INV-14 (non vérifié à la construction du snapshot, qui ne
+        dispose pas du calendrier). Le calendrier fourni est revalidé (frontière validante).
+        """
+        calendar = MarketCalendarSnapshot.model_validate(calendar)
         if self.market_calendar is None:
             raise ValueError("snapshot declares no market_calendar")
         if calendar.ref() != self.market_calendar:

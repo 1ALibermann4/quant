@@ -24,7 +24,7 @@ CONTRACT_VERSION = "1.1"
 
 
 class EarlyClose(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     session: date
     close_local: time
@@ -62,7 +62,7 @@ class MarketCalendarSnapshot(BaseModel):
     produisant exactement le même contenu ont la même empreinte.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     contract_id: str = Field(default=CONTRACT_ID, frozen=True)
     contract_version: str = CONTRACT_VERSION
@@ -211,7 +211,7 @@ def build_market_calendar(
 class MarketCalendarRef(BaseModel):
     """Référence immuable d'un DatasetSnapshot vers un MarketCalendarSnapshot."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     calendar_snapshot_id: str
     content_fingerprint: str

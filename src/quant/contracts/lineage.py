@@ -38,7 +38,7 @@ def _require_qcj(parameters: Mapping[str, Any], field: str) -> Mapping[str, Any]
 class InstrumentIdentifiers(BaseModel):
     """Identifiants d'instrument (DATA-REQ INS-05) — aucun identifiant n'est inventé."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     ticker: str
     venue: Knowable[str]
@@ -56,7 +56,7 @@ class LicenseRef(BaseModel):
     DR-003) ; C02 ne constitue pas une seconde source normative de cette hypothèse.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     license_id: str
     terms_ref: str
@@ -75,7 +75,7 @@ class ProviderArtifact(BaseModel):
     métadonnée d'exécution et ne participe à aucune empreinte.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     contract_id: str = Field(default=CONTRACT_ID, frozen=True)
     contract_version: str = CONTRACT_VERSION
@@ -139,7 +139,7 @@ class ProviderArtifact(BaseModel):
 class ProviderArtifactRef(BaseModel):
     """Référence immuable d'un DatasetSnapshot vers un ProviderArtifact."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     artifact_id: str
     content_sha256: str
@@ -159,7 +159,7 @@ class TransformationRecord(BaseModel):
     paramètres canoniques et empreintes d'entrée — jamais `executed_at`.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     step_index: int = Field(ge=0)
     transformation_id: str

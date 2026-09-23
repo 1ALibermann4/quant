@@ -137,14 +137,15 @@ def _canonical_order(artifacts: list[ProviderArtifact]) -> list[ProviderArtifact
 
 def _check_artifacts(
     snapshot: DatasetSnapshot, artifacts: list[ProviderArtifact], f: _Findings
-) -> bool:
-    """P-03 puis exigences par artefact ; False si les artefacts ne sont pas vérifiés."""
+) -> list[ProviderArtifact] | None:
+    """P-03 puis exigences par artefact ; artefacts revalidés, ou None s'ils ne sont pas vérifiés."""
     if not snapshot.source_artifacts:
         f.errors.append("source_artifacts: missing (§7.1 raw fingerprint)")
-        return False
+        return None
     if not f.guard("source_artifacts", lambda: snapshot.verify_artifacts(artifacts)):
-        return False
-    for artifact in _canonical_order(artifacts):
+        return None
+    artifacts = _canonical_order([ProviderArtifact.model_validate(a) for a in artifacts])
+    for artifact in artifacts:
         label = f"artifact {artifact.artifact_id}"
         f.required(artifact.provider_interface_version, f"{label}.provider_interface_version")
         f.required(artifact.license.usage_basis_ref, f"{label}.license.usage_basis_ref")
@@ -155,7 +156,7 @@ def _check_artifacts(
             f.required(retention, f"{label}.license.raw_retention_permitted")
         if snapshot.instrument is not None and artifact.instrument.ticker != snapshot.instrument.ticker:
             f.errors.append(f"{label}: instrument ticker differs from snapshot instrument")
-    return True
+    return artifacts
 
 
 def _check_instrument(snapshot: DatasetSnapshot, f: _Findings) -> None:
@@ -185,15 +186,17 @@ def _check_temporal(snapshot: DatasetSnapshot, f: _Findings) -> None:
 
 def _check_calendar(
     snapshot: DatasetSnapshot, calendar: MarketCalendarSnapshot, f: _Findings
-) -> bool:
+) -> MarketCalendarSnapshot | None:
+    """C02-INV-14 via `verify_calendar` ; calendrier revalidé, ou None s'il n'est pas vérifié."""
     if snapshot.market_calendar is None:
         f.errors.append("market_calendar: missing (CAL-01)")
-        return False
+        return None
     if not f.guard("market_calendar", lambda: snapshot.verify_calendar(calendar)):
-        return False
+        return None
+    calendar = MarketCalendarSnapshot.model_validate(calendar)
     f.required(calendar.source, "calendar.source (CAL-01)")
     f.required(calendar.source_version, "calendar.source_version (CAL-01)")
-    return True
+    return calendar
 
 
 def _check_ranges_and_counts(snapshot: DatasetSnapshot, f: _Findings) -> None:
@@ -293,24 +296,33 @@ def validate_i01_snapshot(
     artifacts: Iterable[ProviderArtifact],
     assessment: DataGateAssessment | None = None,
 ) -> ProfileReport:
-    """Évalue la conformité d'un snapshot au profil C02-I01 v1.0."""
+    """
+    Évalue la conformité d'un snapshot au profil C02-I01 v1.0.
+
+    Frontière validante : snapshot et évaluation sont revalidés (ValidationError si l'objet
+    n'est pas conforme à C02) ; calendrier et artefacts le sont par `verify_calendar` et
+    `verify_artifacts`, un échec devenant une erreur du rapport.
+    """
+    snapshot = DatasetSnapshot.model_validate(snapshot)
+    if assessment is not None:
+        assessment = DataGateAssessment.model_validate(assessment)
     artifacts = list(artifacts)
     f = _Findings()
     if snapshot.contract_version != "1.1":
         f.errors.append("contract_version: I01 requires C02 v1.1")
     _check_schema(snapshot, f)
-    artifacts_ok = _check_artifacts(snapshot, artifacts, f)
+    verified_artifacts = _check_artifacts(snapshot, artifacts, f)
     _check_instrument(snapshot, f)
     _check_temporal(snapshot, f)
-    calendar_ok = _check_calendar(snapshot, calendar, f)
+    verified_calendar = _check_calendar(snapshot, calendar, f)
     _check_ranges_and_counts(snapshot, f)
     _check_adjustment(snapshot, f)
     if not snapshot.lineage:
         f.errors.append("lineage: missing (§7.1 transformation provenance)")
     if snapshot.intended_use not in INTENDED_USES:
         f.errors.append(f"intended_use: must be one of {sorted(INTENDED_USES)} (§4.3)")
-    if calendar_ok:
-        _check_temporal_bounds(snapshot, calendar, artifacts if artifacts_ok else [], f)
+    if verified_calendar is not None:
+        _check_temporal_bounds(snapshot, verified_calendar, verified_artifacts or [], f)
 
     tier = None
     if snapshot.counts is not None and snapshot.canonical_range is not None:
