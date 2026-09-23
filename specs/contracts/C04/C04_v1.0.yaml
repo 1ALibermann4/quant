@@ -1,0 +1,89 @@
+contract:
+  id: C04
+  name: StrategySignal
+  contract_version: "1.0"
+  status: validated
+  protocol: QDP-v0.1
+
+description: >
+  Proposition normalisée émise par une stratégie (capacité modulaire).
+  Ne fixe pas la taille finale ni n'autorise le risque.
+
+fields:
+  required:
+    - signal_id
+    - strategy_id
+    - strategy_version
+    - market_state_ref
+    - direction
+    - contract_version
+  optional:
+    - raw_signal
+    - confidence
+    - expected_edge
+    - expected_risk
+    - validity_horizon
+    - evidence
+    - abstain_reason
+    - eligible_universe
+    - time_horizon
+
+field_definitions:
+  signal_id:
+    type: string
+  strategy_id:
+    type: string
+  strategy_version:
+    type: string
+  market_state_ref:
+    type: object
+    fields: [market_state_id, as_of]
+  direction:
+    type: string
+    enum: [LONG, SHORT, NEUTRAL, ABSTAIN]
+  raw_signal:
+    type: float
+    description: "Force brute normalisée — sans garantie d'exploitabilité"
+  confidence:
+    type: float
+    range: [0.0, 1.0]
+    description: "Incertitude estimée — ne vaut pas autorisation de risque"
+  expected_edge:
+    type: float
+  expected_risk:
+    type: float
+  validity_horizon:
+    type: string
+    description: "Durée de validité (ex. 1d, 5d, intraday)"
+  evidence:
+    type: list[string]
+  abstain_reason:
+    type: string
+    description: "Requis si direction == ABSTAIN"
+  eligible_universe:
+    type: list[string]
+  time_horizon:
+    type: string
+
+preconditions:
+  - market_state_ref resolves to existing C03
+  - if direction == ABSTAIN then abstain_reason present
+
+postconditions:
+  - signal does not contain final position size or risk budget
+
+invariants:
+  - confidence does not imply risk authorization (I1, I2)
+  - strategy cannot set RiskDecision fields
+  - ABSTAIN requires abstain_reason
+
+limitations:
+  - P0 — no real strategy implementations
+  - Contract supports abstention as first-class strategy outcome
+
+implementations:
+  - id: quant-python-v01
+    version: "0.1.0"
+    maturity: foundation
+    evidence:
+      - tests/contracts/test_strategy_signal.py

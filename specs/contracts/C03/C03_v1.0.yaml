@@ -1,0 +1,79 @@
+contract:
+  id: C03
+  name: MarketState
+  contract_version: "1.0"
+  status: validated
+  protocol: QDP-v0.1
+
+description: >
+  Représentation contextualisée de l'état de marché à l'instant t.
+  Agrège features par référence sans recalcul silencieux.
+
+fields:
+  required:
+    - market_state_id
+    - as_of
+    - dataset_snapshot_ref
+    - feature_refs
+    - contract_version
+  optional:
+    - regime_label
+    - regime_uncertainty
+    - stability_indicators
+    - representation_id
+    - experimental_branch
+
+field_definitions:
+  market_state_id:
+    type: string
+  as_of:
+    type: datetime
+    description: "Instant d'évaluation — must be <= C02.availability_cutoff"
+  dataset_snapshot_ref:
+    type: object
+    fields: [snapshot_id, fingerprint]
+  feature_refs:
+    type: list[FeatureRef]
+  regime_label:
+    type: string
+    description: "Label de régime (ex. trending, mean_reverting, unknown)"
+  regime_uncertainty:
+    type: float
+    range: [0.0, 1.0]
+  stability_indicators:
+    type: object
+    description: "Métriques de stabilité locale (vol, divergence, …)"
+  representation_id:
+    type: string
+    description: "ID de la représentation / espace d'état utilisé"
+  experimental_branch:
+    type: string
+    enum: [classical, p_adic, dynamics, null]
+    description: "null ou classical pour socle ; p_adic/dynamics réservés R&D"
+
+FeatureRef:
+  fields: [name, version, value_ref]
+  description: "Référence à une feature calculée — pas le recalcul ici"
+
+preconditions:
+  - as_of <= dataset availability_cutoff
+  - feature_refs non-empty for operational use (P1+); may be empty in P0 fixtures
+
+postconditions:
+  - state is immutable once published for a given market_state_id
+
+invariants:
+  - Temporal integrity I3 — as_of bounds feature availability
+  - experimental_branch p_adic/dynamics cannot promote to operational without OPS gate
+  - regime_uncertainty in [0, 1] if present
+
+limitations:
+  - P0 does not compute features; structure and validation only
+  - Regime detection algorithms deferred to P1
+
+implementations:
+  - id: quant-python-v01
+    version: "0.1.0"
+    maturity: foundation
+    evidence:
+      - tests/contracts/test_market_state.py

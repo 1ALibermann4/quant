@@ -1,0 +1,84 @@
+contract:
+  id: C05
+  name: RiskDecision
+  contract_version: "1.0"
+  status: validated
+  protocol: QDP-v0.1
+
+description: >
+  Verdict souverain du Risk Engine sur une ou plusieurs propositions.
+  NO_TRADE est un résultat de première classe.
+
+fields:
+  required:
+    - decision_id
+    - verdict
+    - signal_refs
+    - contract_version
+    - decided_at
+  optional:
+    - authorized_exposure
+    - constraints_applied
+    - veto_reason
+    - reduce_factor
+    - delay_until
+    - risk_budget_ref
+
+field_definitions:
+  decision_id:
+    type: string
+  verdict:
+    type: string
+    enum: [AUTHORISE, REDUCE, DELAY, VETO, NO_TRADE]
+  signal_refs:
+    type: list[SignalRef]
+  decided_at:
+    type: datetime
+  authorized_exposure:
+    type: object
+    description: "Exposition autorisée post-décision — absent si NO_TRADE/VETO"
+  constraints_applied:
+    type: list[string]
+    description: "IDs des contraintes activées (concentration, drawdown, …)"
+  veto_reason:
+    type: string
+    description: "Requis si verdict in {VETO, NO_TRADE}"
+  reduce_factor:
+    type: float
+    range: [0.0, 1.0]
+    description: "Requis si verdict == REDUCE"
+  delay_until:
+    type: datetime
+    description: "Requis si verdict == DELAY"
+  risk_budget_ref:
+    type: string
+
+SignalRef:
+  fields: [signal_id, strategy_id]
+
+preconditions:
+  - at least one signal_ref unless verdict == NO_TRADE with explicit system-level reason
+  - reduce_factor present iff verdict == REDUCE
+  - delay_until present iff verdict == DELAY
+
+postconditions:
+  - authorized_exposure <= proposed exposure from signals (when present)
+  - no upstream layer can override this decision
+
+invariants:
+  - Risk sovereignty I1 — decision is final for execution layer
+  - NO_TRADE is explicit verdict, not null or empty decision
+  - veto_reason required for VETO and NO_TRADE
+  - confidence from C04 cannot bypass constraints_applied
+
+limitations:
+  - P0 — risk rules not implemented; verdict structure and invariants only
+  - No broker connectivity
+
+implementations:
+  - id: quant-python-v01
+    version: "0.1.0"
+    maturity: foundation
+    evidence:
+      - tests/contracts/test_risk_decision.py
+      - tests/invariants/test_risk.py

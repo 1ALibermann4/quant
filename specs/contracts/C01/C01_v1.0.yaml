@@ -1,0 +1,117 @@
+contract:
+  id: C01
+  name: Experiment
+  contract_version: "1.0"
+  status: validated
+  protocol: QDP-v0.1
+
+description: >
+  Unité reproductible d'investigation scientifique ou opérationnelle.
+  Encadre hypothèse, protocole, données, baselines, gates et artefacts.
+  Ne produit pas de trading live en P0.
+
+fields:
+  required:
+    - experiment_id
+    - contract_version
+    - hypothesis
+    - success_criteria
+    - dataset_snapshot_ref
+    - baselines
+    - gates
+    - protocol
+    - contract_refs
+  optional:
+    - experiment_run_id
+    - implementation_version
+    - git_commit
+    - promotion_record
+    - artifacts
+    - data_splits
+    - non_goals
+
+field_definitions:
+  experiment_id:
+    type: string
+    description: "Identifiant stable (ex. I01, E-uuid)"
+  experiment_run_id:
+    type: string
+    description: "Identifiant unique de cette exécution"
+  contract_version:
+    type: string
+    description: "Version semver du contrat C01"
+  hypothesis:
+    type: string
+    description: "Énoncé réfutable formulé avant exécution"
+  success_criteria:
+    type: list[string]
+    description: "Critères mesurables de succès/échec"
+  non_goals:
+    type: list[string]
+    description: "Ce que l'expérience ne prétend pas démontrer"
+  dataset_snapshot_ref:
+    type: object
+    fields: [snapshot_id, fingerprint]
+  baselines:
+    type: list[string]
+    description: "IDs baseline (B0, B1, …) — minimum 1"
+  gates:
+    type: list[GateSpec]
+  protocol:
+    type: string
+    enum: [statistical, predictive, economic, paper, operational, exploratory]
+  contract_refs:
+    type: object
+    description: "Versions C02–C05 utilisées"
+  data_splits:
+    type: object
+    description: "Dates train/validation/test — requis si protocol >= predictive"
+  artifacts:
+    type: list[ArtifactRef]
+  promotion_record:
+    type: PromotionRecord
+  implementation_version:
+    type: string
+  git_commit:
+    type: string
+
+GateSpec:
+  fields: [gate_id, description, verdict, evidence_ref]
+  verdict_enum: [PASS, FAIL, INCONCLUSIVE, PENDING]
+
+ArtifactRef:
+  fields: [name, path, content_type, fingerprint]
+
+PromotionRecord:
+  fields:
+    - scientific_verdict
+    - operational_verdict
+  scientific_verdict_enum: [PROMOTED, NO_PROMOTION, DEFERRED, REJECTED]
+  operational_verdict_enum: [GO, NO_GO, DEFERRED, NOT_APPLICABLE]
+
+preconditions:
+  - hypothesis and success_criteria documented before run execution
+  - at least one baseline declared
+  - dataset_snapshot_ref includes fingerprint matching C02
+
+postconditions:
+  - every gate has verdict != PENDING at closure
+  - artifacts manifest complete if run executed
+  - promotion_record distinguishes scientific vs operational outcomes
+
+invariants:
+  - Experiment ID immutable across runs; new run → new experiment_run_id
+  - Baseline list non-empty
+  - contract_refs lock Contract Versions for reproducibility
+  - No gate PASS without evidence_ref when run executed
+
+limitations:
+  - P0 defines structure only; no market data pipeline attached
+  - Does not authorize live trading
+
+implementations:
+  - id: quant-python-v01
+    version: "0.1.0"
+    maturity: foundation
+    evidence:
+      - tests/contracts/test_experiment.py

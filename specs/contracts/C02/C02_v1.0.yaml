@@ -1,0 +1,85 @@
+contract:
+  id: C02
+  name: DatasetSnapshot
+  contract_version: "1.0"
+  status: validated
+  protocol: QDP-v0.1
+
+description: >
+  Empreinte versionnée et provenance d'un ensemble de données figé pour une expérience.
+  Ne prescrit pas de format de stockage ni de source externe.
+
+fields:
+  required:
+    - snapshot_id
+    - fingerprint
+    - as_of
+    - provenance
+    - availability_cutoff
+    - contract_version
+  optional:
+    - instruments
+    - adjustments
+    - quality_flags
+    - storage_hint
+
+field_definitions:
+  snapshot_id:
+    type: string
+  fingerprint:
+    type: string
+    description: "Empreinte cryptographique du contenu (ex. sha256:…)"
+  as_of:
+    type: datetime
+    description: "Instant de figement ISO 8601 UTC"
+  availability_cutoff:
+    type: datetime
+    description: "Dernière information incluse — borne anti look-ahead"
+  provenance:
+    type: object
+    fields:
+      - source_label
+      - universe_description
+      - time_range_start
+      - time_range_end
+      - survivorship_bias_acknowledged
+  source_label:
+    type: string
+    description: "Nom logique de la source — pas de vendor figé en P0"
+  instruments:
+    type: list[string]
+  adjustments:
+    type: list[AdjustmentRecord]
+  quality_flags:
+    type: list[string]
+  storage_hint:
+    type: string
+    description: "Indication non normative (csv, parquet, …) — différé"
+
+AdjustmentRecord:
+  fields: [type, description, applied_at]
+
+preconditions:
+  - fingerprint computed over canonical content representation
+  - availability_cutoff <= as_of is invalid → reject
+  - time_range_start < time_range_end
+
+postconditions:
+  - snapshot immutable after publish; mutation requires new snapshot_id
+
+invariants:
+  - fingerprint uniqueness enforced within experiment registry
+  - availability_cutoff bounds all downstream MarketState.as_of values
+  - provenance.survivorship_bias_acknowledged must be explicit boolean
+
+limitations:
+  - No concrete data loader in P0
+  - storage_hint is informational only
+
+implementations:
+  - id: quant-python-v01
+    version: "0.1.0"
+    maturity: foundation
+    evidence:
+      - tests/contracts/test_dataset_snapshot.py
+      - tests/invariants/test_temporal.py
