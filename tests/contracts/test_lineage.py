@@ -134,6 +134,20 @@ def test_determinism_violation_detected():
         assert_deterministic((a, b))
 
 
+def test_parameters_reject_credentials_in_keys_and_values():
+    with pytest.raises(ValidationError, match="K1"):
+        record(0, [RAW], OUT, parameters={"api_key": "x"})
+    with pytest.raises(ValidationError, match="V1"):
+        record(0, [RAW], OUT, parameters={"note": "Authorization: Bearer x"})
+    with pytest.raises(ValidationError, match="V2"):
+        record(0, [RAW], OUT, parameters={"cols": ["a", "Bearer zzz"]})
+
+
+def test_parameters_accept_ordinary_sort_key():
+    r = record(0, [RAW], OUT, parameters={"key": "session_date", "columns": ["a", "b"]})
+    assert r.parameters["key"] == "session_date"
+
+
 def test_executed_at_timezone_required_and_inputs_non_empty():
     with pytest.raises(ValidationError, match="timezone-aware"):
         record(0, [RAW], OUT, executed_at=datetime(2020, 1, 1))

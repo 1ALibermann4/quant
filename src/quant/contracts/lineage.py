@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping
 from datetime import date, datetime
 from typing import Any
@@ -14,6 +13,7 @@ from quant.contracts.canonical import (
     canonical_json_fingerprint,
     require_sha256_fingerprint,
 )
+from quant.contracts.credentials import require_no_credential_text, require_no_credentials
 from quant.contracts.immutable import FrozenMap, FrozenMapping
 from quant.contracts.knowledge import Knowable
 
@@ -21,10 +21,6 @@ CONTRACT_ID = "C02"
 CONTRACT_VERSION = "1.1"
 
 JsonScalar = str | int | bool | None
-
-_CREDENTIAL_KEY = re.compile(
-    r"(token|api[_-]?key|secret|password|authorization|bearer)", re.IGNORECASE
-)
 
 
 def _require_utc_aware(value: datetime, field: str) -> datetime:
@@ -35,9 +31,7 @@ def _require_utc_aware(value: datetime, field: str) -> datetime:
 
 def _require_qcj(parameters: Mapping[str, Any], field: str) -> Mapping[str, Any]:
     canonical_json_bytes(parameters)
-    for key in parameters:
-        if _CREDENTIAL_KEY.search(key):
-            raise ValueError(f"{field}: credentials must never be recorded (key {key!r})")
+    require_no_credentials(parameters, field)
     return parameters
 
 
@@ -106,6 +100,11 @@ class ProviderArtifact(BaseModel):
     @classmethod
     def _content_hash_format(cls, v: str) -> str:
         return require_sha256_fingerprint(v, "content_sha256")
+
+    @field_validator("provider_interface")
+    @classmethod
+    def _interface_without_credentials(cls, v: str) -> str:
+        return require_no_credential_text(v, "provider_interface")
 
     @field_validator("acquired_at")
     @classmethod
