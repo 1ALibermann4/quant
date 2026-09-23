@@ -1,12 +1,13 @@
 """Tests du profil C02-I01 v1.0 (exigences DATA-REQ-I01 hors contrat générique)."""
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 from c02_synthetic import (
     DATA_LAST,
     artifact,
     assessment,
+    instrument,
     license_ref,
     snapshot_kwargs,
     synthetic_calendar,
@@ -14,7 +15,12 @@ from c02_synthetic import (
     synthetic_snapshot,
 )
 from quant.contracts.data_assessment import CheckOutcome, CheckResult, DataVerdict
-from quant.contracts.dataset_snapshot import DatasetSnapshot, TemporalConvention
+from quant.contracts.dataset_snapshot import (
+    ColumnSpec,
+    DatasetSnapshot,
+    TableSchema,
+    TemporalConvention,
+)
 from quant.contracts.knowledge import Knowable
 from quant.contracts.profiles.i01 import i01_depth_tier, validate_i01_snapshot
 
@@ -45,6 +51,187 @@ def test_generic_v10_snapshot_is_valid_c02_but_not_i01(sample_snapshot):
     assert not report.conforms
     assert any("table_schema" in e for e in report.errors)
     assert any("lineage" in e for e in report.errors)
+
+
+def test_missing_v11_representations_are_errors():
+    """Branches « absent » : P-01, P-02, P-03, P-07, P-10, P-12, P-14–P-18, P-20, P-21."""
+    legacy = DatasetSnapshot.model_validate(
+        {**synthetic_snapshot().model_dump(
+            include={"snapshot_id", "fingerprint", "as_of", "availability_cutoff", "provenance"}
+        ), "contract_version": "1.0"}
+    )
+    errors = run(snapshot=legacy, artifacts=[]).errors
+    expected = [
+        "contract_version: I01 requires C02 v1.1",
+        "table_schema: missing",
+        "source_artifacts: missing",
+        "instrument: missing",
+        "temporal_convention: missing",
+        "market_calendar: missing",
+        "requested_range: missing",
+        "returned_range: missing",
+        "canonical_range: missing",
+        "counts: missing",
+        "adjustment_methodology: missing",
+        "lineage: missing",
+        "intended_use: must be one of",
+    ]
+    for prefix in expected:
+        assert any(e.startswith(prefix) for e in errors), prefix
+
+
+def _with_schema(columns):
+    return synthetic_snapshot(
+        table_schema=TableSchema(schema_id="i01", schema_version="1", columns=columns,
+                                 primary_key=("session_date",))
+    )
+
+
+def test_p02_schema_rules():
+    date_col = ColumnSpec(name="session_date", type="date")
+    adj = ColumnSpec(name="adjusted_close", type="decimal", scale=6)
+    cases = {
+        "out of I01 scope": (date_col, adj, ColumnSpec(name="open", type="decimal", scale=4)),
+        "has type string": (date_col, ColumnSpec(name="adjusted_close", type="string")),
+        "required column 'adjusted_close' missing": (date_col,),
+        "must not be nullable": (
+            date_col, ColumnSpec(name="adjusted_close", type="decimal", scale=6, nullable=True)
+        ),
+    }
+    for message, columns in cases.items():
+        assert any(message in e for e in run(snapshot=_with_schema(columns)).errors), message
+    wrong_key = synthetic_snapshot(table_schema=TableSchema(
+        schema_id="i01", schema_version="1",
+        columns=(date_col, adj, ColumnSpec(name="volume", type="integer")),
+        primary_key=("session_date", "volume"),
+    ))
+    assert any("primary key" in e for e in run(snapshot=wrong_key).errors)
+
+
+def _art_report(**overrides):
+    art = artifact(**overrides)
+    snap = DatasetSnapshot(**snapshot_kwargs(artifacts=(art,)))
+    return run(snapshot=snap, artifacts=[art])
+
+
+def test_p04_interface_version_not_applicable_is_error():
+    report = _art_report(provider_interface_version=Knowable.not_applicable())
+    assert any("provider_interface_version: NOT_APPLICABLE" in e for e in report.errors)
+
+
+def test_p05_usage_basis_unknown_blocking_not_applicable_error():
+    unknown = _art_report(license=license_ref(usage_basis_ref=Knowable.unknown()))
+    assert unknown.conforms and not unknown.data_pass_eligible
+    assert any("usage_basis_ref: UNKNOWN" in b for b in unknown.blocking_unknowns)
+    na = _art_report(license=license_ref(usage_basis_ref=Knowable.not_applicable()))
+    assert any("usage_basis_ref: NOT_APPLICABLE" in e for e in na.errors)
+
+
+def test_p07_instrument_rules():
+    multi = run(snapshot=synthetic_snapshot(instruments=["SYNTH", "OTHER"]))
+    assert any("univariate" in e for e in multi.errors)
+    mismatch = _art_report(instrument=instrument(ticker="OTHER"))
+    assert any("ticker differs" in e for e in mismatch.errors)
+
+
+def test_p10_empty_session_date_rule_is_error():
+    tc = TemporalConvention(source_timezone=Knowable.known("UTC"),
+                            canonical_timezone="America/New_York", session_date_rule="  ")
+    assert any("session_date_rule" in e for e in run(snapshot=synthetic_snapshot(
+        temporal_convention=tc)).errors)
+
+
+def test_p11_source_timezone_unknown_blocking_not_applicable_admitted():
+    def report(status):
+        tc = TemporalConvention(source_timezone=status,
+                                canonical_timezone="America/New_York", session_date_rule="r")
+        return run(snapshot=synthetic_snapshot(temporal_convention=tc))
+
+    unknown = report(Knowable.unknown())
+    assert unknown.conforms and not unknown.data_pass_eligible
+    assert any("source_timezone" in b for b in unknown.blocking_unknowns)
+    na = report(Knowable.not_applicable(note="dates without instants"))
+    assert na.conforms and na.data_pass_eligible
+
+
+def test_p12_calendar_mismatch_is_error():
+    report = run(calendar=synthetic_calendar(last=date(2020, 12, 30)))
+    assert any(e.startswith("market_calendar:") for e in report.errors)
+
+
+def test_p13_calendar_source_unknown_blocking_not_applicable_error():
+    for field in ("source", "source_version"):
+        cal = synthetic_calendar(**{field: Knowable.not_applicable()})
+        report = run(snapshot=DatasetSnapshot(**snapshot_kwargs(calendar=cal)), calendar=cal)
+        assert any(f"calendar.{field} (CAL-01): NOT_APPLICABLE" in e for e in report.errors)
+    cal = synthetic_calendar(source=Knowable.unknown())
+    report = run(snapshot=DatasetSnapshot(**snapshot_kwargs(calendar=cal)), calendar=cal)
+    assert report.conforms and any("calendar.source" in b for b in report.blocking_unknowns)
+
+
+def test_p14_requested_range_unknown_blocking_not_applicable_error():
+    unknown = run(snapshot=synthetic_snapshot(requested_range=Knowable.unknown()))
+    assert unknown.conforms and "requested_range: UNKNOWN" in unknown.blocking_unknowns
+    na = run(snapshot=synthetic_snapshot(requested_range=Knowable.not_applicable()))
+    assert any(e.startswith("requested_range: NOT_APPLICABLE") for e in na.errors)
+
+
+def test_p15_canonical_range_required_even_with_returned_range():
+    report = run(snapshot=synthetic_snapshot(canonical_range=None))
+    assert "canonical_range: missing" in report.errors
+
+
+def _counts(**changes):
+    counts = snapshot_kwargs()["counts"]
+    return type(counts)(**{**dict(counts), **changes})
+
+
+def test_p16_expected_and_missing_sessions_must_be_known():
+    for field in ("expected_sessions", "missing_sessions"):
+        report = run(snapshot=synthetic_snapshot(counts=_counts(**{field: Knowable.unknown()})))
+        assert any(e.startswith(f"counts.{field}: must be KNOWN") for e in report.errors)
+
+
+def test_p17_invalidated_sessions_unknown_blocking_not_applicable_error():
+    unknown = run(snapshot=synthetic_snapshot(
+        counts=_counts(invalidated_sessions=Knowable.unknown())))
+    assert unknown.conforms and "counts.invalidated_sessions: UNKNOWN" in unknown.blocking_unknowns
+    na = run(snapshot=synthetic_snapshot(
+        counts=_counts(invalidated_sessions=Knowable.not_applicable())))
+    assert any(e.startswith("counts.invalidated_sessions: NOT_APPLICABLE") for e in na.errors)
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["events_covered", "method", "reference_date", "numeric_precision", "currency",
+     "methodology_ref"],
+)
+def test_p18_each_adjustment_field_required(field):
+    adj = snapshot_kwargs()["adjustment_methodology"]
+    for status, bucket in ((Knowable.unknown(), "blocking"), (Knowable.not_applicable(), "error")):
+        snap = synthetic_snapshot(adjustment_methodology=type(adj)(**{**dict(adj), field: status}))
+        report = run(snapshot=snap)
+        findings = report.blocking_unknowns if bucket == "blocking" else report.errors
+        assert any(f"adjustment.{field}" in x for x in findings), (field, bucket)
+
+
+def test_p19_recommended_fields_only_warn():
+    adj = snapshot_kwargs()["adjustment_methodology"]
+    snap = synthetic_snapshot(adjustment_methodology=type(adj)(
+        **{**dict(adj), "dividend_factor_formula": Knowable.unknown()}))
+    report = run(snapshot=snap)
+    assert report.data_pass_eligible
+    assert any("dividend_factor_formula" in w for w in report.warnings)
+
+
+def test_p23_provenance_bounds_must_match_session_closes():
+    prov = snapshot_kwargs()["provenance"]
+    early = type(prov)(**{**dict(prov), "time_range_start": prov.time_range_start - timedelta(hours=1)})
+    assert any("time_range_start" in e for e in run(snapshot=synthetic_snapshot(provenance=early)).errors)
+    kwargs = snapshot_kwargs()
+    late_end = kwargs["availability_cutoff"] - timedelta(minutes=1)
+    kwargs["provenance"] = type(prov)(**{**dict(prov), "time_range_end": late_end})
+    assert any("time_range_end" in e for e in run(snapshot=DatasetSnapshot(**kwargs)).errors)
 
 
 def test_unknown_interface_version_is_blocking_not_error():
@@ -224,6 +411,25 @@ def test_assessment_confirmatory_on_technical_tier_requires_fail():
 
     passing = check(DataVerdict.PASS)
     assert passing.depth_tier == "TECHNICAL"
+    assert any("requires FAIL" in e for e in passing.errors)
+    assert not any("requires FAIL" in e for e in check(DataVerdict.FAIL).errors)
+
+
+def test_assessment_below_technical_requires_fail_whatever_the_use():
+    short_last = date(2014, 6, 30)
+    art = artifact(content=synthetic_raw_bytes(short_last))
+    kwargs = snapshot_kwargs(artifacts=(art,), data_last=short_last)
+    kwargs["intended_use"] = "technical"
+    snap = DatasetSnapshot(**kwargs)
+
+    def check(verdict):
+        return validate_i01_snapshot(
+            snap, calendar=synthetic_calendar(), artifacts=[art],
+            assessment=assessment(snap, coverage_tier="BELOW_TECHNICAL", verdict=verdict),
+        )
+
+    passing = check(DataVerdict.PASS)
+    assert passing.depth_tier == "BELOW_TECHNICAL"
     assert any("requires FAIL" in e for e in passing.errors)
     assert not any("requires FAIL" in e for e in check(DataVerdict.FAIL).errors)
 

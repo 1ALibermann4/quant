@@ -14,7 +14,12 @@ from pydantic import ValidationError
 
 from quant.contracts.base import DatasetSnapshotRef
 from quant.contracts.canonical import sha256_fingerprint
-from quant.contracts.dataset_snapshot import DatasetSnapshot, Provenance, SessionRange
+from quant.contracts.dataset_snapshot import (
+    DatasetSnapshot,
+    Provenance,
+    SessionRange,
+    TemporalConvention,
+)
 from quant.contracts.knowledge import Knowable
 from quant.contracts.market_state import MarketState
 
@@ -274,6 +279,44 @@ def test_verify_calendar_detects_wrong_calendar_and_counts():
     )
     with pytest.raises(ValueError, match="expected_sessions"):
         DatasetSnapshot(**kwargs).verify_calendar(synthetic_calendar())
+
+
+def test_inv14_canonical_timezone_must_equal_calendar_timezone():
+    tc = TemporalConvention(source_timezone=Knowable.known("UTC"), canonical_timezone="UTC",
+                            session_date_rule="literal")
+    snap = synthetic_snapshot(temporal_convention=tc)
+    with pytest.raises(ValueError, match="canonical_timezone differs"):
+        snap.verify_calendar(synthetic_calendar())
+
+
+def test_inv14_canonical_bounds_must_be_calendar_sessions():
+    saturday = date(2010, 1, 9)
+    snap = synthetic_snapshot(
+        canonical_range=SessionRange(first_session=saturday, last_session=date(2020, 6, 30))
+    )
+    with pytest.raises(ValueError, match="is not a calendar session"):
+        snap.verify_calendar(synthetic_calendar())
+
+
+def test_inv14_snapshot_without_calendar_reference_cannot_be_verified(sample_snapshot):
+    with pytest.raises(ValueError, match="declares no market_calendar"):
+        sample_snapshot.verify_calendar(synthetic_calendar())
+
+
+def test_inv15_negative_session_counts_rejected():
+    counts = snapshot_kwargs()["counts"]
+    for field in ("expected_sessions", "missing_sessions", "invalidated_sessions"):
+        with pytest.raises(ValidationError, match=">= 0"):
+            type(counts)(**{**dict(counts), field: Knowable.known(-1),
+                            **({"expected_sessions": Knowable.unknown()}
+                               if field != "expected_sessions" else
+                               {"missing_sessions": Knowable.unknown()})})
+
+
+def test_inv12_table_fingerprint_independent_of_as_of():
+    later = synthetic_snapshot(as_of=datetime(2021, 1, 1, tzinfo=UTC))
+    later.verify_table(synthetic_rows())
+    assert later.fingerprint == synthetic_snapshot().fingerprint
 
 
 def test_v11_json_roundtrip():

@@ -77,6 +77,13 @@ def test_early_close_rules():
         )
 
 
+def test_duplicate_early_close_rejected():
+    cal = synthetic_calendar()
+    early = EarlyClose(session=EARLY_CLOSE_DAY, close_local=time(13))
+    with pytest.raises(ValidationError, match="duplicate early close"):
+        MarketCalendarSnapshot(**_kwargs(cal, early_closes=(early, early)))
+
+
 def test_invalid_timezone_rejected():
     cal = synthetic_calendar()
     with pytest.raises(ValidationError):
