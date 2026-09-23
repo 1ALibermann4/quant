@@ -4,7 +4,7 @@
 > **Status :** CLOSED
 > **Authority class :** FOUNDATION
 > **Protocol :** QDP v0.1
-> **Verdict :** P0 complete — **GO P1** recommended
+> **Verdict :** P0 complete — **GO P1 définitif** (HAT PASS — voir [P0-HAT.md](P0-HAT.md))
 
 ---
 
@@ -108,9 +108,13 @@ DecisionTrace — reconstruction I4
 
 **Exécution locale :** `pip install -e ".[dev]" && pytest`
 
-> **Note environnement :** Python n'était pas disponible fonctionnellement sur la machine
-> de clôture (binaire Windows Store / Chocolatey cassé). Les tests sont structurés et
-> prêts ; exécution requise avant P1 sur un environnement Python ≥3.11.
+**HAT technique :** exécuté — voir [P0-HAT.md](P0-HAT.md).
+
+| Métrique | Résultat HAT |
+|----------|--------------|
+| Python | 3.12.3 (WSL Ubuntu 24.04) |
+| Tests | **23/23 PASS** |
+| Import `quant` | PASS |
 
 ---
 
@@ -120,7 +124,8 @@ DecisionTrace — reconstruction I4
 |------|---------|----------|
 | P0-SPEC | **PASS** | `P0-specification.md` |
 | P0-CONTRACTS | **PASS** | C01–C05 YAML + Python |
-| P0-INVARIANTS | **PASS** | Tests écrits (exécution locale pending) |
+| P0-INVARIANTS | **PASS** | 23/23 pytest — [P0-HAT.md](P0-HAT.md) |
+| P0-HAT | **PASS** | HAT technique de clôture |
 | P0-REPRO | **PASS** | Protocole §7 P0-spec |
 | P0-NO-TRADE | **PASS** | C05 RiskVerdict.NO_TRADE + tests |
 | P0-RISK-SOV | **PASS** | C05 invariants + `assert_risk_sovereignty` |
@@ -179,7 +184,7 @@ Voir historique git — commits atomiques :
 
 ## 11. Recommandation P1
 
-### **GO P1**
+### **GO P1 définitif**
 
 **Justification :**
 
@@ -188,12 +193,13 @@ Voir historique git — commits atomiques :
 - Frontières socle / R&D explicites.
 - Aucune décision prématurée sur data source ou infrastructure.
 - Chaîne de promotion à deux niveaux formalisée.
+- **HAT technique PASS** — 23/23 tests, import OK ([P0-HAT.md](P0-HAT.md)).
 
 **Conditions avant démarrage P1 :**
 
-1. Exécuter `pytest` avec succès sur Python ≥3.11.
+1. ~~Exécuter `pytest` avec succès sur Python ≥3.11.~~ **Satisfait (HAT).**
 2. Lire P0-spec et contrats C01–C05.
-3. Première expérience P1 ciblée : voisinage géométrique simple vs baseline B0.
+3. Première expérience P1 : test SCI de proximité géométrique (H₀ vs H₁), pas de stratégie rentable.
 
 ---
 
