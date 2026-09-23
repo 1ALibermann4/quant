@@ -17,6 +17,7 @@ from quant.contracts.data_assessment import (
     CheckResult,
     DataGateAssessment,
     DataVerdict,
+    FrozenDatasetSnapshotRef,
 )
 from quant.contracts.dataset_snapshot import (
     AdjustmentMethod,
@@ -32,6 +33,7 @@ from quant.contracts.dataset_snapshot import (
     TemporalConvention,
 )
 from quant.contracts.experiment import Experiment, ExperimentProtocol
+from quant.contracts.immutable import FrozenMap
 from quant.contracts.knowledge import Knowable, KnowledgeStatus
 from quant.contracts.lineage import (
     InstrumentIdentifiers,
@@ -69,6 +71,8 @@ __all__ = [
     "ExperimentProtocol",
     "ExperimentalBranch",
     "FeatureRef",
+    "FrozenDatasetSnapshotRef",
+    "FrozenMap",
     "GateResult",
     "GateVerdict",
     "InstrumentIdentifiers",

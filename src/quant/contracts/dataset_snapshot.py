@@ -18,6 +18,7 @@ from quant.contracts.canonical import (
     require_sha256_fingerprint,
     sha256_fingerprint,
 )
+from quant.contracts.immutable import FrozenList
 from quant.contracts.knowledge import Knowable
 from quant.contracts.lineage import (
     InstrumentIdentifiers,
@@ -53,12 +54,16 @@ _COLUMN_NAME = re.compile(r"^[a-z][a-z0-9_]*$")
 
 
 class AdjustmentRecord(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     type: str
     description: str
     applied_at: datetime
 
 
 class Provenance(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     source_label: str
     universe_description: str
     time_range_start: datetime
@@ -229,9 +234,9 @@ class DatasetSnapshot(BaseModel):
     as_of: datetime
     availability_cutoff: datetime
     provenance: Provenance
-    instruments: list[str] = Field(default_factory=list)
-    adjustments: list[AdjustmentRecord] = Field(default_factory=list)
-    quality_flags: list[str] = Field(default_factory=list)
+    instruments: FrozenList[str] = ()
+    adjustments: FrozenList[AdjustmentRecord] = ()
+    quality_flags: FrozenList[str] = ()
     storage_hint: str | None = Field(
         default=None,
         description="Indication non normative — format de stockage différé",

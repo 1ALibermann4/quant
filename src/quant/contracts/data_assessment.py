@@ -40,19 +40,32 @@ class CheckResult(BaseModel):
     detail: str | None = None
 
 
+class FrozenDatasetSnapshotRef(DatasetSnapshotRef):
+    """`DatasetSnapshotRef` (C01, non gelé) figé pour l'état d'un objet C02."""
+
+    model_config = ConfigDict(frozen=True)
+
+
 class DataGateAssessment(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     contract_id: str = Field(default=CONTRACT_ID, frozen=True)
     contract_version: str = CONTRACT_VERSION
     assessment_id: str
-    snapshot_ref: DatasetSnapshotRef
+    snapshot_ref: FrozenDatasetSnapshotRef
     evaluated_against: str
     evaluated_at: datetime
     intended_use: str
     coverage_tier: str
     checks: tuple[CheckResult, ...]
     verdict: DataVerdict
+
+    @field_validator("snapshot_ref", mode="before")
+    @classmethod
+    def _freeze_ref(cls, v: object) -> object:
+        if isinstance(v, DatasetSnapshotRef) and not isinstance(v, FrozenDatasetSnapshotRef):
+            return v.model_dump()
+        return v
 
     @field_validator("evaluated_at")
     @classmethod

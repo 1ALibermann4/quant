@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from datetime import date, datetime
 from typing import Any
 
@@ -13,6 +14,7 @@ from quant.contracts.canonical import (
     canonical_json_fingerprint,
     require_sha256_fingerprint,
 )
+from quant.contracts.immutable import FrozenMap, FrozenMapping
 from quant.contracts.knowledge import Knowable
 
 CONTRACT_ID = "C02"
@@ -31,7 +33,7 @@ def _require_utc_aware(value: datetime, field: str) -> datetime:
     return value
 
 
-def _require_qcj(parameters: dict[str, Any], field: str) -> dict[str, Any]:
+def _require_qcj(parameters: Mapping[str, Any], field: str) -> Mapping[str, Any]:
     canonical_json_bytes(parameters)
     for key in parameters:
         if _CREDENTIAL_KEY.search(key):
@@ -89,7 +91,7 @@ class ProviderArtifact(BaseModel):
     provider_interface: str
     provider_interface_version: Knowable[str]
     instrument: InstrumentIdentifiers
-    request_parameters: dict[str, JsonScalar] = Field(default_factory=dict)
+    request_parameters: FrozenMapping[JsonScalar] = Field(default_factory=FrozenMap)
     requested_first_session: Knowable[date]
     requested_last_session: Knowable[date]
     acquired_at: datetime
@@ -98,7 +100,7 @@ class ProviderArtifact(BaseModel):
     encoding: Knowable[str]
     byte_size: int = Field(ge=0)
     license: LicenseRef
-    provenance_metadata: dict[str, str] = Field(default_factory=dict)
+    provenance_metadata: FrozenMapping[str] = Field(default_factory=FrozenMap)
 
     @field_validator("content_sha256")
     @classmethod
@@ -112,12 +114,12 @@ class ProviderArtifact(BaseModel):
 
     @field_validator("request_parameters")
     @classmethod
-    def _parameters_canonical(cls, v: dict[str, Any]) -> dict[str, Any]:
+    def _parameters_canonical(cls, v: Mapping[str, Any]) -> Mapping[str, Any]:
         return _require_qcj(v, "request_parameters")
 
     @field_validator("provenance_metadata")
     @classmethod
-    def _metadata_without_credentials(cls, v: dict[str, str]) -> dict[str, str]:
+    def _metadata_without_credentials(cls, v: Mapping[str, str]) -> Mapping[str, str]:
         return _require_qcj(v, "provenance_metadata")
 
     @model_validator(mode="after")
@@ -164,7 +166,7 @@ class TransformationRecord(BaseModel):
     transformation_id: str
     transformation_type: str
     implementation_version: str
-    parameters: dict[str, JsonScalar | list[JsonScalar]] = Field(default_factory=dict)
+    parameters: FrozenMapping[JsonScalar | list[JsonScalar]] = Field(default_factory=FrozenMap)
     input_fingerprints: tuple[str, ...]
     output_fingerprint: str
     executed_at: datetime
@@ -194,7 +196,7 @@ class TransformationRecord(BaseModel):
 
     @field_validator("parameters")
     @classmethod
-    def _parameters_canonical(cls, v: dict[str, Any]) -> dict[str, Any]:
+    def _parameters_canonical(cls, v: Mapping[str, Any]) -> Mapping[str, Any]:
         return _require_qcj(v, "parameters")
 
     @model_validator(mode="after")
