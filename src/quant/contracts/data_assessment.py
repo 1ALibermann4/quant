@@ -7,12 +7,13 @@ l'inscrire dans le snapshot violerait son immuabilité (REV-D-02).
 
 from __future__ import annotations
 
-from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import ConfigDict, Field, field_validator, model_validator
 
 from quant.contracts.base import DatasetSnapshotRef
+from quant.contracts.canonical import CanonicalInstant
+from quant.contracts.immutable import C02Validated
 
 CONTRACT_ID = "C02"
 CONTRACT_VERSION = "1.1"
@@ -31,8 +32,7 @@ class DataVerdict(str, Enum):
     INCONCLUSIVE = "INCONCLUSIVE"
 
 
-class CheckResult(BaseModel):
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
+class CheckResult(C02Validated):
 
     check_id: str
     outcome: CheckOutcome
@@ -45,16 +45,21 @@ class FrozenDatasetSnapshotRef(DatasetSnapshotRef):
 
     model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
+    @model_validator(mode="after")
+    def _utf8_and_freeze_fields_set(self) -> FrozenDatasetSnapshotRef:
+        from quant.contracts.canonical import scan_utf8
 
-class DataGateAssessment(BaseModel):
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
+        scan_utf8(self, type(self).__name__)
+        return self
 
+
+class DataGateAssessment(C02Validated):
     contract_id: str = Field(default=CONTRACT_ID, frozen=True)
     contract_version: str = CONTRACT_VERSION
     assessment_id: str
     snapshot_ref: FrozenDatasetSnapshotRef
     evaluated_against: str
-    evaluated_at: datetime
+    evaluated_at: CanonicalInstant
     intended_use: str
     coverage_tier: str
     checks: tuple[CheckResult, ...]
@@ -65,13 +70,6 @@ class DataGateAssessment(BaseModel):
     def _freeze_ref(cls, v: object) -> object:
         if isinstance(v, DatasetSnapshotRef) and not isinstance(v, FrozenDatasetSnapshotRef):
             return v.model_dump()
-        return v
-
-    @field_validator("evaluated_at")
-    @classmethod
-    def _aware(cls, v: datetime) -> datetime:
-        if v.tzinfo is None or v.utcoffset() is None:
-            raise ValueError("evaluated_at must be timezone-aware (UTC)")
         return v
 
     @model_validator(mode="after")

@@ -15,7 +15,15 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping
 from typing import Annotated, Any, TypeVar
 
-from pydantic import AfterValidator, PlainSerializer, SerializationInfo, WrapSerializer
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    PlainSerializer,
+    SerializationInfo,
+    WrapSerializer,
+    model_validator,
+)
 
 V = TypeVar("V")
 T = TypeVar("T")
@@ -52,12 +60,37 @@ class FrozenMap(Mapping[str, Any]):
 
 
 def deep_freeze(value: Any) -> Any:
-    """Mappings → FrozenMap, listes/tuples → tuples, récursivement."""
+    """Mappings → FrozenMap, listes/tuples → tuples, récursivement.
+
+    Un modèle Pydantic (qui est un Mapping) n'est pas réduit en FrozenMap : il
+    porte déjà sa propre frontière d'immuabilité.
+    """
+    if isinstance(value, BaseModel):
+        return value
     if isinstance(value, Mapping):
         return FrozenMap({key: deep_freeze(item) for key, item in value.items()})
     if isinstance(value, list | tuple):
         return tuple(deep_freeze(item) for item in value)
     return value
+
+
+class C02Validated(BaseModel):
+    """
+    Frontière commune des modèles C02 : texte UTF-8 et métadonnée Pydantic gelée.
+
+    C02-INV-05 porte sur l'état scientifique, la sérialisation canonique et
+    l'identité C02. ``model_fields_set`` (métadonnée interne Pydantic) n'est pas
+    gelé : pydantic le mute lors de ``model_copy`` / revalidation.
+    """
+
+    model_config = ConfigDict(frozen=True, revalidate_instances="always")
+
+    @model_validator(mode="after")
+    def _finalize_scientific_state(self) -> C02Validated:
+        from quant.contracts.canonical import scan_utf8
+
+        scan_utf8(self, type(self).__name__)
+        return self
 
 
 def thaw(value: Any) -> Any:

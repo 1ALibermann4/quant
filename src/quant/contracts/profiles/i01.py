@@ -63,18 +63,24 @@ class ProfileReport(BaseModel):
         return self.conforms and not self.blocking_unknowns
 
 
-def _add_years(d: date, years: int) -> date:
+def _add_years(d: date, years: int) -> date | None:
+    """Seuil de durée ; ``None`` si le calendrier grégorien ne représente pas la date."""
     try:
         return d.replace(year=d.year + years)
     except ValueError:
-        return date(d.year + years, 2, 28)
+        try:
+            return date(d.year + years, 2, 28)
+        except ValueError:
+            return None
 
 
 def i01_depth_tier(valid_sessions: int, first_session: date, last_session: date) -> str:
     """Palier de profondeur DATA-REQ §4.1 (séances valides et durée calendaire)."""
-    if valid_sessions >= 3780 and last_session >= _add_years(first_session, 15):
+    preferred = _add_years(first_session, 15)
+    if valid_sessions >= 3780 and preferred is not None and last_session >= preferred:
         return TIER_PREFERRED
-    if valid_sessions >= 2520 and last_session >= _add_years(first_session, 10):
+    confirmatory = _add_years(first_session, 10)
+    if valid_sessions >= 2520 and confirmatory is not None and last_session >= confirmatory:
         return TIER_CONFIRMATORY
     if valid_sessions >= 1500:
         return TIER_TECHNICAL
@@ -242,8 +248,12 @@ def _check_temporal_bounds(
     rng = snapshot.canonical_range
     if rng is None:
         return
-    last_close = calendar.close_instant(rng.last_session)
-    first_close = calendar.close_instant(rng.first_session)
+    try:
+        last_close = calendar.close_instant(rng.last_session)
+        first_close = calendar.close_instant(rng.first_session)
+    except (OverflowError, ValueError) as exc:
+        f.errors.append(f"temporal bounds: {exc}")
+        return
     if snapshot.availability_cutoff != last_close:
         f.errors.append(
             "availability_cutoff must equal the close of the last canonical session (§7.1)"
@@ -253,8 +263,17 @@ def _check_temporal_bounds(
     if snapshot.provenance.time_range_start != first_close:
         f.errors.append("provenance.time_range_start must equal the first session close")
     for artifact in _canonical_order(artifacts):
-        acquired_local = artifact.acquired_at.astimezone(last_close.tzinfo).date()
-        gap = calendar.sessions_between(rng.last_session + timedelta(days=1), acquired_local)
+        try:
+            acquired_local = artifact.acquired_at.astimezone(last_close.tzinfo).date()
+        except (OverflowError, ValueError) as exc:
+            f.errors.append(f"artifact {artifact.artifact_id}: temporal bounds {exc}")
+            continue
+        try:
+            after_last = rng.last_session + timedelta(days=1)
+        except OverflowError:
+            gap = 0
+        else:
+            gap = calendar.sessions_between(after_last, acquired_local)
         if gap < 5:
             f.warnings.append(
                 f"REV-D-04: only {gap} calendar sessions between last session and acquisition "

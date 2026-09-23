@@ -21,8 +21,10 @@ from collections.abc import Iterable, Mapping, Sequence
 from datetime import date, datetime, time, timezone
 from decimal import ROUND_HALF_EVEN, Context, Decimal, DivisionByZero, InvalidOperation, Overflow
 from enum import Enum
-from typing import Any
+from typing import Annotated, Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+from pydantic import AfterValidator, BaseModel
 
 QCJ_1 = "QCJ-1"
 QCT_1 = "QCT-1"
@@ -55,6 +57,79 @@ def require_iana_timezone(value: str) -> str:
     return value
 
 
+def require_utf8_text(value: str, path: str = "$") -> str:
+    """Rejette les chaînes non encodables en UTF-8 (surrogates isolés, etc.)."""
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError as exc:
+        raise ValueError(f"text is not UTF-8 encodable at {path}") from exc
+    return value
+
+
+def scan_utf8(value: Any, path: str = "$") -> None:
+    """Parcourt récursivement chaînes, mappings, séquences et modèles."""
+    if isinstance(value, str):
+        require_utf8_text(value, path)
+        return
+    if isinstance(value, BaseModel):
+        for name, item in value.__dict__.items():
+            if name.startswith("_"):
+                continue
+            scan_utf8(item, f"{path}.{name}")
+        return
+    if isinstance(value, Mapping):
+        for key, item in value.items():
+            key_path = f"{path}.{key}"
+            if isinstance(key, str):
+                require_utf8_text(key, key_path)
+            scan_utf8(item, key_path)
+        return
+    if isinstance(value, list | tuple):
+        for i, item in enumerate(value):
+            scan_utf8(item, f"{path}[{i}]")
+
+
+def to_canonical_utc(value: datetime, field: str = "instant") -> datetime:
+    """
+    Frontière temporelle unique : datetime aware → datetime UTC canonique.
+
+    L'instant est converti via ``astimezone(UTC)`` puis reconstruit avec le
+    ``tzinfo`` singleton ``timezone.utc``. Aucun objet timezone de l'appelant
+    n'est conservé (fold résolu, tzinfo mutable isolé).
+    """
+    if not isinstance(value, datetime):
+        raise ValueError(f"{field} must be a datetime")
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError(f"{field} must be timezone-aware (UTC)")
+    try:
+        utc = value.astimezone(timezone.utc)
+    except OverflowError as exc:
+        raise ValueError(f"{field}: instant outside the UTC range 0001-01-01..9999-12-31") from exc
+    if utc.year < 1 or utc.year > 9999:
+        raise ValueError(f"{field}: instant outside the UTC range 0001-01-01..9999-12-31")
+    return datetime(
+        utc.year, utc.month, utc.day, utc.hour, utc.minute, utc.second, utc.microsecond,
+        tzinfo=timezone.utc,
+    )
+
+
+def to_canonical_local_time(value: time, field: str = "local time") -> time:
+    """Heure murale naïve HH:MM:SS[.ffffff] ; ``fold`` n'est pas représentable."""
+    if not isinstance(value, time) or isinstance(value, datetime):
+        raise ValueError(f"{field} must be a time")
+    if value.tzinfo is not None:
+        raise ValueError(f"{field} must be a naive local time")
+    if value.fold:
+        raise ValueError(
+            f"{field}: fold is not representable on a local time; encode an instant instead"
+        )
+    return time(value.hour, value.minute, value.second, value.microsecond)
+
+
+CanonicalInstant = Annotated[datetime, AfterValidator(lambda v: to_canonical_utc(v, "instant"))]
+CanonicalLocalTime = Annotated[time, AfterValidator(lambda v: to_canonical_local_time(v, "local time"))]
+
+
 def format_utc_datetime(value: datetime) -> str:
     """
     Instant UTC ``YYYY-MM-DDTHH:MM:SS.ffffffZ`` sur tout le domaine 0001–9999.
@@ -62,12 +137,7 @@ def format_utc_datetime(value: datetime) -> str:
     Formatage explicite (et non ``strftime``, dont ``%Y`` ne complète pas les années < 1000
     sur toutes les plateformes). Un instant dont la conversion UTC sort de 0001–9999 est rejeté.
     """
-    if value.tzinfo is None or value.utcoffset() is None:
-        raise ValueError("naive datetime is not canonicalizable (timezone required)")
-    try:
-        u = value.astimezone(timezone.utc)
-    except OverflowError as exc:
-        raise ValueError("instant outside the UTC range 0001-01-01..9999-12-31") from exc
+    u = to_canonical_utc(value, "instant")
     return (
         f"{u.year:04d}-{u.month:02d}-{u.day:02d}"
         f"T{u.hour:02d}:{u.minute:02d}:{u.second:02d}.{u.microsecond:06d}Z"
@@ -82,8 +152,10 @@ def format_date(value: date) -> str:
 
 
 def _qcj_normalize(value: Any, path: str) -> Any:
-    if value is None or isinstance(value, bool) or isinstance(value, str):
+    if value is None or isinstance(value, bool):
         return value
+    if isinstance(value, str):
+        return require_utf8_text(value, path)
     if isinstance(value, Enum):
         return _qcj_normalize(value.value, path)
     if isinstance(value, int):
@@ -100,16 +172,16 @@ def _qcj_normalize(value: Any, path: str) -> Any:
     if isinstance(value, date):
         return format_date(value)
     if isinstance(value, time):
-        if value.tzinfo is not None:
-            raise ValueError(f"QCJ-1: time with tzinfo is forbidden at {path}")
-        if value.microsecond:
+        local = to_canonical_local_time(value, path)
+        if local.microsecond:
             raise ValueError(f"QCJ-1: sub-second local time is not representable at {path}")
-        return f"{value.hour:02d}:{value.minute:02d}:{value.second:02d}"
+        return f"{local.hour:02d}:{local.minute:02d}:{local.second:02d}"
     if isinstance(value, Mapping):
         out: dict[str, Any] = {}
         for key, item in value.items():
             if not isinstance(key, str):
                 raise ValueError(f"QCJ-1: object keys must be strings at {path}")
+            require_utf8_text(key, path)
             out[key] = _qcj_normalize(item, f"{path}.{key}")
         return out
     if isinstance(value, list | tuple):
@@ -245,7 +317,15 @@ def canonical_table_bytes(
     lignes triées par clé primaire (valeurs typées), séparateur ``,``, fin de ligne ``\\n``
     après chaque ligne (y compris la dernière), UTF-8 sans BOM.
     """
-    names = [c["name"] for c in columns]
+    names: list[str] = []
+    for i, column in enumerate(columns):
+        if not isinstance(column, Mapping):
+            raise ValueError(f"QCT-1: column descriptor {i} must be a mapping")
+        if "name" not in column:
+            raise ValueError(f"QCT-1: column descriptor {i} missing 'name'")
+        if "type" not in column:
+            raise ValueError(f"QCT-1: column {column['name']!r} missing 'type'")
+        names.append(column["name"])
     if len(set(names)) != len(names):
         raise ValueError("QCT-1: duplicate column names in schema")
     by_name = {c["name"]: c for c in columns}
@@ -257,15 +337,45 @@ def canonical_table_bytes(
         if by_name[key].get("nullable", False):
             raise ValueError(f"QCT-1: primary key column {key!r} must not be nullable")
 
-    # Chaque cellule est validée (types, nullabilité) avant le tri : le tri ne compare
-    # alors que des valeurs typées homogènes et ne peut lever d'exception interne.
+    def _pk_tuple(row: Mapping[str, Any]) -> tuple[Any, ...]:
+        keys: list[Any] = []
+        for key in primary_key:
+            value = row[key]
+            if by_name[key]["type"] == "datetime":
+                keys.append(to_canonical_utc(value, f"column {key!r}"))
+            else:
+                keys.append(value)
+        return tuple(keys)
+
+    # Chaque cellule est validée avant le tri. Les erreurs de toutes les lignes sont
+    # collectées puis triées par clé primaire canonique (invariance par permutation).
     formatted: list[tuple[tuple[Any, ...], str]] = []
+    errors: list[tuple[str, str]] = []
     for row in rows:
-        extra = set(row) - set(names)
-        if extra:
-            raise ValueError(f"QCT-1: row has columns outside schema: {sorted(extra)}")
-        line = ",".join(_format_cell(by_name[n], row.get(n)) for n in names)
-        formatted.append((tuple(row[k] for k in primary_key), line))
+        if not isinstance(row, Mapping):
+            errors.append(("", f"QCT-1: each row must be a mapping; got {type(row).__name__}"))
+            continue
+        try:
+            for key in row:
+                if not isinstance(key, str):
+                    raise ValueError(
+                        f"QCT-1: row keys must be strings; got {type(key).__name__}"
+                    )
+            extra = set(row) - set(names)
+            if extra:
+                raise ValueError(f"QCT-1: row has columns outside schema: {sorted(extra)}")
+            line = ",".join(_format_cell(by_name[n], row.get(n)) for n in names)
+            pk = _pk_tuple(row)
+            formatted.append((pk, line))
+        except ValueError as exc:
+            try:
+                pk_repr = repr(_pk_tuple(row))
+            except Exception:
+                pk_repr = ""
+            errors.append((pk_repr, str(exc)))
+    if errors:
+        errors.sort()
+        raise ValueError(errors[0][1])
 
     formatted.sort(key=lambda item: item[0])
     for previous, current in zip(formatted, formatted[1:], strict=False):

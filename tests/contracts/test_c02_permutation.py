@@ -134,3 +134,17 @@ def test_permutation_invariance_of_verification_and_profile(name):
     assert len(reports) == 1
     (outcome,) = outcomes
     assert (outcome is None) == (name == "valid")
+
+
+def test_hat3_a4_invalid_artifacts_message_is_permutation_invariant():
+    """Plusieurs artefacts invalides (dicts) : le message ne dépend pas de l'ordre."""
+    snap = synthetic_snapshot()
+    real = artifact()
+    bad_hash = {**real.model_dump(mode="json"), "content_sha256": "sha256:bad"}
+    bad_size = {**real.model_dump(mode="json"), "byte_size": -1, "artifact_id": "art-x"}
+    messages = {_outcome(snap, list(p)) for p in itertools.permutations([bad_hash, bad_size])}
+    assert len(messages) == 1
+    (message,) = messages
+    assert message is not None and "failed revalidation" in message
+    reports = {_report(snap, list(p)).model_dump_json() for p in itertools.permutations([bad_hash, bad_size])}
+    assert len(reports) == 1

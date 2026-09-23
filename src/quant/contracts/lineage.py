@@ -3,18 +3,19 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date, datetime
+from datetime import date
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from quant.contracts.canonical import (
+    CanonicalInstant,
     canonical_json_bytes,
     canonical_json_fingerprint,
     require_sha256_fingerprint,
 )
 from quant.contracts.credentials import require_no_credential_text, require_no_credentials
-from quant.contracts.immutable import FrozenMap, FrozenMapping
+from quant.contracts.immutable import C02Validated, FrozenMap, FrozenMapping
 from quant.contracts.knowledge import Knowable
 
 CONTRACT_ID = "C02"
@@ -23,22 +24,14 @@ CONTRACT_VERSION = "1.1"
 JsonScalar = str | int | bool | None
 
 
-def _require_utc_aware(value: datetime, field: str) -> datetime:
-    if value.tzinfo is None or value.utcoffset() is None:
-        raise ValueError(f"{field} must be timezone-aware (UTC)")
-    return value
-
-
 def _require_qcj(parameters: Mapping[str, Any], field: str) -> Mapping[str, Any]:
     canonical_json_bytes(parameters)
     require_no_credentials(parameters, field)
     return parameters
 
 
-class InstrumentIdentifiers(BaseModel):
+class InstrumentIdentifiers(C02Validated):
     """Identifiants d'instrument (DATA-REQ INS-05) — aucun identifiant n'est inventé."""
-
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     ticker: str
     venue: Knowable[str]
@@ -48,15 +41,13 @@ class InstrumentIdentifiers(BaseModel):
     vendor_permanent_id: Knowable[str]
 
 
-class LicenseRef(BaseModel):
+class LicenseRef(C02Validated):
     """
     Transport de la licence d'un artefact.
 
     `usage_basis_ref` référence la décision qui fonde l'usage (ex. l'ASSUMPTION A-1 de
     DR-003) ; C02 ne constitue pas une seconde source normative de cette hypothèse.
     """
-
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     license_id: str
     terms_ref: str
@@ -67,15 +58,13 @@ class LicenseRef(BaseModel):
     retention_condition: Knowable[str]
 
 
-class ProviderArtifact(BaseModel):
+class ProviderArtifact(C02Validated):
     """
     Artefact brut effectivement reçu d'une source externe, avant toute interprétation.
 
     Identité de contenu : `content_sha256` (octets exacts reçus). `acquired_at` est une
     métadonnée d'exécution et ne participe à aucune empreinte.
     """
-
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     contract_id: str = Field(default=CONTRACT_ID, frozen=True)
     contract_version: str = CONTRACT_VERSION
@@ -88,11 +77,11 @@ class ProviderArtifact(BaseModel):
     request_parameters: FrozenMapping[JsonScalar] = Field(default_factory=FrozenMap)
     requested_first_session: Knowable[date]
     requested_last_session: Knowable[date]
-    acquired_at: datetime
+    acquired_at: CanonicalInstant
     content_sha256: str
     media_type: str
     encoding: Knowable[str]
-    byte_size: int = Field(ge=0)
+    byte_size: int = Field(ge=0, strict=True)
     license: LicenseRef
     provenance_metadata: FrozenMapping[str] = Field(default_factory=FrozenMap)
 
@@ -105,11 +94,6 @@ class ProviderArtifact(BaseModel):
     @classmethod
     def _interface_without_credentials(cls, v: str) -> str:
         return require_no_credential_text(v, "provider_interface")
-
-    @field_validator("acquired_at")
-    @classmethod
-    def _acquired_at_aware(cls, v: datetime) -> datetime:
-        return _require_utc_aware(v, "acquired_at")
 
     @field_validator("request_parameters")
     @classmethod
@@ -136,10 +120,8 @@ class ProviderArtifact(BaseModel):
         )
 
 
-class ProviderArtifactRef(BaseModel):
+class ProviderArtifactRef(C02Validated):
     """Référence immuable d'un DatasetSnapshot vers un ProviderArtifact."""
-
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     artifact_id: str
     content_sha256: str
@@ -151,7 +133,7 @@ class ProviderArtifactRef(BaseModel):
         return require_sha256_fingerprint(v, "content_sha256")
 
 
-class TransformationRecord(BaseModel):
+class TransformationRecord(C02Validated):
     """
     Une étape déterministe entre artefact(s) brut(s) et table scientifique.
 
@@ -159,16 +141,14 @@ class TransformationRecord(BaseModel):
     paramètres canoniques et empreintes d'entrée — jamais `executed_at`.
     """
 
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
-
-    step_index: int = Field(ge=0)
+    step_index: int = Field(ge=0, strict=True)
     transformation_id: str
     transformation_type: str
     implementation_version: str
     parameters: FrozenMapping[JsonScalar | list[JsonScalar]] = Field(default_factory=FrozenMap)
     input_fingerprints: tuple[str, ...]
     output_fingerprint: str
-    executed_at: datetime
+    executed_at: CanonicalInstant
     observations_in: Knowable[int]
     observations_out: Knowable[int]
     observations_dropped: Knowable[int]
@@ -188,11 +168,6 @@ class TransformationRecord(BaseModel):
     def _output_format(cls, v: str) -> str:
         return require_sha256_fingerprint(v, "output_fingerprint")
 
-    @field_validator("executed_at")
-    @classmethod
-    def _executed_at_aware(cls, v: datetime) -> datetime:
-        return _require_utc_aware(v, "executed_at")
-
     @field_validator("parameters")
     @classmethod
     def _parameters_canonical(cls, v: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -202,8 +177,11 @@ class TransformationRecord(BaseModel):
     def _observation_arithmetic(self) -> TransformationRecord:
         counts = (self.observations_in, self.observations_out, self.observations_dropped)
         for count in counts:
-            if count.is_known and count.value < 0:
-                raise ValueError("observation counts must be >= 0")
+            if count.is_known:
+                if isinstance(count.value, bool):
+                    raise ValueError("observation counts must be integers, not booleans")
+                if count.value < 0:
+                    raise ValueError("observation counts must be >= 0")
         if all(c.is_known for c in counts):
             n_in, n_out, n_drop = (c.value for c in counts)
             if n_in - n_drop != n_out:
@@ -212,6 +190,7 @@ class TransformationRecord(BaseModel):
                 )
         if self.output_fingerprint in self.input_fingerprints:
             raise ValueError("output_fingerprint must differ from its inputs")
+        self.application_key
         return self
 
     def application_identity(self) -> dict[str, Any]:
@@ -256,7 +235,8 @@ def verify_lineage(
     - chaque entrée est un artefact source, une sortie d'étape antérieure ou une
       dépendance auxiliaire déclarée (ex. empreinte du calendrier) ;
     - chaque artefact source est consommé ;
-    - les sorties sont uniques ;
+    - les sorties sont uniques dans l'univers de la lignée (sources, auxiliaires
+      déjà disponibles, sorties antérieures) et distinctes de leurs entrées ;
     - la sortie de la dernière étape est l'empreinte de la table canonique.
     """
     if not records:

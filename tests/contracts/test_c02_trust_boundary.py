@@ -104,7 +104,7 @@ def test_forged_nested_models_are_revalidated(field, forged_factory, match):
 
 def test_forged_nested_objects_rejected_in_calendar_and_assessment():
     early = EarlyClose.model_construct(session=date(2019, 7, 3), close_local=time(13, 0, tzinfo=timezone.utc))
-    with pytest.raises(ValidationError, match="early close"):
+    with pytest.raises(ValidationError, match="naive local time|early close"):
         MarketCalendarSnapshot(**{**dict(CAL), "early_closes": (early,)})
     good = assessment(synthetic_snapshot())
     forged_check = CheckResult.model_construct(check_id="Q-01", outcome="MAYBE")
@@ -147,11 +147,12 @@ def test_profile_rejects_forged_snapshot():
 
 def test_naive_aware_mix_raises_validation_error_not_type_error():
     kwargs = snapshot_kwargs()
-    with pytest.raises(ValidationError, match="pairwise comparable"):
+    with pytest.raises(ValidationError, match="timezone-aware"):
         DatasetSnapshot(**{**kwargs, "as_of": datetime(2020, 8, 1)})
-    prov = Provenance(**{**dict(kwargs["provenance"]), "time_range_start": datetime(2010, 1, 4)})
-    with pytest.raises(ValidationError, match="pairwise comparable"):
-        DatasetSnapshot(**{**kwargs, "provenance": prov})
+    with pytest.raises(ValidationError, match="timezone-aware"):
+        DatasetSnapshot(
+            **{**kwargs, "provenance": {**dict(kwargs["provenance"]), "time_range_start": datetime(2010, 1, 4)}}
+        )
 
 
 # ------------------------------------------------------------ frontière de C02-INV-14

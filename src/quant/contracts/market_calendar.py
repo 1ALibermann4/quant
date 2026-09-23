@@ -7,9 +7,11 @@ from datetime import date, datetime, time
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from quant.contracts.canonical import (
+    CanonicalInstant,
+    CanonicalLocalTime,
     QCC_1,
     canonical_calendar_bytes,
     canonical_json_fingerprint,
@@ -17,17 +19,16 @@ from quant.contracts.canonical import (
     require_sha256_fingerprint,
     sha256_fingerprint,
 )
+from quant.contracts.immutable import C02Validated
 from quant.contracts.knowledge import Knowable
 
 CONTRACT_ID = "C02"
 CONTRACT_VERSION = "1.1"
 
 
-class EarlyClose(BaseModel):
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
-
+class EarlyClose(C02Validated):
     session: date
-    close_local: time
+    close_local: CanonicalLocalTime
 
 
 def _calendar_content_identity(
@@ -52,7 +53,7 @@ def _calendar_content_identity(
     }
 
 
-class MarketCalendarSnapshot(BaseModel):
+class MarketCalendarSnapshot(C02Validated):
     """
     Liste matérialisée des séances utilisées pour les calculs en rangs.
 
@@ -62,8 +63,6 @@ class MarketCalendarSnapshot(BaseModel):
     produisant exactement le même contenu ont la même empreinte.
     """
 
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
-
     contract_id: str = Field(default=CONTRACT_ID, frozen=True)
     contract_version: str = CONTRACT_VERSION
     calendar_snapshot_id: str
@@ -71,13 +70,13 @@ class MarketCalendarSnapshot(BaseModel):
     timezone: str
     source: Knowable[str]
     source_version: Knowable[str]
-    generated_at: datetime
-    regular_close_local: time
+    generated_at: CanonicalInstant
+    regular_close_local: CanonicalLocalTime
     early_closes: tuple[EarlyClose, ...] = ()
     sessions: tuple[date, ...]
     first_session: date
     last_session: date
-    session_count: int
+    session_count: int = Field(strict=True)
     canonical_representation: str = QCC_1
     sessions_fingerprint: str
     content_fingerprint: str
@@ -92,19 +91,10 @@ class MarketCalendarSnapshot(BaseModel):
     def _fingerprint_format(cls, v: str) -> str:
         return require_sha256_fingerprint(v, "calendar fingerprint")
 
-    @field_validator("generated_at")
-    @classmethod
-    def _generated_at_aware(cls, v: datetime) -> datetime:
-        if v.tzinfo is None or v.utcoffset() is None:
-            raise ValueError("generated_at must be timezone-aware (UTC)")
-        return v
-
     @model_validator(mode="after")
     def _consistency(self) -> MarketCalendarSnapshot:
         if self.canonical_representation != QCC_1:
             raise ValueError(f"unsupported calendar representation {self.canonical_representation}")
-        if self.regular_close_local.tzinfo is not None:
-            raise ValueError("regular_close_local must be a naive local time")
         raw = canonical_calendar_bytes(self.sessions)
         if self.first_session != self.sessions[0] or self.last_session != self.sessions[-1]:
             raise ValueError("first_session/last_session inconsistent with sessions")
@@ -208,10 +198,8 @@ def build_market_calendar(
     )
 
 
-class MarketCalendarRef(BaseModel):
+class MarketCalendarRef(C02Validated):
     """Référence immuable d'un DatasetSnapshot vers un MarketCalendarSnapshot."""
-
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     calendar_snapshot_id: str
     content_fingerprint: str

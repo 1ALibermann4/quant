@@ -46,6 +46,26 @@ def test_frozen():
         k.status = KnowledgeStatus.UNKNOWN
 
 
+def test_known_list_and_mapping_are_deep_frozen():
+    k = Knowable.known(["a", {"b": ["c"]}])
+    assert k.value == ("a", {"b": ("c",)})
+    with pytest.raises((AttributeError, TypeError)):
+        k.value.append("X")  # type: ignore[union-attr]
+    inner = k.value[1]
+    with pytest.raises((AttributeError, TypeError)):
+        inner["b"] = "mutated"  # type: ignore[index]
+
+
+def test_known_value_inside_model_is_frozen():
+    class Holder(BaseModel):
+        tags: Knowable[list[str]]
+
+    holder = Holder(tags=Knowable.known(["x"]))
+    assert holder.tags.value == ("x",)
+    with pytest.raises((AttributeError, TypeError)):
+        holder.tags.value.append("y")  # type: ignore[union-attr]
+
+
 def test_serialization_roundtrip():
     k = Knowable[str].unknown(note="n")
     dumped = k.model_dump(mode="json")

@@ -153,6 +153,28 @@ def test_qcc_mixed_date_and_datetime_raise_value_error_not_type_error():
         canonical_calendar_bytes([date(2020, 1, 2), datetime(2020, 1, 3)])
 
 
+def test_hat3_m2_malformed_table_inputs_raise_value_error():
+    cols = [{"name": "d", "type": "date"}]
+    with pytest.raises(ValueError, match="missing 'name'"):
+        canonical_table_bytes([{"type": "date"}], ["d"], [])
+    with pytest.raises(ValueError, match="must be strings"):
+        canonical_table_bytes(cols, ["d"], [{1: date(2020, 1, 1), "z": 2, "d": date(2020, 1, 1)}])
+    with pytest.raises(ValueError, match="must be a mapping"):
+        canonical_table_bytes(cols, ["d"], [5])  # type: ignore[list-item]
+
+
+def test_hat3_m7_lone_surrogate_rejected_in_qcj():
+    with pytest.raises(ValueError, match="UTF-8"):
+        canonical_json_bytes({"id": "t\ud800"})
+    with pytest.raises(ValueError, match="UTF-8"):
+        canonical_json_bytes({"a\ud800": "x"})
+
+
+def test_qcj_non_bmp_and_valid_unicode_accepted():
+    assert "𝄞" in canonical_json_bytes({"n": "𝄞"}).decode()
+    assert "é" in canonical_json_bytes({"b": "é"}).decode()
+
+
 def test_qcj_sub_second_local_time_rejected_to_avoid_identity_collision():
     assert canonical_json_bytes({"t": time(16, 0)}) == b'{"t":"16:00:00"}'
     with pytest.raises(ValueError, match="sub-second"):

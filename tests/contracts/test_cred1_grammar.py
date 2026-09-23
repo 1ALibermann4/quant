@@ -132,6 +132,8 @@ FALSE_POSITIVES = [
     "http://host.example?x=a:b@c",
     "mailto:ops@example.org",
     "take literal YYYY-MM-DD date part; no timezone conversion",
+    "Basic Materials=12%",
+    "the basic settings=5",
 ]
 
 
@@ -154,3 +156,55 @@ def test_declared_v2_limit_not_detected(value):
 def test_declared_false_positives_rejected(value):
     """Faux positifs déclarés (CRED-1.limits) : la grammaire privilégie la détection."""
     assert credential_indicator(value) is not None
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "basic token abc123def456",
+        "Bearer Bearer eyJhbGciOiJIUzI1NiJ9",
+        "digest Bearer abcdefgh12",
+        "token token a1b2c3d4e5f6",
+    ],
+)
+def test_hat3_a5_v2_overlapping_scheme_words_detected(value):
+    assert credential_indicator(value) == "V2 authentication scheme value"
+    with pytest.raises(ValidationError, match="credentials"):
+        artifact(provenance_metadata={"note": value})
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "ftp://john@corp.example:hunter2@ftp.host/",
+        "https://user@corp:S3CRET@host/x",
+        "https://user%40corp:p%40ss@host/x",
+    ],
+)
+def test_hat3_a6_v4_at_in_username_detected(value):
+    assert credential_indicator(value) == "V4 credentials in URL"
+    with pytest.raises(ValidationError, match="credentials"):
+        artifact(provider_interface=value)
+
+
+@pytest.mark.parametrize(
+    "key",
+    ["https://u:S3CRET@host", "Basic dXNlcjpwYXNzd29yZA==", "?key=abc123", "hdr=Digest abcdefgh12"],
+)
+def test_hat3_a7_v_rules_apply_to_keys(key):
+    with pytest.raises(ValidationError, match="credentials"):
+        artifact(provenance_metadata={key: "x"})
+    with pytest.raises(ValidationError, match="credentials"):
+        artifact(request_parameters={key: "x"})
+
+
+@pytest.mark.parametrize("value", ["the basic settings=5", "Basic Materials=12%"])
+def test_hat3_m3_padding_equals_does_not_defeat_natural_word_filter(value):
+    assert credential_indicator(value) is None
+    artifact(provenance_metadata={"h": value})
+
+
+@pytest.mark.parametrize("key", ["privatekey", "private-key", "private_key", "accesskey", "access-key"])
+def test_hat3_m4_k1_hyphen_and_glued_variants_rejected(key):
+    with pytest.raises(ValidationError, match="K1"):
+        artifact(request_parameters={key: "x"})

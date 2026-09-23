@@ -86,6 +86,18 @@ def test_outputs_unique_and_distinct_from_inputs():
         verify_lineage(dup, source_hashes=(RAW,), terminal_fingerprint=MID)
 
 
+def test_hat3_m5_output_equal_to_unused_auxiliary_is_rejected():
+    """INV-10 : unicité dans l'univers (sources + auxiliaires + sorties), pas seulement vs entrées."""
+    chain = (record(0, [RAW], CAL),)
+    with pytest.raises(ValueError, match="not unique"):
+        verify_lineage(chain, source_hashes=(RAW,), terminal_fingerprint=CAL, auxiliary_hashes=(CAL,))
+
+
+def test_hat3_m7_surrogate_in_transformation_id_rejected_at_construction():
+    with pytest.raises(ValidationError, match="UTF-8"):
+        record(0, [RAW], OUT, transformation_id="t\ud800")
+
+
 def test_empty_lineage_rejected():
     with pytest.raises(ValueError, match="at least one"):
         verify_lineage((), source_hashes=(RAW,), terminal_fingerprint=OUT)

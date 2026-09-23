@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable, Mapping
-from datetime import date, datetime
+from datetime import date
 from enum import Enum
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import Field, ValidationError, field_validator, model_validator
 
 from quant.contracts.canonical import (
+    CanonicalInstant,
     QCT_1,
     canonical_table_bytes,
     raw_artifact_set_fingerprint,
@@ -18,7 +19,7 @@ from quant.contracts.canonical import (
     require_sha256_fingerprint,
     sha256_fingerprint,
 )
-from quant.contracts.immutable import FrozenList
+from quant.contracts.immutable import C02Validated, FrozenList
 from quant.contracts.knowledge import Knowable
 from quant.contracts.lineage import (
     InstrumentIdentifiers,
@@ -53,31 +54,26 @@ V1_1_FIELDS = (
 _COLUMN_NAME = re.compile(r"^[a-z][a-z0-9_]*$")
 
 
-class AdjustmentRecord(BaseModel):
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
-
+class AdjustmentRecord(C02Validated):
     type: str
     description: str
-    applied_at: datetime
+    applied_at: CanonicalInstant
 
 
-class Provenance(BaseModel):
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
-
+class Provenance(C02Validated):
     source_label: str
     universe_description: str
-    time_range_start: datetime
-    time_range_end: datetime
-    survivorship_bias_acknowledged: bool
+    time_range_start: CanonicalInstant
+    time_range_end: CanonicalInstant
+    survivorship_bias_acknowledged: bool = Field(strict=True)
 
 
-class ColumnSpec(BaseModel):
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
+class ColumnSpec(C02Validated):
 
     name: str
     type: Literal["date", "datetime", "decimal", "integer", "string"]
-    scale: int | None = None
-    nullable: bool = False
+    scale: int | None = Field(default=None, strict=True)
+    nullable: bool = Field(default=False, strict=True)
 
     @model_validator(mode="after")
     def _scale_iff_decimal(self) -> ColumnSpec:
@@ -91,10 +87,8 @@ class ColumnSpec(BaseModel):
         return self
 
 
-class TableSchema(BaseModel):
+class TableSchema(C02Validated):
     """Schéma versionné de la table canonique ; porte la représentation QCT-1."""
-
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     schema_id: str
     schema_version: str
@@ -131,9 +125,7 @@ class TableSchema(BaseModel):
         )
 
 
-class SessionRange(BaseModel):
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
-
+class SessionRange(C02Validated):
     first_session: date
     last_session: date
 
@@ -150,10 +142,8 @@ class SessionRange(BaseModel):
         )
 
 
-class TemporalConvention(BaseModel):
+class TemporalConvention(C02Validated):
     """Fuseaux source/canonique et règle de dérivation de `session_date` (TS-01…TS-04)."""
-
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     source_timezone: Knowable[str]
     canonical_timezone: str
@@ -165,11 +155,9 @@ class TemporalConvention(BaseModel):
         return require_iana_timezone(v)
 
 
-class ObservationCounts(BaseModel):
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
-
-    raw_observations: int = Field(ge=0)
-    canonical_observations: int = Field(ge=0)
+class ObservationCounts(C02Validated):
+    raw_observations: int = Field(ge=0, strict=True)
+    canonical_observations: int = Field(ge=0, strict=True)
     expected_sessions: Knowable[int]
     missing_sessions: Knowable[int]
     invalidated_sessions: Knowable[int]
@@ -179,8 +167,11 @@ class ObservationCounts(BaseModel):
         if self.canonical_observations > self.raw_observations:
             raise ValueError("canonical_observations must be <= raw_observations")
         for count in (self.expected_sessions, self.missing_sessions, self.invalidated_sessions):
-            if count.is_known and count.value < 0:
-                raise ValueError("session counts must be >= 0")
+            if count.is_known:
+                if isinstance(count.value, bool):
+                    raise ValueError("session counts must be integers, not booleans")
+                if count.value < 0:
+                    raise ValueError("session counts must be >= 0")
         if self.expected_sessions.is_known and self.missing_sessions.is_known:
             expected = self.expected_sessions.value
             if self.canonical_observations + self.missing_sessions.value != expected:
@@ -202,10 +193,8 @@ class AdjustmentReferenceDate(str, Enum):
     OTHER = "OTHER"
 
 
-class AdjustmentMethodology(BaseModel):
+class AdjustmentMethodology(C02Validated):
     """Méthodologie d'ajustement, propriété du snapshot (DATA-REQ §3.3, §5)."""
-
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     events_covered: Knowable[tuple[str, ...]]
     method: Knowable[AdjustmentMethod]
@@ -217,22 +206,21 @@ class AdjustmentMethodology(BaseModel):
     currency: Knowable[str]
 
 
-class DatasetSnapshot(BaseModel):
+class DatasetSnapshot(C02Validated):
     """
     Objet scientifique immuable consommé par les expériences.
 
     `fingerprint` (v1.0, conservé) : empreinte du contenu. Lorsque `table_schema` est
     présent, c'est l'empreinte SHA-256 de la représentation QCT-1 de la table canonique.
+    Tout instant validé est stocké en UTC canonique.
     """
-
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     contract_id: str = Field(default=CONTRACT_ID, frozen=True)
     contract_version: str = Field(default=CONTRACT_VERSION)
     snapshot_id: str
     fingerprint: str
-    as_of: datetime
-    availability_cutoff: datetime
+    as_of: CanonicalInstant
+    availability_cutoff: CanonicalInstant
     provenance: Provenance
     instruments: FrozenList[str] = ()
     adjustments: FrozenList[AdjustmentRecord] = ()
@@ -346,7 +334,26 @@ class DatasetSnapshot(BaseModel):
         résultat (succès ou message d'erreur) est invariant par permutation de la collection.
         Chaque artefact fourni est revalidé (frontière validante).
         """
-        artifacts = [ProviderArtifact.model_validate(a) for a in artifacts]
+        validated: list[ProviderArtifact] = []
+        revalidation_errors: list[tuple[str, str]] = []
+        for raw in artifacts:
+            try:
+                validated.append(ProviderArtifact.model_validate(raw))
+            except (ValidationError, ValueError) as exc:
+                hint = ""
+                if isinstance(raw, ProviderArtifact):
+                    hint = raw.artifact_id
+                elif isinstance(raw, Mapping):
+                    ident = raw.get("artifact_id")
+                    hint = "" if ident is None else str(ident)
+                revalidation_errors.append((hint, str(exc)))
+        if revalidation_errors:
+            revalidation_errors.sort()
+            details = "; ".join(
+                f"{ident or '?'}: {message}" for ident, message in revalidation_errors
+            )
+            raise ValueError(f"provided artifacts failed revalidation: {details}")
+        artifacts = validated
         ids = [a.artifact_id for a in artifacts]
         duplicates = sorted({i for i in ids if ids.count(i) > 1})
         if duplicates:

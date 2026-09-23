@@ -162,7 +162,8 @@ PINNED = {
     ],
     "calendar_content": "sha256:1c56441f70a341e3fb5b53f731911eb5e8e413814388ac94432167ca7de628b9",
     "json_sha256": {
-        "snapshot_v11": "0540fcd5c1476dd22a683ba98729d5655bc079a1f08c03e4c172dcdd7b74f902",
+        # CA-03 / BC-12 : instants NY de close_instant désormais stockés et sérialisés en UTC.
+        "snapshot_v11": "c33dae5bcddbb35371bf641e916b5d2fd9d7e0c76b310a7f8349b6c530327ef0",
         "snapshot_v10": "c8125a1c5f0490a1753949be6e4e789b9ea4c43039b6b1a969077c8f5955f8c0",
         "artifact": "f5771b88659f5f702581da2d454e68928612a61f504847e46808dde26e23867d",
         "calendar": "edaec204f7be127bdcdb3359356c6db934065ebc6d03c6fa5b4dbdee06812388",
@@ -213,6 +214,17 @@ def test_deepcopy_preserves_equality(name):
 def test_v10_object_pickle_roundtrip():
     snap = DatasetSnapshot.model_validate(V10_PAYLOAD)
     assert pickle.loads(pickle.dumps(snap)) == snap
+
+
+def test_hat3_m8_fields_set_is_outside_scientific_state():
+    """INV-05 : model_fields_set est une métadonnée Pydantic, pas l'état C02."""
+    snap = synthetic_snapshot()
+    before_fp = (snap.fingerprint, snap.raw_fingerprint, snap.lineage_fingerprint)
+    before_json = snap.model_dump_json()
+    snap.model_fields_set.add("storage_hint")
+    assert (snap.fingerprint, snap.raw_fingerprint, snap.lineage_fingerprint) == before_fp
+    assert snap.model_dump_json() == before_json
+    assert snap.storage_hint is None
 
 
 def test_frozen_map_equality_hash_and_pickle():

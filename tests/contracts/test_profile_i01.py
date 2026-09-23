@@ -436,3 +436,32 @@ def test_assessment_below_technical_requires_fail_whatever_the_use():
 
 def test_confirmatory_fixture_ends_at_data_last():
     assert synthetic_snapshot().canonical_range.last_session == DATA_LAST
+
+
+def test_hat3_m1_depth_tier_near_year_9999_does_not_overflow():
+    """Seuil first+15 ans hors domaine → durée non satisfaite, pas OverflowError."""
+    assert i01_depth_tier(4000, date(9990, 1, 1), date(9999, 12, 31)) == "TECHNICAL"
+    assert i01_depth_tier(100, date(9990, 1, 1), date(9999, 12, 31)) == "BELOW_TECHNICAL"
+
+
+def test_hat3_m1_profile_on_last_gregorian_day_reports_instead_of_raising():
+    from datetime import time
+
+    from quant.contracts.market_calendar import build_market_calendar
+
+    cal = build_market_calendar(
+        calendar_snapshot_id="cal-edge",
+        market="SYNTHETIC",
+        timezone="America/New_York",
+        source=Knowable.known("SYNTH"),
+        source_version=Knowable.known("0"),
+        generated_at=datetime(2020, 1, 1, tzinfo=UTC),
+        regular_close_local=time(16, 0),
+        sessions=(date(9999, 12, 30), date(9999, 12, 31)),
+    )
+    assert cal.close_instant(date(9999, 12, 31))
+    report = validate_i01_snapshot(
+        synthetic_snapshot(), calendar=cal, artifacts=[artifact()]
+    )
+    assert isinstance(report.errors, tuple)
+    assert not report.data_pass_eligible

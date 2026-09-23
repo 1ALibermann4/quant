@@ -5,7 +5,9 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, Generic, TypeVar
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import model_validator
+
+from quant.contracts.immutable import C02Validated, deep_freeze
 
 T = TypeVar("T")
 
@@ -16,15 +18,14 @@ class KnowledgeStatus(str, Enum):
     NOT_APPLICABLE = "NOT_APPLICABLE"
 
 
-class Knowable(BaseModel, Generic[T]):
+class Knowable(C02Validated, Generic[T]):
     """
     Métadonnée dont la connaissance peut être partielle.
 
     Invariant C02-INV-K01 : `value` présent ⇔ `status == KNOWN`.
     Une information absente n'est jamais représentée par une valeur inventée.
+    La valeur KNOWN est gelée en profondeur (aucune structure mutable atteignable).
     """
-
-    model_config = ConfigDict(frozen=True, revalidate_instances="always")
 
     status: KnowledgeStatus
     value: T | None = None
@@ -36,6 +37,10 @@ class Knowable(BaseModel, Generic[T]):
             raise ValueError("Knowable: status KNOWN requires a value")
         if self.status is not KnowledgeStatus.KNOWN and self.value is not None:
             raise ValueError(f"Knowable: status {self.status.value} forbids a value")
+        if self.value is not None:
+            frozen = deep_freeze(self.value)
+            if frozen is not self.value:
+                object.__setattr__(self, "value", frozen)
         return self
 
     @classmethod
