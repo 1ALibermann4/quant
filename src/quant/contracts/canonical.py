@@ -19,7 +19,7 @@ import math
 import re
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import date, datetime, time, timezone
-from decimal import ROUND_HALF_EVEN, Decimal, InvalidOperation
+from decimal import ROUND_HALF_EVEN, Context, Decimal, DivisionByZero, InvalidOperation, Overflow
 from enum import Enum
 from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -56,9 +56,26 @@ def require_iana_timezone(value: str) -> str:
 
 
 def format_utc_datetime(value: datetime) -> str:
+    """
+    Instant UTC ``YYYY-MM-DDTHH:MM:SS.ffffffZ`` sur tout le domaine 0001–9999.
+
+    Formatage explicite (et non ``strftime``, dont ``%Y`` ne complète pas les années < 1000
+    sur toutes les plateformes). Un instant dont la conversion UTC sort de 0001–9999 est rejeté.
+    """
     if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError("naive datetime is not canonicalizable (timezone required)")
-    return value.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+    try:
+        u = value.astimezone(timezone.utc)
+    except OverflowError as exc:
+        raise ValueError("instant outside the UTC range 0001-01-01..9999-12-31") from exc
+    return (
+        f"{u.year:04d}-{u.month:02d}-{u.day:02d}"
+        f"T{u.hour:02d}:{u.minute:02d}:{u.second:02d}.{u.microsecond:06d}Z"
+    )
+
+
+def format_date(value: date) -> str:
+    return f"{value.year:04d}-{value.month:02d}-{value.day:02d}"
 
 
 # --------------------------------------------------------------------------- QCJ-1
@@ -81,11 +98,13 @@ def _qcj_normalize(value: Any, path: str) -> Any:
     if isinstance(value, datetime):
         return format_utc_datetime(value)
     if isinstance(value, date):
-        return value.isoformat()
+        return format_date(value)
     if isinstance(value, time):
         if value.tzinfo is not None:
             raise ValueError(f"QCJ-1: time with tzinfo is forbidden at {path}")
-        return value.strftime("%H:%M:%S")
+        if value.microsecond:
+            raise ValueError(f"QCJ-1: sub-second local time is not representable at {path}")
+        return f"{value.hour:02d}:{value.minute:02d}:{value.second:02d}"
     if isinstance(value, Mapping):
         out: dict[str, Any] = {}
         for key, item in value.items():
@@ -137,8 +156,24 @@ def raw_artifact_set_fingerprint(content_hashes: Iterable[str]) -> str:
 # --------------------------------------------------------------------------- QCT-1
 
 
+QCT_DECIMAL_PRECISION = 28
+_QCT_DECIMAL_CONTEXT = Context(
+    prec=QCT_DECIMAL_PRECISION,
+    rounding=ROUND_HALF_EVEN,
+    Emin=-999999,
+    Emax=999999,
+    traps=[InvalidOperation, DivisionByZero, Overflow],
+)
+
+
 def format_decimal(value: Any, scale: int) -> str:
-    """Décimal à échelle fixe, arrondi au pair le plus proche sur la valeur exacte."""
+    """
+    Décimal à échelle fixe, arrondi au pair le plus proche sur la valeur exacte.
+
+    Domaine : résultat d'au plus ``QCT_DECIMAL_PRECISION`` chiffres significatifs (partie
+    entière + ``scale``). Le contexte décimal est explicite : le contexte global du processus
+    n'influence ni le résultat ni le domaine. Hors domaine → ``ValueError``.
+    """
     if isinstance(value, bool):
         raise ValueError("QCT-1: boolean is not a decimal")
     if isinstance(value, float):
@@ -156,9 +191,17 @@ def format_decimal(value: Any, scale: int) -> str:
         raise ValueError(f"QCT-1: unsupported decimal type {type(value).__name__}")
     if not exact.is_finite():
         raise ValueError("QCT-1: non-finite decimal value")
-    quantized = exact.quantize(Decimal(1).scaleb(-scale), rounding=ROUND_HALF_EVEN)
+    if isinstance(scale, bool) or not isinstance(scale, int) or scale < 0:
+        raise ValueError(f"QCT-1: decimal scale must be a non-negative integer; got {scale!r}")
+    try:
+        quantized = exact.quantize(Decimal((0, (1,), -scale)), context=_QCT_DECIMAL_CONTEXT)
+    except InvalidOperation as exc:
+        raise ValueError(
+            f"QCT-1: decimal {value!r} exceeds {QCT_DECIMAL_PRECISION} significant digits "
+            f"at scale {scale}"
+        ) from exc
     if quantized.is_zero():
-        quantized = abs(quantized)
+        quantized = quantized.copy_abs()
     return f"{quantized:f}"
 
 
@@ -172,7 +215,7 @@ def _format_cell(column: Mapping[str, Any], value: Any) -> str:
     if ctype == "date":
         if isinstance(value, datetime) or not isinstance(value, date):
             raise ValueError(f"QCT-1: column {name!r} expects a date")
-        return value.isoformat()
+        return format_date(value)
     if ctype == "datetime":
         if not isinstance(value, datetime):
             raise ValueError(f"QCT-1: column {name!r} expects a datetime")
@@ -203,6 +246,8 @@ def canonical_table_bytes(
     après chaque ligne (y compris la dernière), UTF-8 sans BOM.
     """
     names = [c["name"] for c in columns]
+    if len(set(names)) != len(names):
+        raise ValueError("QCT-1: duplicate column names in schema")
     by_name = {c["name"]: c for c in columns}
     for key in primary_key:
         if key not in by_name:
@@ -212,24 +257,22 @@ def canonical_table_bytes(
         if by_name[key].get("nullable", False):
             raise ValueError(f"QCT-1: primary key column {key!r} must not be nullable")
 
-    materialized = []
+    # Chaque cellule est validée (types, nullabilité) avant le tri : le tri ne compare
+    # alors que des valeurs typées homogènes et ne peut lever d'exception interne.
+    formatted: list[tuple[tuple[Any, ...], str]] = []
     for row in rows:
         extra = set(row) - set(names)
         if extra:
             raise ValueError(f"QCT-1: row has columns outside schema: {sorted(extra)}")
-        materialized.append(row)
+        line = ",".join(_format_cell(by_name[n], row.get(n)) for n in names)
+        formatted.append((tuple(row[k] for k in primary_key), line))
 
-    def sort_key(row: Mapping[str, Any]) -> tuple[Any, ...]:
-        return tuple(row[k] for k in primary_key)
+    formatted.sort(key=lambda item: item[0])
+    for previous, current in zip(formatted, formatted[1:], strict=False):
+        if previous[0] == current[0]:
+            raise ValueError(f"QCT-1: duplicate primary key {current[0]!r}")
 
-    materialized.sort(key=sort_key)
-    for previous, current in zip(materialized, materialized[1:], strict=False):
-        if sort_key(previous) == sort_key(current):
-            raise ValueError(f"QCT-1: duplicate primary key {sort_key(current)!r}")
-
-    lines = [",".join(names)]
-    for row in materialized:
-        lines.append(",".join(_format_cell(by_name[n], row.get(n)) for n in names))
+    lines = [",".join(names), *(line for _, line in formatted)]
     return ("\n".join(lines) + "\n").encode("utf-8")
 
 
@@ -240,10 +283,10 @@ def canonical_calendar_bytes(sessions: Sequence[date]) -> bytes:
     """QCC-1 : une date ISO ``YYYY-MM-DD`` par ligne, strictement croissante, ``\\n`` final."""
     if not sessions:
         raise ValueError("QCC-1: session list must not be empty")
-    for previous, current in zip(sessions, sessions[1:], strict=False):
-        if not previous < current:
-            raise ValueError("QCC-1: sessions must be strictly increasing")
     for session in sessions:
         if isinstance(session, datetime) or not isinstance(session, date):
             raise ValueError("QCC-1: sessions must be dates")
-    return "".join(f"{s.isoformat()}\n" for s in sessions).encode("utf-8")
+    for previous, current in zip(sessions, sessions[1:], strict=False):
+        if not previous < current:
+            raise ValueError("QCC-1: sessions must be strictly increasing")
+    return "".join(f"{format_date(s)}\n" for s in sessions).encode("utf-8")
