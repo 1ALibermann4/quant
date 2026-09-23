@@ -5,10 +5,20 @@ contract:
   contract_version: "1.1"
   supersedes: "1.0"
   compatibility: backward-compatible (additive) — see section `compatibility`
-  status: validated
+  status: "corrected (CA-01) — HAT #2 pending"
   protocol: QDP-v0.1
   decision_record: docs/adr/DR-004-c02-data-provenance-architecture.md
   resolves: [DATA-GAP-01, DATA-GAP-02]  # research/I01/DATA-REQ-I01.md §7.3
+
+revisions:
+  - {revision: initial, commit: bd088e2, validation: docs/validation/C02-v1.1-validation-report.md}
+  - revision: CA-01
+    trigger: "docs/validation/C02-v1.1-HAT.md (HAT #1 FAIL, 3c684b7)"
+    changes:
+      - C02-INV-05 précisé (immuabilité transitive, périmètre de la garantie)
+      - C02-INV-18 reformulé sur la règle CRED-1 (garantie réelle et limites)
+      - compatibility.behaviour_changes déclarés (BC-01…BC-07)
+    report: docs/validation/C02-v1.1-CA-01-report.md
 
 description: >
   Provenance vérifiable des données scientifiques : de l'artefact brut effectivement reçu
@@ -61,16 +71,16 @@ canonical_representations:
       - date → "YYYY-MM-DD"
       - instant → UTC "YYYY-MM-DDTHH:MM:SS.ffffffZ" (6 décimales toujours) ; instant naïf interdit
       - heure locale → "HH:MM:SS" ; heure avec fuseau interdite
-      - listes : ordre conservé (l'ordre fait partie du contenu)
+      - "listes : ordre conservé (l'ordre fait partie du contenu)"
   QCT-1:
     usage: table scientifique canonique d'un DatasetSnapshot (fingerprint)
     rules:
       - encodage UTF-8 sans BOM
-      - première ligne = en-tête : noms de colonnes dans l'ordre déclaré par TableSchema.columns
+      - "première ligne = en-tête : noms de colonnes dans l'ordre déclaré par TableSchema.columns"
       - une ligne par enregistrement ; séparateur de champ "," ; aucun guillemet
       - fin de ligne "\n" (LF) après chaque ligne, y compris la dernière ; pas de CR
-      - ordre des lignes : croissant selon TableSchema.primary_key, comparaison sur valeurs typées
-        (date/instant chronologique, entier numérique, chaîne par point de code) ; clés dupliquées interdites
+      - "ordre des lignes : croissant selon TableSchema.primary_key, comparaison sur valeurs typées
+        (date/instant chronologique, entier numérique, chaîne par point de code) ; clés dupliquées interdites"
       - date → "YYYY-MM-DD" ; instant → format QCJ-1
       - decimal → notation positionnelle à échelle fixe TableSchema.columns[].scale ; séparateur ".",
         sans exposant, sans séparateur de milliers, "-" pour les négatifs, jamais "+" ;
@@ -85,7 +95,29 @@ canonical_representations:
     usage: liste des séances d'un MarketCalendarSnapshot (sessions_fingerprint)
     rules:
       - une date "YYYY-MM-DD" par ligne, strictement croissante, sans doublon
-      - "\n" après chaque date, y compris la dernière ; UTF-8 ; liste vide interdite
+      - '"\n" après chaque date, y compris la dernière ; UTF-8 ; liste vide interdite'
+
+credential_rules:
+  CRED-1:
+    usage: détection d'indicateurs structurels de secret (C02-INV-18)
+    scope:
+      - ProviderArtifact.request_parameters — clés et valeurs, récursivement
+      - ProviderArtifact.provenance_metadata — clés et valeurs
+      - ProviderArtifact.provider_interface — valeur
+      - TransformationRecord.parameters — clés et valeurs, récursivement (éléments de liste compris)
+    indicators:
+      K1: "nom de clé contenant token, api_key/apikey/api-key, secret, password/passwd, authorization,
+           bearer, credential, private_key, access_key (insensible à la casse)"
+      V1: "en-tête d'autorisation dans une valeur : « Authorization: … », « Proxy-Authorization=… »"
+      V2: "valeur entière de la forme « <bearer|basic|digest|token> <identifiant> »"
+      V3: "paramètre d'URL ou de requête (après ? & ; #) dont le nom satisfait K1 ou vaut key, auth, sig, signature"
+      V4: "identifiants dans une URL : « scheme://utilisateur:motdepasse@hôte »"
+    limits: >
+      CRED-1 n'est PAS un détecteur universel de secrets. Ne sont pas détectés : un secret brut sans
+      marqueur structurel (ex. jeton sous une clé anodine), un secret encodé, fragmenté ou obfusqué,
+      un secret placé dans un champ hors périmètre. K1 privilégie le faux positif (une clé est
+      renommable) ; V1–V4 exigent une forme structurelle pour éviter les faux positifs sur du texte.
+      L'obligation première reste de ne jamais transmettre de secret à ces champs.
 
 test_vectors:
   # Deux implémentations conformes DOIVENT reproduire ces octets et ces empreintes.
@@ -172,8 +204,7 @@ objects:
         - request_parameters            # objet QCJ-1 de scalaires
         - provenance_metadata           # objet chaîne → chaîne (en-têtes, marqueurs de révision)
     rules:
-      - aucun secret (jeton, clé d'API, mot de passe, en-tête Authorization) dans request_parameters
-        ni provenance_metadata
+      - aucun indicateur CRED-1 dans request_parameters, provenance_metadata ni provider_interface
       - requested_first_session <= requested_last_session si les deux sont connus
 
   InstrumentIdentifiers:
@@ -296,7 +327,7 @@ objects:
       snapshot violerait son immuabilité (REV-D-02).
     fields: [assessment_id, snapshot_ref, evaluated_against, evaluated_at, intended_use,
              coverage_tier, checks, verdict]
-    checks_item: {check_id, outcome: [PASS, WARN, INCONCLUSIVE, REJECT], measurement?, detail?}
+    checks_item: "{check_id, outcome: [PASS, WARN, INCONCLUSIVE, REJECT], measurement?, detail?}"
     verdict: [PASS, FAIL, INCONCLUSIVE]
 
 # =====================================================================================
@@ -317,7 +348,12 @@ invariants:
   C02-INV-02: availability_cutoff bounds all downstream MarketState.as_of values (C03)
   C02-INV-03: fingerprint uniqueness enforced within experiment registry
   C02-INV-04: provenance.survivorship_bias_acknowledged is an explicit boolean
-  C02-INV-05: immuabilité logique — objets C02 gelés ; toute modification = nouvel objet / nouveau snapshot_id
+  C02-INV-05: >-
+              immuabilité transitive — tout objet C02 et tout objet ou conteneur atteignable depuis lui
+              est non modifiable par l'API publique (modèles gelés, séquences en tuple, mappings gelés) ;
+              aucune mutation atteignable ne modifie l'état ni une empreinte dérivée ; toute modification
+              = nouvel objet / nouveau snapshot_id. Hors garantie (contournements délibérés, objets non
+              validés) : object.__setattr__, attributs privés, model_construct, model_copy(update=…)
   C02-INV-K01: Knowable — value présent ⇔ status = KNOWN
   C02-INV-06: représentations canoniques déterministes (QCJ-1, QCT-1, QCC-1) ; vecteurs de test reproduits
   C02-INV-07: table_schema présent ⇒ fingerprint = sha256(QCT-1(table)) au format sha256:<hex>
@@ -337,7 +373,9 @@ invariants:
               observations_out = observations_in − observations_dropped (si connus)
   C02-INV-16: canonical_range ⊆ returned_range
   C02-INV-17: objet déclaré "1.0" ⇒ aucun champ v1.1 renseigné
-  C02-INV-18: aucun secret enregistré dans les métadonnées d'acquisition
+  C02-INV-18: >-
+              aucun indicateur structurel de secret (règle CRED-1, indicateurs K1, V1–V4) dans les champs
+              du périmètre CRED-1 ; garantie limitée aux indicateurs définis (voir CRED-1.limits)
   C02-INV-19: DataGateAssessment — REJECT ⇒ FAIL ; INCONCLUSIVE ⇒ pas PASS ; check_id uniques
 
 # =====================================================================================
@@ -351,11 +389,40 @@ compatibility:
       provenance, instruments, adjustments, quality_flags, storage_hint)
     - tout objet v1.0 valide reste valide et conserve sa valeur de contract_version "1.0"
     - le format du fingerprint n'est pas imposé rétroactivement aux objets sans table_schema
-    - DatasetSnapshotRef (C01, C03) inchangé : {snapshot_id, fingerprint}
+    - "DatasetSnapshotRef (C01, C03) inchangé : {snapshot_id, fingerprint}"
     - DecisionTrace.verify_fingerprint_chain inchangé
     - C01 ContractRef.c02 conserve sa valeur par défaut "1.0" ; un run sur snapshot v1.1 déclare c02 = "1.1"
       explicitement (changer ce défaut modifierait C01)
   migration: aucune requise ; un objet v1.0 peut être ré-émis en v1.1 sans perte
+  compatibility_axes:
+    json_input: tout JSON v1.0 valide est accepté
+    json_output: >
+      la sortie JSON d'un objet v1.0 comporte en plus les clés v1.1 (null / []) — non identique
+      octet à octet à la sortie du code v1.0 ; le code v1.0 la relit (clés inconnues ignorées)
+    fingerprints: >
+      aucune empreinte modifiée par v1.1 ni par CA-01 (valeurs épinglées dans les tests)
+    python_api: NON totalement compatible — voir behaviour_changes BC-04 à BC-06
+  behaviour_changes:
+    BC-01: valeur par défaut de contract_version "1.0" → "1.1" (objet construit sans version explicite)
+    BC-02: domaine de contract_version restreint à {"1.0", "1.1"} (valeur libre en v1.0)
+    BC-03: sortie JSON d'un objet v1.0 enrichie des clés v1.1 (voir compatibility_axes.json_output)
+    BC-04: DatasetSnapshot gelé — réaffectation d'attribut rejetée
+    BC-05: >
+      Provenance et AdjustmentRecord gelés ; instruments, adjustments, quality_flags stockés en tuple
+      (model_dump restitue des list) ; conséquence : snapshot.instruments == ["X"] est faux,
+      snapshot.instruments == ("X",) est vrai
+    BC-06: >
+      mappings v1.1 (request_parameters, provenance_metadata, parameters) stockés en FrozenMap
+      (isinstance(…, dict) faux ; égalité avec un dict conservée) et leurs listes en tuple ;
+      DataGateAssessment.snapshot_ref stocké en FrozenDatasetSnapshotRef (sous-classe gelée de
+      DatasetSnapshotRef : isinstance conservé, égalité pydantic avec une DatasetSnapshotRef fausse)
+    BC-07: CRED-1 rejette des entrées v1.1 auparavant acceptées (nouvelles clés K1, indicateurs V1–V4)
+  behaviour_changes_rationale: >
+    BC-04 à BC-06 suppriment des capacités de mutation que la postcondition v1.0 (« snapshot immutable
+    after publish ») interdisait déjà : elles corrigent un défaut d'implémentation, pas le contrat.
+    Aucun champ, aucune sérialisation d'entrée ni aucune empreinte n'est modifié ; la version reste
+    MINOR (1.1). Un consommateur Python comparant ces champs à des list/dict littéraux doit comparer
+    des tuples ou convertir. Politique de version inchangée par CA-01.
   exigences_investigation: >
     Les exigences propres à une investigation sont exprimées par des PROFILS de validation,
     pas par des champs obligatoires du contrat générique.
@@ -382,8 +449,8 @@ errata:
     evidence_semantics_unchanged:
       - src/quant/contracts/dataset_snapshot.py rejette availability_cutoff > as_of depuis P0 (a4c55b9)
       - tests/contracts/test_dataset_snapshot.py::test_availability_cutoff_after_as_of_rejected (P0)
-      - C03 : MarketState.as_of <= availability_cutoff — cohérent avec cutoff <= as_of
-      - DATA-REQ-I01 §9.1 : « availability_cutoff ≤ as_of (C02) »
+      - "C03 : MarketState.as_of <= availability_cutoff — cohérent avec cutoff <= as_of"
+      - "DATA-REQ-I01 §9.1 : « availability_cutoff ≤ as_of (C02) »"
     statement: >
       Ce n'est pas une nouvelle sémantique introduite par v1.1 : l'implémentation, les tests et
       les documents dépendants ont toujours appliqué la règle correcte. Le fichier v1.0 publié
@@ -391,8 +458,11 @@ errata:
 
 limitations:
   - aucun chargeur, aucune acquisition, aucune source de calendrier dans ce contrat
-  - les listes v1.0 (instruments, adjustments, quality_flags) restent des listes : l'immuabilité
-    logique de leur contenu repose sur le gel de l'objet et la vérification d'empreinte
+  - C02-INV-05 ne couvre pas les contournements délibérés (object.__setattr__, attributs privés)
+    ni les objets non validés (model_construct, model_copy(update=…)) ; la conformité d'un objet
+    s'établit par validation (model_validate)
+  - les objets portant une valeur Knowable ne sont pas sérialisables par pickle (classe générique
+    paramétrée pydantic) ; limitation antérieure à CA-01, JSON est la sérialisation de référence
   - close_instant dépend de la base de fuseaux IANA de l'environnement (zoneinfo)
   - storage_hint reste informatif
 
@@ -403,6 +473,8 @@ implementations:
     modules:
       - src/quant/contracts/knowledge.py
       - src/quant/contracts/canonical.py
+      - src/quant/contracts/immutable.py
+      - src/quant/contracts/credentials.py
       - src/quant/contracts/lineage.py
       - src/quant/contracts/market_calendar.py
       - src/quant/contracts/dataset_snapshot.py
@@ -411,6 +483,7 @@ implementations:
     evidence:
       - tests/contracts/test_knowable.py
       - tests/contracts/test_canonical.py
+      - tests/contracts/test_c02_immutability.py
       - tests/contracts/test_provider_artifact.py
       - tests/contracts/test_lineage.py
       - tests/contracts/test_market_calendar.py
