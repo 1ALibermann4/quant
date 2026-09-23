@@ -1,0 +1,420 @@
+contract:
+  id: C02
+  name: Data Provenance & Dataset Snapshot
+  former_name: DatasetSnapshot
+  contract_version: "1.1"
+  supersedes: "1.0"
+  compatibility: backward-compatible (additive) — see section `compatibility`
+  status: validated
+  protocol: QDP-v0.1
+  decision_record: docs/adr/DR-004-c02-data-provenance-architecture.md
+  resolves: [DATA-GAP-01, DATA-GAP-02]  # research/I01/DATA-REQ-I01.md §7.3
+
+description: >
+  Provenance vérifiable des données scientifiques : de l'artefact brut effectivement reçu
+  d'une source externe jusqu'au snapshot immuable consommé par une expérience, en passant
+  par des transformations ordonnées et un calendrier de séances matérialisé.
+  Ne prescrit ni format de stockage, ni source externe, ni source de calendrier.
+
+provenance_chain: |
+  ProviderArtifact ──► TransformationRecord* ──► DatasetSnapshot ◄── MarketCalendarSnapshot
+                                                      │
+                                                      └──► DataGateAssessment (évalué après figement)
+
+# =====================================================================================
+# 1. Types communs
+# =====================================================================================
+
+Knowable:
+  description: >
+    Métadonnée à connaissance partielle. Type générique unique pour toute information
+    fournisseur ou externe susceptible d'être inconnue. Aucune convention ad hoc par champ.
+  fields:
+    status: {type: enum, values: [KNOWN, UNKNOWN, NOT_APPLICABLE]}
+    value: {type: T, description: "présent si et seulement si status = KNOWN"}
+    note: {type: string, optional: true, description: "raison, référence de preuve"}
+  invariant: C02-INV-K01
+
+Fingerprint:
+  format: "sha256:<64 caractères hexadécimaux minuscules>"
+  algorithm: SHA-256 sur les octets de la représentation canonique déclarée
+  scope_rule: >
+    Toute empreinte déclare sa représentation (QCJ-1, QCT-1, QCC-1 ou octets bruts).
+    Les métadonnées d'exécution (horodatages) n'entrent dans aucune empreinte d'identité.
+
+# =====================================================================================
+# 2. Représentations canoniques (normatives — REP-04)
+# =====================================================================================
+
+canonical_representations:
+  QCJ-1:
+    usage: objets d'identité (paramètres, lignée, agrégat brut, identité de calendrier)
+    rules:
+      - encodage UTF-8 sans BOM ; aucune normalisation Unicode appliquée (chaînes hachées telles quelles)
+      - JSON (RFC 8259) sans espace non significatif ; séparateurs "," et ":"
+      - clés d'objet triées par point de code Unicode croissant ; clés uniquement de type chaîne
+      - caractères non ASCII émis tels quels (pas d'échappement \uXXXX)
+      - entiers en décimal, |n| <= 2^53 - 1
+      - nombres non entiers INTERDITS (les encoder en chaîne décimale explicite)
+      - NaN et ±Infinity interdits
+      - booléens true/false ; null autorisé
+      - date → "YYYY-MM-DD"
+      - instant → UTC "YYYY-MM-DDTHH:MM:SS.ffffffZ" (6 décimales toujours) ; instant naïf interdit
+      - heure locale → "HH:MM:SS" ; heure avec fuseau interdite
+      - listes : ordre conservé (l'ordre fait partie du contenu)
+  QCT-1:
+    usage: table scientifique canonique d'un DatasetSnapshot (fingerprint)
+    rules:
+      - encodage UTF-8 sans BOM
+      - première ligne = en-tête : noms de colonnes dans l'ordre déclaré par TableSchema.columns
+      - une ligne par enregistrement ; séparateur de champ "," ; aucun guillemet
+      - fin de ligne "\n" (LF) après chaque ligne, y compris la dernière ; pas de CR
+      - ordre des lignes : croissant selon TableSchema.primary_key, comparaison sur valeurs typées
+        (date/instant chronologique, entier numérique, chaîne par point de code) ; clés dupliquées interdites
+      - date → "YYYY-MM-DD" ; instant → format QCJ-1
+      - decimal → notation positionnelle à échelle fixe TableSchema.columns[].scale ; séparateur ".",
+        sans exposant, sans séparateur de milliers, "-" pour les négatifs, jamais "+" ;
+        arrondi au pair le plus proche (ROUND_HALF_EVEN) appliqué à la valeur EXACTE de l'entrée
+        (valeur binaire exacte pour un flottant) ; zéro négatif normalisé en zéro positif
+      - integer → décimal sans zéro non significatif ; booléen interdit
+      - string → caractères ',' '"' CR LF interdits
+      - valeur manquante → champ vide, autorisé uniquement si la colonne est nullable
+      - NaN / ±Infinity interdits
+      - colonnes hors schéma interdites
+  QCC-1:
+    usage: liste des séances d'un MarketCalendarSnapshot (sessions_fingerprint)
+    rules:
+      - une date "YYYY-MM-DD" par ligne, strictement croissante, sans doublon
+      - "\n" après chaque date, y compris la dernière ; UTF-8 ; liste vide interdite
+
+test_vectors:
+  # Deux implémentations conformes DOIVENT reproduire ces octets et ces empreintes.
+  QCT-1:
+    schema:
+      columns:
+        - {name: session_date, type: date}
+        - {name: adjusted_close, type: decimal, scale: 6}
+        - {name: close, type: decimal, scale: 4, nullable: true}
+      primary_key: [session_date]
+    rows_input_order:
+      - {session_date: "2020-01-03", adjusted_close: "101.5", close: null}
+      - {session_date: "2020-01-02", adjusted_close: "100.1234565", close: 100}
+    bytes: "session_date,adjusted_close,close\n2020-01-02,100.123456,100.0000\n2020-01-03,101.500000,\n"
+    fingerprint: "sha256:c815b68ff3ed0ee548e79700e2a9651b3365e0e79cb1ae5202151182469771d0"
+  QCC-1:
+    sessions: ["2020-01-02", "2020-01-03", "2020-01-06"]
+    bytes: "2020-01-02\n2020-01-03\n2020-01-06\n"
+    fingerprint: "sha256:e481bd671c59e4d9b6da6f0a0ff7db42b2cbf70aae3bb6b24706ffd56fcf09c5"
+  QCJ-1:
+    input: {t: "2020-01-02T16:00:00-05:00", d: "2020-01-02 (date)", b: "é", a: [1, true, null]}
+    bytes_utf8: '{"a":[1,true,null],"b":"é","d":"2020-01-02","t":"2020-01-02T21:00:00.000000Z"}'
+    fingerprint: "sha256:4ad22465ed2282ab01f2f58a2ba885f36d8477f5a74bc0c38328b72c019b6828"
+
+# =====================================================================================
+# 3. Périmètre des empreintes
+# =====================================================================================
+
+fingerprint_scope:
+  ProviderArtifact.content_sha256:
+    covers: octets exacts reçus de la source
+    excludes: [acquired_at, provenance_metadata, license, request_parameters]
+  TransformationRecord.application_key:
+    representation: QCJ-1
+    covers: [transformation_id, transformation_type, implementation_version, parameters, input_fingerprints]
+    excludes: [executed_at, observations_*, justification, output_fingerprint]
+  DatasetSnapshot.lineage_fingerprint:
+    representation: QCJ-1 de {"kind":"C02.lineage","steps":[{step_index, application identity, output_fingerprint}]}
+    excludes: [executed_at, observations_*, justification]
+  DatasetSnapshot.raw_fingerprint:
+    representation: >
+      QCJ-1 de {"kind":"C02.raw_artifact_set","members":[content_sha256 triés lexicographiquement]}
+    semantics: >
+      Sémantique d'ENSEMBLE (indépendante de l'ordre de consommation, qui est porté par la lignée).
+      Enveloppé même pour un seul artefact : raw_fingerprint ≠ content_sha256 par construction.
+      Doublons et ensemble vide interdits.
+  DatasetSnapshot.fingerprint:
+    representation: QCT-1 de la table canonique (lorsque table_schema est présent)
+    excludes: [as_of, métadonnées du snapshot, lignée, calendrier]
+  MarketCalendarSnapshot.sessions_fingerprint:
+    representation: QCC-1
+  MarketCalendarSnapshot.content_fingerprint:
+    representation: >
+      QCJ-1 de {"kind":"C02.market_calendar","canonical_representation","market","timezone",
+      "regular_close_local","early_closes" (triées par séance),"sessions_fingerprint"}
+    excludes: [calendar_snapshot_id, source, source_version, generated_at]
+    rationale: deux sources produisant exactement le même contenu ont la même identité scientifique
+
+# =====================================================================================
+# 4. Objets
+# =====================================================================================
+
+objects:
+
+  ProviderArtifact:
+    description: Artefact brut effectivement reçu d'une source externe, avant interprétation.
+    fields:
+      required:
+        - artifact_id
+        - provider_id
+        - provider_product
+        - provider_interface            # endpoint / interface logique
+        - provider_interface_version    # Knowable[string] — UNKNOWN admis, jamais inventé
+        - instrument                    # InstrumentIdentifiers
+        - requested_first_session       # Knowable[date]
+        - requested_last_session        # Knowable[date]
+        - acquired_at                   # instant UTC — métadonnée d'exécution
+        - content_sha256
+        - media_type
+        - encoding                      # Knowable[string] ; NOT_APPLICABLE pour un format binaire
+        - byte_size
+        - license                       # LicenseRef
+      optional:
+        - request_parameters            # objet QCJ-1 de scalaires
+        - provenance_metadata           # objet chaîne → chaîne (en-têtes, marqueurs de révision)
+    rules:
+      - aucun secret (jeton, clé d'API, mot de passe, en-tête Authorization) dans request_parameters
+        ni provenance_metadata
+      - requested_first_session <= requested_last_session si les deux sont connus
+
+  InstrumentIdentifiers:
+    fields: [ticker, venue, isin, cusip, figi, vendor_permanent_id]
+    types: "ticker: string ; autres: Knowable[string]"
+
+  LicenseRef:
+    description: >
+      Transport de la licence d'un artefact. `usage_basis_ref` RÉFÉRENCE la décision qui fonde
+      l'usage (ex. « DR-003 ASSUMPTION A-1 ») ; C02 n'est pas une source normative de cette hypothèse.
+    fields:
+      - license_id
+      - terms_ref
+      - terms_version            # Knowable[string]
+      - plan_tier                # Knowable[string]
+      - usage_basis_ref          # Knowable[string]
+      - raw_retention_permitted  # Knowable[bool] — REP-05
+      - retention_condition      # Knowable[string] (ex. « jusqu'à la fin de l'abonnement »)
+
+  ProviderArtifactRef:
+    fields: [artifact_id, content_sha256, license]
+    rule: égal champ à champ à ProviderArtifact.ref() de l'artefact référencé
+
+  TransformationRecord:
+    description: Étape déterministe entre artefact(s) brut(s) et table scientifique.
+    fields:
+      required:
+        - step_index               # 0…n-1, ordre d'exécution
+        - transformation_id
+        - transformation_type      # vocabulaire ouvert : PARSE, DATE_NORMALIZATION, SORT, DEDUPLICATION,
+                                   # COLUMN_SELECTION, CALENDAR_ALIGNMENT, QUALITY_FILTER, …
+        - implementation_version
+        - parameters               # objet QCJ-1
+        - input_fingerprints       # liste ordonnée non vide
+        - output_fingerprint
+        - executed_at              # instant UTC — métadonnée d'exécution
+        - observations_in          # Knowable[int]
+        - observations_out         # Knowable[int]
+        - observations_dropped     # Knowable[int]
+      optional:
+        - justification
+
+  MarketCalendarSnapshot:
+    description: Calendrier de séances matérialisé ; une chaîne « NYSE » n'est pas une identité.
+    fields:
+      required:
+        - calendar_snapshot_id
+        - market
+        - timezone                 # IANA
+        - source                   # Knowable[string]
+        - source_version           # Knowable[string]
+        - generated_at             # métadonnée
+        - regular_close_local      # heure locale naïve
+        - sessions                 # liste matérialisée, QCC-1
+        - first_session
+        - last_session
+        - session_count
+        - canonical_representation # "QCC-1"
+        - sessions_fingerprint
+        - content_fingerprint
+      optional:
+        - early_closes             # [{session, close_local}]
+    operations:
+      rank(session): rang 0-indexé (CAL-04) ; erreur si la date n'est pas une séance
+      sessions_between(first, last): nombre de séances, bornes incluses
+      close_instant(session): instant de clôture officielle (clôture anticipée comprise)
+    non_goals: >
+      Le contrat ne choisit aucune source réelle de calendrier et n'en fabrique aucune.
+      Le choix de la source est une décision distincte (DR-003 DEF-04).
+
+  MarketCalendarRef:
+    fields: [calendar_snapshot_id, content_fingerprint]
+
+  DatasetSnapshot:
+    description: Objet scientifique immuable consommé par les expériences.
+    fields:
+      required:              # inchangés depuis v1.0
+        - snapshot_id
+        - fingerprint
+        - as_of
+        - provenance
+        - availability_cutoff
+        - contract_version     # "1.0" ou "1.1"
+      optional_v1_0:
+        - instruments
+        - adjustments
+        - quality_flags
+        - storage_hint
+      optional_v1_1:
+        - table_schema          # TableSchema (schema_id, schema_version, QCT-1, columns, primary_key)
+        - source_artifacts      # [ProviderArtifactRef]
+        - raw_fingerprint       # requis si source_artifacts non vide
+        - lineage               # [TransformationRecord]
+        - market_calendar       # MarketCalendarRef
+        - temporal_convention   # {source_timezone: Knowable, canonical_timezone, session_date_rule}
+        - requested_range       # Knowable[SessionRange]
+        - returned_range        # SessionRange — bornes effectivement retournées par la source
+        - canonical_range       # SessionRange — bornes de la table canonique
+        - counts                # {raw_observations, canonical_observations, expected_sessions,
+                                #  missing_sessions, invalidated_sessions}
+        - adjustment_methodology  # {events_covered, method, reference_date, dividend_factor_formula,
+                                  #  methodology_ref, methodology_version, numeric_precision, currency}
+        - instrument            # InstrumentIdentifiers
+        - intended_use          # usage déclaré AVANT l'évaluation du gate DATA
+    field_definitions:
+      fingerprint: >
+        Empreinte du contenu. Si table_schema est présent : SHA-256 de la représentation QCT-1
+        de la table canonique, format sha256:<hex> obligatoire. Pour un objet sans table_schema,
+        la sémantique v1.0 est conservée (format non imposé rétroactivement).
+      as_of: instant de figement ISO 8601 UTC
+      availability_cutoff: >
+        Dernier instant d'information incluse — borne anti look-ahead.
+        DOIT vérifier availability_cutoff <= as_of (voir errata E-01).
+      licence: >
+        Portée par chaque ProviderArtifactRef.license (le snapshot est dérivé de ses artefacts).
+
+  DataGateAssessment:
+    description: >
+      Verdict de qualité évalué sur un snapshot déjà figé. Objet distinct : l'inscrire dans le
+      snapshot violerait son immuabilité (REV-D-02).
+    fields: [assessment_id, snapshot_ref, evaluated_against, evaluated_at, intended_use,
+             coverage_tier, checks, verdict]
+    checks_item: {check_id, outcome: [PASS, WARN, INCONCLUSIVE, REJECT], measurement?, detail?}
+    verdict: [PASS, FAIL, INCONCLUSIVE]
+
+# =====================================================================================
+# 5. Préconditions, postconditions, invariants
+# =====================================================================================
+
+preconditions:
+  - availability_cutoff <= as_of is REQUIRED; availability_cutoff > as_of → reject (errata E-01)
+  - time_range_start < time_range_end
+  - contract_version ∈ {"1.0", "1.1"}
+
+postconditions:
+  - snapshot immutable after publish; mutation requires new snapshot_id (REV-D-02)
+  - le fingerprint est vérifié au chargement ; tout écart interrompt le run
+
+invariants:
+  C02-INV-01: availability_cutoff <= as_of (errata E-01)
+  C02-INV-02: availability_cutoff bounds all downstream MarketState.as_of values (C03)
+  C02-INV-03: fingerprint uniqueness enforced within experiment registry
+  C02-INV-04: provenance.survivorship_bias_acknowledged is an explicit boolean
+  C02-INV-05: immuabilité logique — objets C02 gelés ; toute modification = nouvel objet / nouveau snapshot_id
+  C02-INV-K01: Knowable — value présent ⇔ status = KNOWN
+  C02-INV-06: représentations canoniques déterministes (QCJ-1, QCT-1, QCC-1) ; vecteurs de test reproduits
+  C02-INV-07: table_schema présent ⇒ fingerprint = sha256(QCT-1(table)) au format sha256:<hex>
+  C02-INV-08: source_artifacts non vide ⇔ raw_fingerprint présent ; raw_fingerprint = agrégat d'ensemble
+  C02-INV-09: artefacts référencés uniques (id et empreinte) ; références = artefacts (id, empreinte, licence)
+  C02-INV-10: lignée — step_index 0…n-1 ; chaque entrée = artefact source, sortie antérieure ou dépendance
+              auxiliaire déclarée (empreinte du calendrier référencé) ; chaque artefact source consommé ;
+              sorties uniques et distinctes de leurs entrées ; sortie finale = fingerprint
+  C02-INV-11: déterminisme — même application_key ⇒ même output_fingerprint
+  C02-INV-12: horodatages d'exécution exclus de toute identité (acquired_at, executed_at, generated_at,
+              evaluated_at, as_of pour la table)
+  C02-INV-13: calendrier — séances strictement croissantes ; first/last/count cohérents ; empreintes
+              recalculées ; clôtures anticipées ⊂ séances et antérieures à la clôture régulière
+  C02-INV-14: référence calendrier valide — ref égale ; bornes canoniques = séances ; expected_sessions =
+              séances du calendrier dans canonical_range ; canonical_timezone = fuseau du calendrier
+  C02-INV-15: comptages — canonical <= raw ; canonical + missing = expected (si connus) ; valeurs >= 0 ;
+              observations_out = observations_in − observations_dropped (si connus)
+  C02-INV-16: canonical_range ⊆ returned_range
+  C02-INV-17: objet déclaré "1.0" ⇒ aucun champ v1.1 renseigné
+  C02-INV-18: aucun secret enregistré dans les métadonnées d'acquisition
+  C02-INV-19: DataGateAssessment — REJECT ⇒ FAIL ; INCONCLUSIVE ⇒ pas PASS ; check_id uniques
+
+# =====================================================================================
+# 6. Compatibilité
+# =====================================================================================
+
+compatibility:
+  classification: MINOR (1.0 → 1.1), additive
+  guarantees:
+    - aucun champ v1.0 renommé ni supprimé (snapshot_id, fingerprint, as_of, availability_cutoff,
+      provenance, instruments, adjustments, quality_flags, storage_hint)
+    - tout objet v1.0 valide reste valide et conserve sa valeur de contract_version "1.0"
+    - le format du fingerprint n'est pas imposé rétroactivement aux objets sans table_schema
+    - DatasetSnapshotRef (C01, C03) inchangé : {snapshot_id, fingerprint}
+    - DecisionTrace.verify_fingerprint_chain inchangé
+    - C01 ContractRef.c02 conserve sa valeur par défaut "1.0" ; un run sur snapshot v1.1 déclare c02 = "1.1"
+      explicitement (changer ce défaut modifierait C01)
+  migration: aucune requise ; un objet v1.0 peut être ré-émis en v1.1 sans perte
+  exigences_investigation: >
+    Les exigences propres à une investigation sont exprimées par des PROFILS de validation,
+    pas par des champs obligatoires du contrat générique.
+  v2_candidates: >
+    Tout renommage, suppression ou resserrement rétroactif (ex. format obligatoire du fingerprint
+    pour tous les objets) relève de C02 v2.0 et ne doit pas être introduit dans v1.x.
+
+profiles:
+  - id: C02-I01
+    version: "1.0"
+    spec: specs/contracts/C02/profiles/C02-I01_v1.0.yaml
+    authority: research/I01/DATA-REQ-I01.md v0.1
+
+# =====================================================================================
+# 7. Errata
+# =====================================================================================
+
+errata:
+  E-01:
+    affects: specs/contracts/C02/C02_v1.0.yaml — preconditions, ligne « availability_cutoff <= as_of is invalid → reject »
+    identified_by: research/I01/DATA-REQ-I01.md §7.3 DATA-GAP-02
+    nature: erreur de rédaction du texte YAML v1.0 (condition inversée)
+    correct_semantics: availability_cutoff <= as_of est REQUIS ; availability_cutoff > as_of est rejeté
+    evidence_semantics_unchanged:
+      - src/quant/contracts/dataset_snapshot.py rejette availability_cutoff > as_of depuis P0 (a4c55b9)
+      - tests/contracts/test_dataset_snapshot.py::test_availability_cutoff_after_as_of_rejected (P0)
+      - C03 : MarketState.as_of <= availability_cutoff — cohérent avec cutoff <= as_of
+      - DATA-REQ-I01 §9.1 : « availability_cutoff ≤ as_of (C02) »
+    statement: >
+      Ce n'est pas une nouvelle sémantique introduite par v1.1 : l'implémentation, les tests et
+      les documents dépendants ont toujours appliqué la règle correcte. Le fichier v1.0 publié
+      n'est pas réécrit ; il est corrigé par cet erratum.
+
+limitations:
+  - aucun chargeur, aucune acquisition, aucune source de calendrier dans ce contrat
+  - les listes v1.0 (instruments, adjustments, quality_flags) restent des listes : l'immuabilité
+    logique de leur contenu repose sur le gel de l'objet et la vérification d'empreinte
+  - close_instant dépend de la base de fuseaux IANA de l'environnement (zoneinfo)
+  - storage_hint reste informatif
+
+implementations:
+  - id: quant-python-v01
+    version: "0.1.0"
+    maturity: foundation
+    modules:
+      - src/quant/contracts/knowledge.py
+      - src/quant/contracts/canonical.py
+      - src/quant/contracts/lineage.py
+      - src/quant/contracts/market_calendar.py
+      - src/quant/contracts/dataset_snapshot.py
+      - src/quant/contracts/data_assessment.py
+      - src/quant/contracts/profiles/i01.py
+    evidence:
+      - tests/contracts/test_knowable.py
+      - tests/contracts/test_canonical.py
+      - tests/contracts/test_provider_artifact.py
+      - tests/contracts/test_lineage.py
+      - tests/contracts/test_market_calendar.py
+      - tests/contracts/test_dataset_snapshot.py
+      - tests/contracts/test_profile_i01.py
+      - tests/trace/test_decision_trace_c02_v11.py
+      - tests/invariants/test_temporal.py

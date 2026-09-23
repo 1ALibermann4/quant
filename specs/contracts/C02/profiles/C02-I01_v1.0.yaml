@@ -1,0 +1,86 @@
+profile:
+  id: C02-I01
+  version: "1.0"
+  applies_to: C02 v1.1 DatasetSnapshot
+  authority: research/I01/DATA-REQ-I01.md v0.1 (§1–§9, §12)
+  protocol: QDP-v0.1
+  status: validated
+
+description: >
+  Exigences supplémentaires qu'un DatasetSnapshot doit satisfaire pour être consommé par I01.
+  Le contrat générique C02 accepte tout objet v1.0/v1.1 valide ; ce profil ne rend aucun objet
+  C02 invalide — il qualifie sa conformité à I01.
+
+inputs:
+  - snapshot: DatasetSnapshot
+  - calendar: MarketCalendarSnapshot référencé par snapshot.market_calendar
+  - artifacts: ProviderArtifact référencés par snapshot.source_artifacts
+  - assessment: DataGateAssessment (optionnel)
+
+outcome_categories:
+  errors: >
+    Représentation absente, incohérente, ou exigence violée avec certitude.
+    Un seul constat ⇒ non conforme au profil.
+  blocking_unknowns: >
+    Métadonnée REQUIRED représentée honnêtement comme UNKNOWN. L'objet est conforme au profil
+    (représentation honnête) mais DATA-PASS est impossible tant qu'elle n'est pas résolue.
+    Une absence d'information ne devient jamais implicitement PASS.
+  warnings: exigences RECOMMENDED non satisfaites ou non vérifiables
+report:
+  conforms: errors vide
+  data_pass_eligible: conforms ET blocking_unknowns vide
+  depth_tier: palier dérivé (§4.1)
+
+rules:
+  # id: {requirement, source DATA-REQ, UNKNOWN →, NOT_APPLICABLE →}
+  P-01: {rule: "contract_version = 1.1", source: "§7.2"}
+  P-02: {rule: "table_schema présent ; primary_key = [session_date] ; colonnes ⊂ {session_date:date, adjusted_close:decimal, close:decimal, volume:integer|decimal} ; session_date et adjusted_close non nullables", source: "§3.1, TS-01"}
+  P-03: {rule: "source_artifacts non vide ; artefacts fournis = références", source: "§7.1"}
+  P-04: {rule: "artifact.provider_interface_version", source: "§7.1, PA-14", unknown: blocking, not_applicable: error}
+  P-05: {rule: "artifact.license.usage_basis_ref", source: "REP-05, DR-003 A-1", unknown: blocking, not_applicable: error}
+  P-06: {rule: "artifact.license.raw_retention_permitted ; KNOWN false ⇒ error", source: "REP-05", unknown: blocking}
+  P-07: {rule: "instrument présent ; instruments de cardinal <= 1 ; ticker artefact = ticker snapshot", source: "INS-01, INS-05"}
+  P-08: {rule: "instrument.venue", source: "INS-05", unknown: blocking}
+  P-09: {rule: "au moins un de ISIN/CUSIP/FIGI KNOWN", source: "INS-05", otherwise: blocking}
+  P-10: {rule: "temporal_convention présent ; canonical_timezone = America/New_York ; session_date_rule non vide", source: "TS-01…TS-04"}
+  P-11: {rule: "temporal_convention.source_timezone", source: "TS-03", unknown: blocking, note: "NOT_APPLICABLE admis si la source livre des dates sans instant"}
+  P-12: {rule: "market_calendar présent et valide (C02-INV-14)", source: "CAL-01, CAL-04"}
+  P-13: {rule: "calendar.source et calendar.source_version", source: "CAL-01", unknown: blocking, not_applicable: error}
+  P-14: {rule: "requested_range", source: "§7.1", unknown: blocking, not_applicable: error}
+  P-15: {rule: "returned_range et canonical_range présents", source: "§7.1"}
+  P-16: {rule: "counts présent ; expected_sessions et missing_sessions KNOWN", source: "§7.1, CAL-03"}
+  P-17: {rule: "counts.invalidated_sessions", source: "§6, §7.1", unknown: blocking, not_applicable: error}
+  P-18: {rule: "adjustment_methodology présent ; events_covered, method, reference_date, numeric_precision, currency, methodology_ref", source: "§3.3, ADJ-01", unknown: blocking, not_applicable: error}
+  P-19: {rule: "dividend_factor_formula, methodology_version", source: "§3.3 RECOMMENDED", unknown: warning}
+  P-20: {rule: "lineage non vide (C02-INV-10)", source: "§7.1"}
+  P-21: {rule: "intended_use ∈ {technical, confirmatory}", source: "§4.3"}
+  P-22: {rule: "availability_cutoff = close_instant(canonical_range.last_session)", source: "§7.1, §2.4"}
+  P-23: {rule: "provenance.time_range_start = close_instant(first_session) ; time_range_end = close_instant(last_session)", source: "cohérence v1.0/v1.1"}
+  P-24: {rule: ">= 5 séances du calendrier entre la dernière séance et la date d'acquisition de chaque artefact", source: "REV-D-04 RECOMMENDED", otherwise: warning}
+
+depth_tier:
+  source: DATA-REQ §4.1
+  measure: canonical_observations (séances valides) et durée calendaire first_session → last_session
+  anniversary_rule: "last_session >= first_session + N ans ; 29 février → 28 février"
+  tiers:
+    PREFERRED: ">= 3780 séances ET >= 15 ans"
+    CONFIRMATORY: ">= 2520 séances ET >= 10 ans"
+    TECHNICAL: ">= 1500 séances"
+    BELOW_TECHNICAL: "< 1500 séances"
+
+assessment_rules:
+  A-01: snapshot_ref = (snapshot_id, fingerprint) du snapshot
+  A-02: checks = exactement Q-01…Q-14 (DATA-REQ §6)
+  A-03: assessment.intended_use = snapshot.intended_use (déclaré avant évaluation, §4.3)
+  A-04: coverage_tier = palier dérivé
+  A-05: palier BELOW_TECHNICAL, ou usage confirmatory sur palier TECHNICAL ⇒ verdict FAIL (§4.3)
+  A-06: verdict PASS interdit si le profil présente des errors ou des blocking_unknowns (§12)
+
+non_goals:
+  - le profil n'évalue pas les contrôles Q-01…Q-14 sur les données ; il vérifie la cohérence de leur enregistrement
+  - le profil ne choisit ni fournisseur (DR-003) ni source de calendrier (DEF-04)
+
+implementation:
+  module: src/quant/contracts/profiles/i01.py
+  entrypoint: validate_i01_snapshot(snapshot, *, calendar, artifacts, assessment=None) -> ProfileReport
+  evidence: tests/contracts/test_profile_i01.py
