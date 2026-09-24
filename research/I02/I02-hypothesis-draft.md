@@ -13,7 +13,7 @@
 > **Draft v0.4 review :** `5980bc8`
 > **Draft v0.4 accept S :** `c85476c`
 > **Draft v0.5 level invariant :** `9a9cf89`
-> **Draft v0.6 Q vs φ review :** *(ce commit)*
+> **Draft v0.6 Q vs φ review :** `8b652f7`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
