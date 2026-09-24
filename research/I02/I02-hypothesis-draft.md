@@ -25,7 +25,7 @@
 > **Draft v0.15 W_RV := W_X :** `e3fc32c`
 > **Draft v0.16 m_Z admissibility :** `52a8a4a`
 > **Draft v0.17 m_Z domain + identifiability :** `08f845d`
-> **Draft v0.18 multiscale governance :** *(ce commit)*
+> **Draft v0.18 multiscale governance :** `ef5d39c`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
