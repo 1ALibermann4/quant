@@ -23,7 +23,7 @@
 > **Draft v0.13 Disp = Std_pop :** `98ddec6`
 > **Draft v0.14 temporal architecture :** `6e0b4c7`
 > **Draft v0.15 W_RV := W_X :** `e3fc32c`
-> **Draft v0.16 m_Z admissibility :** *(ce commit)*
+> **Draft v0.16 m_Z admissibility :** `52a8a4a`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
