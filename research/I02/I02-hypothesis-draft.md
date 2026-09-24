@@ -19,6 +19,7 @@
 > **Draft v0.9 Z_t review :** `5681916`
 > **Draft v0.10 A vs D / m :** `22ddd95`
 > **Draft v0.11 family A primary candidate :** `e7cecc2`
+> **Draft v0.12 Disp review :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -45,8 +46,8 @@ REPRESENTATION ACCEPTED / METRIC ROBUSTNESS SETS ACCEPTED
 \(\mathcal{M}_{S2}\) figés ; sujet métrique pré-cadrage **CLOSED**.
 
 **État \(Z_t\) :** famille **A** = `PRIMARY SEMANTIC CANDIDATE`
-(§14A.12) ; \(E=\mathrm{TV}-\lvert\mathrm{net}\rvert\) = mécanisme
-**alternatif** (pas robustesse de A) ; Disp et \(m\) UNRESOLVED.
+(§14A.12) ; \(E\) = mécanisme alternatif ; Disp : revue §14B
+(MAD `REJECT` ; Std / MeanAD encore OPEN) ; \(m\) UNRESOLVED.
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
@@ -1945,8 +1946,8 @@ A est le candidat sémantique primaire ; \(E\) reste disponible comme
 piste alternative / future investigation, sans obligation de
 co-survie avec A pour interpréter un résultat sur A.
 
-**Prochaines questions OPEN (étroit) :** Disp ; \(m\) (dont statut
-\(m=W\)). Toujours sans donnée, sans \(\varepsilon\), sans acceptation
+**Prochaines questions OPEN (étroit) :** choix Std vs MeanAD (§14B) ;
+\(m\). Toujours sans donnée, sans \(\varepsilon\), sans acceptation
 \(Z_t\).
 
 ### 14A.13 Cohérence
@@ -1964,6 +1965,259 @@ co-survie avec A pour interpréter un résultat sur A.
 
 ---
 
+## 14B. Dispersion functional for family A — MAD / Std / MeanAD
+
+**Nature :** mathématique / adversariale. **Aucune donnée.** Décisions
+§14A.12 **non rouvertes.** Aucune \(Z_t\) acceptée. I02 =
+`NOT OPENED`.
+
+**Baseline sémantique :** A = variabilité des changements du niveau
+de log-volatilité ; saut unidirectionnel **doit** être détecté ;
+accélération monotone **peut** compter ; \(E\) = mécanisme alternatif
+(≠ robustesse de A).
+
+**Notation :** \(y=(y_1,\ldots,y_n)\), \(y_i=\Delta L\) sur la fenêtre ;
+\(\bar y=n^{-1}\sum y_i\). Critère « différentiabilité / \(C^\infty\) »
+**retiré** — non pertinent ; \(\sqrt{\mathrm{Var}}\) n'est d'ailleurs
+pas régulier en variance nulle.
+
+### 14B.1 MAD (médiane) — rejet pour I02/A
+
+Cas canonique (sémantique humaine) :
+
+\[
+L=[1,1,1,2,2]
+\quad\Rightarrow\quad
+y=[0,0,1,0]
+\quad(n=4)
+\]
+
+Médiane de \(y\) : \(0\). Écarts absolus à la médiane :
+\([0,0,1,0]\). Médiane de ceux-ci : \(0\).
+
+\[
+\operatorname{MAD}_{\mathrm{median}}(y)=0
+\]
+
+Le saut unique exigé **n'est pas détecté** (breakdown : majorité
+d'incréments nuls). Cela **suffit** à classer :
+
+\[
+\boxed{\operatorname{MAD}_{\mathrm{median}}=\texttt{REJECT}\text{ pour I02/A}}
+\]
+
+**Portée :** rejet **local** à I02/famille A. Pas de généralisation
+à d'autres usages de la MAD.
+
+### 14B.2 Deux candidats restants
+
+\[
+Z_t^{(2)}=\operatorname{Std}(y),
+\qquad
+Z_t^{(1)}=\operatorname{MeanAD}(y)
+=\frac1n\sum_{i=1}^n\lvert y_i-\bar y\rvert
+\]
+
+MeanAD = déviation absolue moyenne **autour de la moyenne
+arithmétique** — **pas** MAD médiane.
+
+Propriété commune fondamentale :
+
+\[
+y_i=c\ \forall i
+\quad\Longrightarrow\quad
+Z^{(1)}=Z^{(2)}=0.
+\]
+
+### 14B.3 Propriétés comparées
+
+| Propriété | Std | MeanAD |
+|-----------|-----|--------|
+| Translation \(y\mapsto y+b\) | invariant | invariant |
+| Équivariance \(y\mapsto a y\) | \(\lvert a\rvert\,\mathrm{Std}\) | \(\lvert a\rvert\,\mathrm{MeanAD}\) |
+| \(y\) constant | 0 | 0 |
+| Saut unique | > 0 (§14B.4) | > 0 (§14B.4) |
+| Plusieurs chocs | ↑ avec énergie \(L_2\) | ↑ plus linéaire en \(L_1\) |
+| Oscillation régulière | > 0 | > 0 |
+| Accélération monotone | > 0 si \(\Delta L\) non constant | > 0 idem |
+| Incrément extrême | dominance **quadratique** | réponse **linéaire** en \(\lvert y_i-\bar y\rvert\) |
+| Dépendance à \(n\) | oui (formule saut ; facteur \(n\) vs \(n-1\)) | oui |
+| Géométrie | \(L_2\) (Euclidienne centrée) | \(L_1\) centrée (mean) |
+| Singularité | \(n=1\) indéfini / dégénéré ; \(RV=0\) amont | idem ; pas de racine |
+
+### 14B.4 Saut unique — formules exactes (\(n\ge 2\), \(\delta\neq 0\))
+
+\[
+y=(0,\ldots,0,\delta,0,\ldots,0)
+\quad\text{(un seul nonzero)}
+\qquad
+\bar y=\delta/n
+\]
+
+Somme des carrés centrés :
+
+\[
+\sum(y_i-\bar y)^2
+=\frac{(n-1)\delta^2}{n}.
+\]
+
+**Std population** (dénominateur \(n\)) :
+
+\[
+\operatorname{Std}_n(y)
+=\lvert\delta\rvert\,\frac{\sqrt{n-1}}{n}.
+\]
+
+**Std sample** (dénominateur \(n-1\)) :
+
+\[
+\operatorname{Std}_{n-1}(y)
+=\frac{\lvert\delta\rvert}{\sqrt{n}}.
+\]
+
+Relation : \(\operatorname{Std}_{n-1}=\sqrt{n/(n-1)}\,\operatorname{Std}_n\).
+
+**MeanAD :**
+
+\[
+\operatorname{MeanAD}(y)
+=\frac{2(n-1)}{n^2}\,\lvert\delta\rvert.
+\]
+
+Les deux détectent le saut (\(\propto\lvert\delta\rvert\)) ; seuls les
+préfacteurs en \(n\) diffèrent.
+
+### 14B.5 Population vs sample (\(n\) vs \(n-1\))
+
+Si \(n\) est **fixe** pour toutes les queries \(t\) (même \(m\)), alors
+
+\[
+\operatorname{Std}_{n-1}(y_t)
+=
+\sqrt{\frac{n}{n-1}}
+\,\operatorname{Std}_n(y_t)
+\]
+
+est une **re-échelle déterministe** indépendante de \(y_t\). Les
+**rangs** de \(Z_t\) (donc Spearman avec tout \(\Delta_t\)) sont
+**identiques**.
+
+**Verdict :** pour un état déterministe à \(n\) fixé, \(n\) vs \(n-1\)
+est une **convention de définition**, **pas** une question
+scientifique matérielle pour un estimand ordinal. Devient matériel
+seulement si \(n\) varie entre comparaisons ou si l'échelle absolue
+de \(Z\) (hors rangs) est utilisée. **Rien n'est choisi ici.**
+
+### 14B.6 Attaque queues / multi-chocs (synthétique)
+
+| Fenêtre | Lecture |
+|---------|---------|
+| \(y=(10,0,0,0)\) | Std élevé (quadratique) ; MeanAD proportionnel à \(\lvert\delta\rvert\) mais plus bas relativement |
+| \(y=(2,2,-2,-2)\) | instabilité « répartie » : MeanAD plus compétitif vs un mega-choc de même énergie \(L_2\) |
+
+Std peut être **dominé par un seul** \(\lvert\Delta L\rvert\) extrême
+(détecteur de choc \(L_2\)). MeanAD peut **sous-représenter** une
+instabilité très concentrée que la sémantique (saut unique pertinent)
+considère pourtant forte — tension, pas élimination (le saut simple
+reste détecté).
+
+### 14B.7 Rank equivalence — BLOCKING pour Spearman
+
+Question : \(\operatorname{Std}\) et \(\operatorname{MeanAD}\) sont-ils
+des transformées **monotones** l'un de l'autre sur l'espace des
+fenêtres \(y\) ?
+
+**Non.** Contre-exemple explicite (\(n=4\), moyennes nulles) :
+
+\[
+y^{(A)}=(2,-2,0.1,-0.1),
+\qquad
+y^{(B)}=(1.2,1.2,-1.2,-1.2)
+\]
+
+| | \(\operatorname{Std}_n\) | MeanAD |
+|--|--------------------------|--------|
+| \(y^{(A)}\) | \(\sqrt{2.005}\approx 1.416\) | \(1.05\) |
+| \(y^{(B)}\) | \(1.2\) | \(1.2\) |
+
+\[
+\operatorname{Std}(y^{(A)})>\operatorname{Std}(y^{(B)})
+\quad\text{mais}\quad
+\operatorname{MeanAD}(y^{(A)})<\operatorname{MeanAD}(y^{(B)}).
+\]
+
+**Rank reversal.** Donc pour
+
+\[
+\rho_{\mathrm{Spearman}}(Z,\Delta),
+\]
+
+le choix Std vs MeanAD peut **changer l'estimand observé**. MeanAD
+**n'est pas** une simple « variante de robustesse » au sens §9.16
+(co-survie d'une même conclusion sous géométries équivalentes pour
+un même contrôle) : ce sont deux définitions potentiellement
+**ordinalement distinctes** de « davantage d'instabilité ».
+
+### 14B.8 Revue adversariale
+
+**Attaques Std :** dominance de queue \(L_2\) ; domination par un choc ;
+convention \(n\) vs \(n-1\) (immaterial si \(n\) fixe) ; dérive conceptuelle
+vers « détecteur de choc ».
+
+**Attaques MeanAD :** moindre sensibilité aux extrêmes (peut sous-peser
+une instabilité concentrée) ; \(\bar y\) encore influencé par outliers ;
+pas d'interprétation Euclidienne canonique ; **rank disagreement** avec
+Std ; appeler cela « robustesse » **masque** un changement d'estimand.
+
+### 14B.9 Verdicts (aucune acceptation de \(Z_t\))
+
+| Fonctionnelle | Verdict |
+|---------------|---------|
+| **MAD** (médiane) | `REJECT` (I02/A only) |
+| **Std** | `PROMISING` |
+| **MeanAD** (autour de la moyenne) | `PROMISING` |
+
+**Réponses imposées :**
+
+1. **Plus directe sémantiquement ?** Les deux implémentent une
+   Disp **centrée** détectant saut et accélération. Std = géométrie
+   \(L_2\) (chocs amplifiés) ; MeanAD = \(L_1\) (plus linéaire). Aucune
+   n'est encore PRIMARY figée — **décision humaine** suivante.
+2. **Rank-equivalent ?** **Non** (§14B.7).
+3. **MeanAD = robustness variant ?** **Non** légitimement au sens
+   §9.16, tant que Spearman est l'estimand candidat.
+4. **PRIMARY + ROBUSTNESS vs incertitude sémantique ?** Un désaccord
+   de rang implique **incertitude sémantique** sur la géométrie
+   (\(L_2\) vs \(L_1\)) de « davantage d'instabilité », **pas** un
+   schéma robustesse gratuit. Préenregistrer le rôle de chaque
+   fonctionnelle **avant** toute donnée. Options documentaires :
+   (i) choisir PRIMARY unique ; (ii) préenregistrer
+   \(\{Z^{(2)},Z^{(1)}\}\) avec règle type §9.16 sur la **conclusion**
+   — mais ce n'est **pas** automatique.
+5. **Population vs sample ?** **Non matériel** pour rangs à \(n\) fixe
+   (§14B.5).
+
+\[
+\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\]
+
+**Recommandation documentaire :** décision humaine étroite —
+géométrie \(L_2\) (Std) vs \(L_1\) (MeanAD) compte tenu du rank
+reversal ; ensuite \(m\). Pas de MAD ; pas de critère de régularité.
+
+### 14B.10 Cohérence
+
+| Contrôle | OK |
+|----------|-----|
+| §14A.12 non rouvert | oui |
+| MAD rejetée localement seulement | oui |
+| Pas de critère \(C^\infty\) | oui |
+| Rank reversal documenté | oui |
+| Pas de \(m\)/\(W\)/\(\varepsilon\)/données | oui |
+| I02 NOT OPENED | oui |
+
+---
+
 ## 15. Market-State / Regime Engine
 
 **Aucun contrat empirique n'est dérivé d'I01.** Aucune architecture
@@ -1976,8 +2230,11 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 Ne pas résoudre dans ce draft :
 
-- **Disp** (UNFIXED) ; **\(m\)** (UNRESOLVED ; \(m=W\) défendable non forcé) ;
-- formule exacte \(Z_t\) (famille A candidate seulement) ;
+- **choix Std vs MeanAD** (rank reversal ⇒ décision géométrique ;
+  rôles à préenregistrer) ; convention \(\mathrm{Std}_n\) vs
+  \(\mathrm{Std}_{n-1}\) (immaterial si \(n\) fixe) ;
+- **\(m\)** (UNRESOLVED ; \(m=W\) défendable non forcé) ;
+- formule exacte \(Z_t\) ;
 - définition protocolaire du « désaccord matériel » sous §9.16 ;
 - détail d'agrégation \(L\)+forme dans l'opérateur kNN ;
 - Spearman / CRPS / inférence dépendance temporelle ;
@@ -1989,15 +2246,13 @@ Ne pas résoudre dans ce draft :
 **CLOSED :**
 
 - doctrine §9.16 ; \(\mathcal{M}_{S3}\), \(\mathcal{M}_{S2}\) ;
-- B `REJECT`, C `WEAK` ; D-sign-flips `WEAK` ;
-- décision cas 3 / cas 5 ⇒ famille **A** primaire candidate ;
-- \(E\) = mécanisme alternatif (≠ robustesse de A) ;
+- B/C ; D-sign-flips `WEAK` ; \(E\) = alternatif ;
+- famille **A** primaire candidate ;
+- **MAD médiane = `REJECT`** pour I02/A (§14B.1) ;
 - framing \(C_t\) binaire stress.
 
-**Accepté (représentations / métriques) :** \(S_1/S_2/S_3\) ; invariant
-multiplicatif ; §9.16 locale I02.
-
-**Candidat sémantique (non formule) :** famille A pour \(Z_t\).
+**Candidats Disp restants :** Std `PROMISING` ; MeanAD `PROMISING`
+— **non** rank-equivalent ; MeanAD ≠ robustesse automatique.
 
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
@@ -2017,7 +2272,10 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [x] Décision sémantique cas 3 / cas 5 : famille **A** =
       `PRIMARY SEMANTIC CANDIDATE` ; \(E\) = mécanisme alternatif
       (≠ robustesse de A) — **pas** de \(Z_t\) acceptée (§14A.12)
-- [ ] Disp et \(m\) résolus ; formule \(Z_t\) éventuellement acceptée
+- [x] Revue Disp §14B : MAD `REJECT` ; Std / MeanAD `PROMISING` ;
+      **non** rank-equivalent
+- [ ] Disp (Std vs MeanAD) et \(m\) tranchés ; formule \(Z_t\)
+      éventuellement acceptée
 - [x] Représentations \(S_1/S_2/S_3\) **acceptées**
 - [x] Invariant multiplicatif **accepté**
 - [ ] Observable futur **approuvé** (\(V_{t,h}\) candidat)
@@ -2038,8 +2296,9 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 | Aucun chiffre / donnée / CRPS | oui |
 | \(S_1/S_2/S_3\) / §9.16 inchangés | oui |
 | Famille A = primary semantic candidate (§14A.12) | oui |
-| \(E\) = alternatif ≠ robustesse de A | oui |
-| Disp / \(m\) UNRESOLVED ; `NO Z_t ACCEPTED` | oui |
+| MAD `REJECT` ; Std/MeanAD `PROMISING` ; rank reversal | oui |
+| MeanAD ≠ robustesse auto (§14B.7) | oui |
+| Disp / \(m\) encore OPEN ; `NO Z_t ACCEPTED` | oui |
 | I01 CLOSED ; I02 NOT OPENED | oui |
 
 ---
