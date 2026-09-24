@@ -20,6 +20,7 @@
 > **Draft v0.10 A vs D / m :** `22ddd95`
 > **Draft v0.11 family A primary candidate :** `e7cecc2`
 > **Draft v0.12 Disp review :** `ab6645f`
+> **Draft v0.13 Disp = Std_pop :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -45,9 +46,9 @@ REPRESENTATION ACCEPTED / METRIC ROBUSTNESS SETS ACCEPTED
 **Doctrine §9.16 :** `ACCEPTED` (locale I02) — \(\mathcal{M}_{S3}\),
 \(\mathcal{M}_{S2}\) figés ; sujet métrique pré-cadrage **CLOSED**.
 
-**État \(Z_t\) :** famille **A** = `PRIMARY SEMANTIC CANDIDATE`
-(§14A.12) ; \(E\) = mécanisme alternatif ; Disp : revue §14B
-(MAD `REJECT` ; Std / MeanAD encore OPEN) ; \(m\) UNRESOLVED.
+**État \(Z_t\) :** famille **A** = `PRIMARY SEMANTIC CANDIDATE` ;
+\(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) `ACCEPTED` (§14B.11) —
+géométrie \(L_2\) ; \(m\) UNRESOLVED ; formule \(Z_t\) **incomplète**.
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
@@ -1925,14 +1926,14 @@ A et \(E\) **distincts** (cas 3, 5). Suite : §14A.12.
 
 | Objet | Statut figé |
 |-------|-------------|
-| Famille **A** (\(\operatorname{Disp}(\Delta L)\), Disp UNFIXED) | `PRIMARY SEMANTIC CANDIDATE` pour \(Z_t\) |
+| Famille **A** (\(\operatorname{Disp}(\Delta L)\)) | `PRIMARY SEMANTIC CANDIDATE` pour \(Z_t\) |
 | Cas 3 (accélération monotone) | manifestation **pertinente** d'instabilité locale |
 | Cas 5 (saut unidirectionnel brutal) | manifestation **pertinente** d'instabilité locale |
 | \(E=\mathrm{TV}-\lvert\mathrm{net}\rvert\) | **mécanisme alternatif** (backtracking / path reversal) — **pas** métrique de robustesse de A |
 | D-sign-flips | `WEAK` (inchangé) |
-| Disp | `UNRESOLVED` / UNFIXED |
+| Disp | `ACCEPTED` = \(\mathrm{Std}_{\mathrm{pop}}\) (§14B.11) |
 | \(m\) | `UNRESOLVED` |
-| Formule \(Z_t\) | **non acceptée** |
+| Formule \(Z_t\) | **non acceptée** (incomplete sans \(m\)) |
 
 \[
 \boxed{\text{Family A = primary semantic candidate}}
@@ -1946,9 +1947,9 @@ A est le candidat sémantique primaire ; \(E\) reste disponible comme
 piste alternative / future investigation, sans obligation de
 co-survie avec A pour interpréter un résultat sur A.
 
-**Prochaines questions OPEN (étroit) :** choix Std vs MeanAD (§14B) ;
-\(m\). Toujours sans donnée, sans \(\varepsilon\), sans acceptation
-\(Z_t\).
+**Prochaines questions OPEN (étroit) :** \(m\) (dont statut \(m=W\)).
+Disp figée §14B.11. Toujours sans donnée, sans \(\varepsilon\), sans
+acceptation \(Z_t\).
 
 ### 14A.13 Cohérence
 
@@ -2201,11 +2202,10 @@ Std ; appeler cela « robustesse » **masque** un changement d'estimand.
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
 
-**Recommandation documentaire :** décision humaine étroite —
-géométrie \(L_2\) (Std) vs \(L_1\) (MeanAD) compte tenu du rank
-reversal ; ensuite \(m\). Pas de MAD ; pas de critère de régularité.
+**Recommandation documentaire (§14B, historique) :** tranchée en
+§14B.11 — géométrie \(L_2\) / \(\mathrm{Std}_{\mathrm{pop}}\).
 
-### 14B.10 Cohérence
+### 14B.10 Cohérence (revue)
 
 | Contrôle | OK |
 |----------|-----|
@@ -2215,6 +2215,76 @@ reversal ; ensuite \(m\). Pas de MAD ; pas de critère de régularité.
 | Rank reversal documenté | oui |
 | Pas de \(m\)/\(W\)/\(\varepsilon\)/données | oui |
 | I02 NOT OPENED | oui |
+
+### 14B.11 Décision humaine — \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\)
+
+**Statut :** `ACCEPTED` pour I02 / famille A. **Pas** d'acceptation
+de \(Z_t\). \(L_1/L_2\) **ne se rediscute plus** sauf contradiction
+mathématique nouvelle.
+
+\[
+\operatorname{Disp}(y)
+=
+\mathrm{Std}_{\mathrm{pop}}(y)
+=
+\sqrt{
+\frac1n\sum_{i=1}^{n}(y_i-\bar y)^{2}
+}
+=
+\frac{\lVert y-\bar y\,\mathbf{1}\rVert_{2}}{\sqrt{n}}
+\]
+
+avec \(y_i=\Delta L_i\), \(L_t=\log(RV_t)\) sur \(RV_t>0\).
+
+**Géométrie :** distance euclidienne normalisée du vecteur
+d'incréments à l'espace des incréments constants
+\(S=\{c\mathbf{1}:c\in\mathbb{R}\}\).
+
+**Justification acceptée :**
+
+1. \(\operatorname{Disp}=0\) si \(\Delta L_i=c\) pour tout \(i\)
+   (volatilité constante, hausse ou baisse **régulière**) ;
+2. \(\operatorname{Disp}>0\) si le taux de changement varie
+   (accélération, décélération, saut unidirectionnel, oscillation) ;
+3. un choc isolé **appartient** à la sémantique — ne pas l'éliminer
+   comme outlier ;
+4. géométrie euclidienne explicite sur les écarts à une dynamique
+   constante ;
+5. dénominateur **population** \(n\) : la fenêtre **est** l'objet
+   d'état, pas un échantillon pour estimer sans biais une variance
+   hypothétique.
+
+| Fonctionnelle | Statut figé |
+|---------------|-------------|
+| \(\mathrm{Std}_{\mathrm{pop}}\) | **`ACCEPTED`** (Disp pour I02/A) |
+| MAD (médiane) | `REJECTED FOR I02/A` |
+| MeanAD (autour de la moyenne) | `VALID ALTERNATIVE GEOMETRY` — **not retained** for I02/A ; **≠** robustness variant |
+| \(E=\mathrm{TV}-\lvert\mathrm{net}\rvert\) | `ALTERNATIVE MECHANISM` (path reversal) — pas composante de A, pas à combiner / tester maintenant |
+
+**Formules saut unique (§14B.4) :** déjà correctes
+(\(\lvert\delta\rvert\sqrt{n-1}/n\), \(\lvert\delta\rvert/\sqrt{n}\),
+\(2(n-1)\lvert\delta\rvert/n^{2}\)) — **aucune correction**.
+
+\[
+\boxed{\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\ \texttt{ACCEPTED}}
+\quad
+\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\]
+
+**Encore OPEN :** \(m\) ; \(m\) vs \(W\) ; empan effectif ; \(W\) ;
+construction RV si non gelée ; redondance temporelle ; CRPS ;
+Spearman ; inférence ; ouverture I02. La formule complète de \(Z_t\)
+reste **incomplète** sans \(m\).
+
+### 14B.12 Cohérence (post-décision)
+
+| Contrôle | OK |
+|----------|-----|
+| Disp = Std_pop ACCEPTED | oui |
+| MeanAD ≠ robustesse ; MAD REJECT | oui |
+| \(E\) inchangé (alternatif) | oui |
+| Pas de choix \(m\)/\(W\) | oui |
+| `NO Z_t ACCEPTED` ; I02 NOT OPENED | oui |
 
 ---
 
@@ -2230,11 +2300,10 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 Ne pas résoudre dans ce draft :
 
-- **choix Std vs MeanAD** (rank reversal ⇒ décision géométrique ;
-  rôles à préenregistrer) ; convention \(\mathrm{Std}_n\) vs
-  \(\mathrm{Std}_{n-1}\) (immaterial si \(n\) fixe) ;
-- **\(m\)** (UNRESOLVED ; \(m=W\) défendable non forcé) ;
-- formule exacte \(Z_t\) ;
+- **\(m\)** (UNRESOLVED ; \(m=W\) défendable non forcé) — **prochain
+  verrou** ;
+- formule complète \(Z_t\) (Disp figée ; \(m\) manquant) ;
+- \(m\) vs \(W\) ; empan historique effectif ;
 - définition protocolaire du « désaccord matériel » sous §9.16 ;
 - détail d'agrégation \(L\)+forme dans l'opérateur kNN ;
 - Spearman / CRPS / inférence dépendance temporelle ;
@@ -2248,11 +2317,11 @@ Ne pas résoudre dans ce draft :
 - doctrine §9.16 ; \(\mathcal{M}_{S3}\), \(\mathcal{M}_{S2}\) ;
 - B/C ; D-sign-flips `WEAK` ; \(E\) = alternatif ;
 - famille **A** primaire candidate ;
-- **MAD médiane = `REJECT`** pour I02/A (§14B.1) ;
+- MAD `REJECTED FOR I02/A` ;
+- **\(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) `ACCEPTED`**
+  (§14B.11) — \(L_1/L_2\) clos sauf contradiction mathématique ;
+- MeanAD = géométrie \(L_1\) valide **non retenue** (≠ robustesse) ;
 - framing \(C_t\) binaire stress.
-
-**Candidats Disp restants :** Std `PROMISING` ; MeanAD `PROMISING`
-— **non** rank-equivalent ; MeanAD ≠ robustesse automatique.
 
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
@@ -2272,10 +2341,9 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [x] Décision sémantique cas 3 / cas 5 : famille **A** =
       `PRIMARY SEMANTIC CANDIDATE` ; \(E\) = mécanisme alternatif
       (≠ robustesse de A) — **pas** de \(Z_t\) acceptée (§14A.12)
-- [x] Revue Disp §14B : MAD `REJECT` ; Std / MeanAD `PROMISING` ;
-      **non** rank-equivalent
-- [ ] Disp (Std vs MeanAD) et \(m\) tranchés ; formule \(Z_t\)
-      éventuellement acceptée
+- [x] Revue Disp §14B ; **\(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\)
+      `ACCEPTED`** (§14B.11) ; MAD REJECT ; MeanAD non retenue
+- [ ] \(m\) tranché ; formule \(Z_t\) éventuellement acceptée
 - [x] Représentations \(S_1/S_2/S_3\) **acceptées**
 - [x] Invariant multiplicatif **accepté**
 - [ ] Observable futur **approuvé** (\(V_{t,h}\) candidat)
@@ -2296,9 +2364,9 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 | Aucun chiffre / donnée / CRPS | oui |
 | \(S_1/S_2/S_3\) / §9.16 inchangés | oui |
 | Famille A = primary semantic candidate (§14A.12) | oui |
-| MAD `REJECT` ; Std/MeanAD `PROMISING` ; rank reversal | oui |
-| MeanAD ≠ robustesse auto (§14B.7) | oui |
-| Disp / \(m\) encore OPEN ; `NO Z_t ACCEPTED` | oui |
+| \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) `ACCEPTED` (§14B.11) | oui |
+| MeanAD non retenue (≠ robustesse) ; MAD REJECT | oui |
+| \(m\) OPEN ; `NO Z_t ACCEPTED` | oui |
 | I01 CLOSED ; I02 NOT OPENED | oui |
 
 ---
