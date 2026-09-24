@@ -15,7 +15,7 @@
 > **Draft v0.5 level invariant :** `9a9cf89`
 > **Draft v0.6 Q vs φ review :** `8b652f7`
 > **Draft v0.7 metric robustness :** `2a92da7`
-> **Draft v0.8 accept §9.16 :** *(ce commit)*
+> **Draft v0.8 accept §9.16 :** `ceb224c`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -418,7 +418,7 @@ Pas de reproduction sur information indépendante. Issue normale.
 ## 9. Batterie d'adversaires \(S_1,S_2,S_3\)
 
 **Statut :** `REPRESENTATION ACCEPTED / METRIC ROBUSTNESS SETS ACCEPTED`
-(représentations @ `c85476c` ; doctrine §9.16 @ ce draft).
+(représentations @ `c85476c` ; doctrine §9.16 @ `ceb224c`).
 
 Ce qui est accepté : la **nature informationnelle** des trois
 adversaires ; \(\mathcal{M}_{S2}\), \(\mathcal{M}_{S3}\) (§9.16).
