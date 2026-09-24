@@ -19,7 +19,7 @@
 > **Draft v0.9 Z_t review :** `5681916`
 > **Draft v0.10 A vs D / m :** `22ddd95`
 > **Draft v0.11 family A primary candidate :** `e7cecc2`
-> **Draft v0.12 Disp review :** *(ce commit)*
+> **Draft v0.12 Disp review :** `ab6645f`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
