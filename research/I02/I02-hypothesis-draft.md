@@ -28,6 +28,7 @@
 > **Draft v0.18 multiscale governance :** `ef5d39c`
 > **Draft v0.19 W_X inheritance review :** `27b8102`
 > **Draft v0.20 accept W_X=20 :** `e42b3a8`
+> **Draft v0.21 freeze M_Z :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -53,12 +54,10 @@ REPRESENTATION ACCEPTED / METRIC ROBUSTNESS SETS ACCEPTED
 **Doctrine §9.16 :** `ACCEPTED` (locale I02) — \(\mathcal{M}_{S3}\),
 \(\mathcal{M}_{S2}\) figés ; sujet métrique pré-cadrage **CLOSED**.
 
-**État \(Z_t\) :** Disp `ACCEPTED` ;
-\(W_X=20\) `ACCEPTED` (§14G.14) —
-`INHERITED FIXED DESIGN CONSTRAINT` ;
-\(W_{RV}=20\) (dérivé) ; domaine \(3\le m_Z\le 21\) ;
-politique multi-échelle §14F — **aucune** \(m_Z\) / \(\mathcal{M}_Z\)
-numérique encore ; formule \(Z_t\) **incomplète**.
+**État \(Z_t\) :** Disp `ACCEPTED` ; \(W_X=W_{RV}=20\) ;
+domaine \(3\le m_Z\le 21\) ; \(\mathcal{M}_Z=\{3,12,21\}\)
+`ACCEPTED` (§14H) — **no-primary** ; formule \(Z_t\) encore
+**incomplète** (stride / objet prédictif).
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
@@ -3463,6 +3462,165 @@ réplication.
 
 ---
 
+## 14H. Famille numérique multi-échelle \(\mathcal{M}_Z\)
+
+**Nature :** mathématique / documentaire. **Aucune donnée.**
+Prérequis : \(W_X=W_{RV}=20\), domaine \([3,21]\), politique §14F.
+I02 = `NOT OPENED`.
+
+### 14H.0 Objectif et contraintes
+
+Matérialiser une **petite** famille préenregistrée
+
+\[
+\mathcal{M}_Z=\{m_Z^{(1)},\ldots,m_Z^{(q)}\}
+\subset\{3,4,\ldots,21\}
+\]
+
+**CO-PRE-REGISTERED**, **NO PRIMARY**. Pas une grille, pas de
+sélection post-run, pas de « best \(m_Z\) ».
+
+### 14H.1 \(q\)
+
+| \(q\) | Évaluation |
+|-------|------------|
+| 2 | bornes seules — trop peu d'info d'échelle ; fausse robustesse |
+| **3** | couverture minimale SHORT / INTERMEDIATE / LONG-LOCAL |
+| \(>3\) | risque grid-search ; multiplicité sans gain d'identifiabilité |
+
+**Verdict :** \(q=3\) retenu comme couverture minimale de gouvernance.
+
+### 14H.2 Constructions candidates (a priori)
+
+Domaine admissible \(D=[L,U]\) avec \(L=3\), \(U=W_{RV}+1\).
+
+| ID | Règle | Pour \(W_{RV}=20\) |
+|----|-------|---------------------|
+| **A** Linéaire dans \(D\) | \(\{L,\;\mathrm{mid}(L,U),\;U\}\) | \(\{3,12,21\}\) |
+| **B** Relative / \(W_{RV}\) | ex. \(\{L,\;W_{RV}/2,\;U\}\) | \(\{3,10,21\}\) |
+| **C** Bornes + centre « matching » | \(\{L,\;W_{RV},\;U\}\) | \(\{3,20,21\}\) |
+
+**Adversarial :**
+
+| Construction | Objection |
+|--------------|-----------|
+| **B** (\(W_{RV}/2\)) | centre collé à l'horizon d'estimation — préférence cachée pour l'échelle \(W_{RV}\) |
+| **C** (\(W_{RV}\)) | matching esthétique déjà rejeté comme identification (§14E) ; LONG et mid presque collés (20≈21) — **pas** trois mémoires distinctes |
+| **A** (midpoint de \(D\)) | voisins 11/13 ? le midpoint est l'unique centre affine du domaine admissible, sans référence à \(W_{RV}\) comme valeur préférée |
+
+**Verdict construction :** **A** retenue.
+
+### 14H.3 Bornes dans \(\mathcal{M}_Z\)
+
+| Borne | Rôle |
+|-------|------|
+| \(m_Z=3\) | SHORT extrême ; proche détecteur minimal — **informatif** pour MS-2 (localisation courte) |
+| \(m_Z=21\) | LONG-LOCAL maximal avant dual-signature — **informatif** pour MS-2 (localisation longue) |
+
+**Verdict :** inclusion des **deux** bornes **retenue** (cas limites
+scientifiquement utiles, pas de tuning).
+
+### 14H.4 Intermediate
+
+Centre affine du domaine :
+
+\[
+m_{\mathrm{mid}}
+=
+\operatorname{round}_{\ast}\!\left(\frac{L+U}{2}\right)
+=
+\operatorname{round}_{\ast}\!\left(\frac{W_{RV}+4}{2}\right)
+\]
+
+Pour \(W_{RV}=20\) : \((20+4)/2=12\) exact.
+
+Centre géométrique \(\sqrt{L\cdot U}\) : pour \((3,21)\) ≈ 7,94 → 8 ;
+moins naturel pour une mémoire **additive** d'incréments. Non retenu.
+
+### 14H.5 Règle d'arrondi (déterministe, future-proof)
+
+Pour tout \(W_{RV}\ge 2\) autorisant un domaine non dégénéré :
+
+1. \(m_{\mathrm{short}}:=3\) (si \(3\le W_{RV}+1\) ; sinon domaine
+   dégénéré — hors I02 actuel) ;
+2. \(m_{\mathrm{long}}:=W_{RV}+1\) ;
+3. \(m_{\mathrm{mid}}:=\operatorname{round}_{\ast}((3+W_{RV}+1)/2)\)
+   où \(\operatorname{round}_{\ast}\) = arrondi au plus proche entier ;
+   en cas de **tie** (.5) : arrondir **vers le haut** (away from
+   \(-\infty\), i.e. \(\lceil x\rceil\) sur les demi-entiers positifs) ;
+4. former l'ensemble \(\{m_{\mathrm{short}},m_{\mathrm{mid}},m_{\mathrm{long}}\}\) ;
+5. **dédoublonnage** : si collision après arrondi, supprimer les
+   doublons et conserver l'ordre croissant ; si \(\lvert\mathcal{M}_Z\rvert<3\)
+   (domaine trop étroit), la famille se réduit mécaniquement — documenter
+   à l'ouverture d'une investigation avec autre \(W_X\) ;
+6. **ordre** : strictement croissant après dédoublonnage.
+
+### 14H.6 Famille figée pour I02
+
+\[
+\boxed{\mathcal{M}_Z=\{3,\,12,\,21\}}
+\]
+
+| Label | \(m_Z\) | \(n_Z=m_Z-1\) |
+|-------|---------|---------------|
+| SHORT | 3 | 2 |
+| INTERMEDIATE | 12 | 11 |
+| LONG-LOCAL | 21 | 20 |
+
+**Statut :** `ACCEPTED` — **CO-PRE-REGISTERED**, **NO PRIMARY**.
+
+Mémoires distinctes : 2 / 11 / 20 incréments — espacement clair,
+pas de cluster près de \(W_{RV}\).
+
+### 14H.7 Taxonomie MS (inchangée)
+
+| Code | Cas |
+|------|-----|
+| MS-1 | Cross-scale consistent |
+| MS-2 | Scale-localized — **≠** retune / PRIMARY |
+| MS-3 | Cross-scale contradictory |
+| MS-4 | Cross-scale inconclusive |
+
+### 14H.8 Attaques
+
+| Attaque | Réponse |
+|---------|---------|
+| Pourquoi pas 11/13 ? | mid = unique centre affine de \([3,21]\) |
+| Grid search ? | \(q=3\) fixe, préenregistré, no selection |
+| Préférence \(W_{RV}\) ? | mid ≠ 20 ; construction A évite B/C |
+| \(m_Z=3\) trop local ? | inclus comme SHORT extrême pour MS-2 |
+| Sur-représentation ? | une échelle par régime de longueur |
+
+### 14H.9 Horizons — clôture pré-cadrage
+
+| Objet | Statut |
+|-------|--------|
+| \(W_X\) | \(20\) ACCEPTED |
+| \(W_{RV}\) | \(20\) DERIVED |
+| Domaine \(m_Z\) | \([3,21]\) |
+| \(\mathcal{M}_Z\) | \(\{3,12,21\}\) ACCEPTED |
+
+**Prochain bloc pré-cadrage :** objet prédictif / évaluation
+(\(V_{t,h}\), \(h\), CRPS candidat) — pas de retouche d'horizons
+sauf contradiction mathématique.
+
+\[
+\boxed{\text{NO DATA USED}}
+\quad
+\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\]
+
+### 14H.10 Cohérence
+
+| Contrôle | OK |
+|----------|-----|
+| §14F / \(W_X\) non rouverts | oui |
+| No-primary ; pas de sélection post-hoc | oui |
+| Règle relative + arrondi déterministe | oui |
+| I02 NOT OPENED | oui |
+
+---
+
 ## 15. Market-State / Regime Engine
 
 **Aucun contrat empirique n'est dérivé d'I01.** Aucune architecture
@@ -3475,24 +3633,22 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 Ne pas résoudre dans ce draft :
 
-- **famille numérique \(\mathcal{M}_Z\)** dans \([3,21]\) (§14F) —
-  **prochaine** étape autorisée ;
 - acceptation formelle rolling / stride 1 ;
-- formule complète \(Z_t\) ;
-- correction statistique de multiplicité ;
+- formule complète \(Z_t\) (Disp+\(\mathcal{M}_Z\) ok ; reste
+  agrégation query-level / stride) ;
+- objet prédictif final / \(h\) / acceptation CRPS ;
+- correction statistique de multiplicité (exigences §14F.6) ;
 - empan / redondance du **pool** de voisins ;
-- désaccord matériel §9.16 ; agrégation \(L\)+forme ;
-- Spearman / CRPS / inférence ;
+- désaccord matériel §9.16 ; agrégation \(L\)+forme kNN ;
+- Spearman / inférence ;
 - singularités — pas d'\(\varepsilon\) ;
-- \(h\), \(k\) ; holdout ; Market-State Engine.
+- \(k\) ; holdout ; Market-State Engine.
 
-**CLOSED :**
+**CLOSED (horizons) :**
 
-- Disp ; \(W_{RV}:=W_X\) ;
-- **\(W_X=20\)** `INHERITED FIXED DESIGN CONSTRAINT` ;
-- **\(W_{RV}=20\)** dérivé ;
-- domaine **\(3\le m_Z\le 21\)** (aucune valeur \(m_Z\)) ;
-- politique multi-échelle §14F (forme).
+- \(W_X=20\) ; \(W_{RV}=20\) ; domaine \([3,21]\) ;
+- \(\mathcal{M}_Z=\{3,12,21\}\) no-primary (§14H) ;
+- politique MS-1…4.
 
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
@@ -3525,10 +3681,11 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
       NUMERICAL \(\mathcal{M}_Z\) **après \(W_X\)** (`B`) ;
       no-primary ; MS-1…4
 - [x] Revue \(W_X\) §14G : class `B` preferred
-- [x] **\(W_X=20\)** `ACCEPTED` — `INHERITED FIXED DESIGN CONSTRAINT`
-      (§14G.14) ; \(W_{RV}=20\) dérivé ; domaine \(3\le m_Z\le 21\)
-- [ ] Famille numérique \(\mathcal{M}_Z\) (§14F) ; stride 1 ;
-      formule \(Z_t\) éventuellement acceptée
+- [x] **\(W_X=20\)** `ACCEPTED` ; \(W_{RV}=20\) ; domaine
+      \(3\le m_Z\le 21\)
+- [x] \(\mathcal{M}_Z=\{3,12,21\}\) `ACCEPTED` (§14H) — no-primary
+- [ ] Stride 1 ; formule \(Z_t\) complète ; \(V_{t,h}\) / \(h\) /
+      CRPS éventuellement acceptés
 - [x] Représentations \(S_1/S_2/S_3\) **acceptées**
 - [x] Invariant multiplicatif **accepté**
 - [ ] Observable futur **approuvé** (\(V_{t,h}\) candidat)
@@ -3553,9 +3710,10 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 | \(W_{RV}:=W_X\) comparability coupling `ACCEPTED` | oui |
 | \(3\le m_Z\le W_{RV}+1\) `ACCEPTED` ; not identifiable ; class C | oui |
 | §14F multi-scale policy ; NUMERICAL after \(W_X\) | oui |
-| \(W_X=20\) inherited ACCEPTED ; \(W_{RV}=20\) derived | oui |
-| Domaine \(3\le m_Z\le 21\) ; no \(m_Z\) / no \(\mathcal{M}_Z\) yet | oui |
-| `NO Z_t ACCEPTED` ; I02 NOT OPENED | oui |
+| \(W_X=W_{RV}=20\) ; domaine \([3,21]\) | oui |
+| \(\mathcal{M}_Z=\{3,12,21\}\) ACCEPTED ; no-primary | oui |
+| Horizons pré-cadrage CLOSED ; `NO Z_t ACCEPTED` | oui |
+| I01 CLOSED ; I02 NOT OPENED | oui |
 
 ---
 
