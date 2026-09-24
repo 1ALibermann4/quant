@@ -25,6 +25,7 @@
 > **Draft v0.15 W_RV := W_X :** `e3fc32c`
 > **Draft v0.16 m_Z admissibility :** `52a8a4a`
 > **Draft v0.17 m_Z domain + identifiability :** `08f845d`
+> **Draft v0.18 multiscale governance :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -50,12 +51,11 @@ REPRESENTATION ACCEPTED / METRIC ROBUSTNESS SETS ACCEPTED
 **Doctrine §9.16 :** `ACCEPTED` (locale I02) — \(\mathcal{M}_{S3}\),
 \(\mathcal{M}_{S2}\) figés ; sujet métrique pré-cadrage **CLOSED**.
 
-**État \(Z_t\) :** famille **A** ; \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\)
-`ACCEPTED` ; \(W_{RV}:=W_X\) `ACCEPTED` ; domaine
-\(3\le m_Z\le W_{RV}+1\) `ACCEPTED` (§14E) ; \(m_Z\)
-**not structurally identifiable** — gouvernance multi-échelle
-préenregistrée (forme) ; **aucune** valeur ; formule \(Z_t\)
-**incomplète**.
+**État \(Z_t\) :** famille **A** ; Disp / \(W_{RV}:=W_X\) / domaine
+\(m_Z\) `ACCEPTED` ; \(m_Z\) not identifiable ; gouvernance
+multi-échelle §14F — **POLICY FREEZE** possible maintenant ;
+**NUMERICAL \(\mathcal{M}_Z\)** après \(W_X\) (`B`) ; **aucune**
+valeur ; formule \(Z_t\) **incomplète**.
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
@@ -3040,6 +3040,195 @@ pas comme issue de ce mandat d'identifiabilité.)*
 
 ---
 
+## 14F. Gouvernance multi-échelle de \(m_Z\)
+
+**Nature :** mathématique / méthodologique / documentaire. **Aucune
+donnée.** Aucune valeur / fraction / grille de \(m_Z\). Bases §14E
+**non rouvertes.** I02 = `NOT OPENED`.
+
+**Objectif :** comment construire une petite famille préenregistrée
+\(\mathcal{M}_Z=\{m_Z^{(1)},\ldots,m_Z^{(q)}\}\) **sans** tuning,
+optimisation, sélection post-hoc, CRPS/Spearman/SPY/E01–E04, ni
+« best \(m_Z\) ».
+
+### 14F.0 Distinguer POLICY FREEZE et NUMERICAL FREEZE
+
+| Couche | Contenu | Figement |
+|--------|---------|----------|
+| **POLICY FREEZE** | règles de construction, taxonomie MS, no-primary, multiplicité, réplication | **maintenant** possible |
+| **NUMERICAL SCALE FREEZE** | valeurs concrètes de \(\mathcal{M}_Z\) | **après** \(W_X\) (car \(W_{RV}:=W_X\) borne le domaine) |
+
+### 14F.1 Couverture d'échelle — trois philosophies
+
+#### A. Absolute spacing
+
+Valeurs absolues prédéfinies dans \([3,W_{RV}+1]\).
+
+**Verdict :** `WEAK` / non retenu comme politique. Dépend de la
+valeur future de \(W_{RV}\) ; mauvaise transférabilité si \(W_X\)
+change ; « evenly spaced » = fausse neutralité.
+
+#### B. Relative-to-\(W_{RV}\)
+
+Positions relatives dans \([3,W_{RV}+1]\) (sans fractions figées
+ici).
+
+**Verdict :** `PROMISING` pour la **politique**. Invariance de forme
+quand \(W_{RV}\) change ; attention arrondis / doublons si \(W_{RV}\)
+petit (domaine étroit) ; interprétable comme « short / mid / long
+dans le domaine admissible ».
+
+#### C. Semantic scale classes — SHORT / INTERMEDIATE / LONG-LOCAL
+
+LONG-LOCAL reste \(\le W_{RV}+1\).
+
+**Verdict :** `PROMISING` comme **vocabulaire**, `WEAK` s'il cache
+des fractions arbitraires non déclarées. Admissible seulement si les
+classes sont **définies comme** des positions relatives explicites
+dans le domaine (cas B) — sinon short/medium/long = catégories
+ornementales.
+
+**Synthèse couverture :** politique = **relative-to-\(W_{RV}\)**
+(éventuellement labellisée sémantiquement) ; pas absolute spacing.
+
+### 14F.2 Combien d'échelles \(q\) ?
+
+| Trop peu | Trop |
+|----------|------|
+| fausse robustesse / mauvaise info d'échelle | multiplicité, flexibilité analytique, **grid-search déguisé** |
+
+Aucune \(q\) structurellement identifiable. Exigence qualitative :
+**petit** ensemble représentatif des extrémités du domaine et d'au
+moins une position intérieure — **sans** chiffrer \(q\) ici.
+
+**Verdict \(q\) :** `NOT STRUCTURALLY IDENTIFIABLE` ; borne
+supérieure conceptuelle « assez petit pour ne pas être une grille ».
+
+### 14F.3 PRIMARY vs no-primary — BLOCKING
+
+| Architecture | Contenu | Cohérence avec « not identifiable » |
+|--------------|---------|-------------------------------------|
+| **A** PRIMARY + sensitivity | une échelle « principale » + autres | **incohérente** si PRIMARY prétend être naturelle / meilleure ; **tolérable** seulement si PRIMARY = **étiquette de reporting conventionnelle** préenregistrée, jamais « parce que meilleure » |
+| **B** co-préenregistrées, **aucune** PRIMARY | toutes les \(m_Z\in\mathcal{M}_Z\) de même statut | **cohérente** avec non-identifiabilité |
+
+**Verdict :** architecture **B** (no-primary / co-primary scales)
+retenue comme gouvernance par défaut. Architecture A **interdite**
+sauf convention de reporting **explicite** et non performative.
+
+**Interdit absolu :** PRIMARY parce qu'elle a le mieux performé.
+
+### 14F.4 Taxonomie cross-scale (avant expérimentation)
+
+« Même conclusion scientifique » ≠ valeurs numériques identiques.
+Indépendant du score final (CRPS / Spearman **non** acceptés) :
+porte sur le **verdict** préenregistré concernant \(X\) vs \(S\)
+sous \(Z(\cdot)\), quelle que soit la mesure ultérieure.
+
+| Code | Cas | Signification | Interdit |
+|------|-----|---------------|----------|
+| **MS-1** | Cross-scale consistent | même conclusion sur **toutes** les \(m_Z\in\mathcal{M}_Z\) | — |
+| **MS-2** | Scale-localized | effet seulement sur une **partie** préidentifiée des échelles | **ne pas** promouvoir cette partie en PRIMARY ; ≠ autorisation de retune |
+| **MS-3** | Cross-scale contradictory | conclusions **opposées** selon l'échelle | verdict d'ensemble `INCONCLUSIVE` / non-résistance selon protocole futur — pas de vote opportuniste |
+| **MS-4** | Cross-scale inconclusive | information insuffisante / instable | ne pas « sauver » via une échelle |
+
+### 14F.5 Scale-localized ≠ échec ; ≠ retune
+
+\[
+\text{observation of scale localization}
+\;\neq\;
+\text{authorization to retune }m_Z
+\]
+
+La localisation d'échelle peut être une **propriété scientifique**
+du phénomène (effet à courte / longue mémoire locale dans le
+domaine). Elle **n'autorise pas** de sélectionner l'échelle
+favorable et de continuer comme si elle était primaire.
+
+### 14F.6 Multiplicité — exigences (pas de correction choisie)
+
+La future inférence **devra** respecter (sans méthode figée ici) :
+
+- pas de minimum \(p\)-value / maximum effect size sur \(\mathcal{M}_Z\) ;
+- pas de majority vote opportuniste ;
+- pas de « best \(m_Z\) » ;
+- dépendance forte entre échelles **reconnue** (pas traiter comme
+  tests indépendants naïfs) ;
+- toute correction / agrégation = **préenregistrée**, pas post-hoc.
+
+### 14F.7 Réplication
+
+\[
+\text{discovered scale dependence}
+\;\longrightarrow\;
+\text{new hypothesis / independent replication}
+\]
+
+Une échelle devenue « intéressante » **après** observation ne se
+confirme **pas** sur les mêmes données en la déclarant primaire.
+
+### 14F.8 Revue adversariale
+
+| Attaque | Rejet |
+|---------|--------|
+| evenly / log spaced = neutralité / naturalité | faux |
+| short/medium/long ornemental | fractions cachées |
+| \(q\) élevé | grid search |
+| \(q=1\) déguisé en multi-scale | fausse robustesse |
+| PRIMARY sans fondement / post-hoc | interdit |
+| majority vote / best \(m_Z\) / min-\(p\) / max-effect | interdit |
+| sélection d'échelle localisée | interdit (§14F.5–7) |
+| changer \(\mathcal{M}_Z\) après résultat | nouvelle investigation |
+
+### 14F.9 Verdicts
+
+| Question | Verdict |
+|----------|---------|
+| Absolute spacing | `WEAK` |
+| Relative-to-\(W_{RV}\) | `PROMISING` (politique) |
+| Semantic classes | `PROMISING` si = labels de B ; sinon `WEAK` |
+| PRIMARY + sensitivity | `WEAK` par défaut ; convention reporting seulement |
+| No-primary / co-registered | **`RETAINED`** |
+| Scale-localized | propriété possible ; ≠ retune |
+| Multiplicité | exigences §14F.6 ; pas de correction choisie |
+| \(q\) | not identifiable ; « petit » qualitative |
+
+### 14F.10 Classification — \(W_X\) et figement
+
+\[
+\boxed{\texttt{B — SPECIFIABLE AFTER }W_X\text{ IS FIXED}}
+\]
+
+**Précision :**
+
+- **POLICY FREEZE** (relative coverage, no-primary, taxonomie MS-1…4,
+  règles multiplicité / réplication) : **SPECIFIABLE NOW** ;
+- **NUMERICAL \(\mathcal{M}_Z\)** : **SPECIFIABLE AFTER \(W_X\)**
+  (domaine \([3,W_X+1]\) ; positions relatives → entiers après
+  arrondi / dédoublonnage).
+
+**Implication pré-cadrage :** arrêter de travailler les **valeurs**
+de \(m_Z\) ; passer à la décision sur \(W_X\) (et stride / reste de
+\(Z_t\)). La politique multi-échelle reste en vigueur comme
+contrainte méthodologique.
+
+\[
+\boxed{\text{NO }m_Z\text{ VALUE SELECTED}}
+\quad
+\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\]
+
+### 14F.11 Cohérence
+
+| Contrôle | OK |
+|----------|-----|
+| §14E non rouvert | oui |
+| Pas de fraction / grille / valeur | oui |
+| ≠ §9.16 | oui |
+| POLICY vs NUMERICAL distingués | oui |
+| I02 NOT OPENED | oui |
+
+---
+
 ## 15. Market-State / Regime Engine
 
 **Aucun contrat empirique n'est dérivé d'I01.** Aucune architecture
@@ -3052,29 +3241,26 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 Ne pas résoudre dans ce draft :
 
-- **gouvernance concrète de \(m_Z\)** : ensemble multi-échelle
-  préenregistré (et éventuelle primaire conventionnelle) — **forme**
-  recommandée §14E.7 ; **aucune** valeur ici ;
-- valeur numérique de \(W_X\) (donc de \(W_{RV}\)) ;
+- **valeur de \(W_X\)** (donc \(W_{RV}\)) — **prochain verrou** ;
+  matérialisation numérique de \(\mathcal{M}_Z\) **après** ;
 - acceptation formelle rolling / stride 1 ;
 - formule complète \(Z_t\) ;
-- empan / redondance temporelle du **pool** de voisins ;
+- ensemble numérique \(\mathcal{M}_Z\) ; \(q\) chiffré ;
+- correction statistique de multiplicité ;
+- empan / redondance du **pool** de voisins ;
 - définition protocolaire du « désaccord matériel » sous §9.16 ;
 - détail d'agrégation \(L\)+forme dans l'opérateur kNN ;
-- Spearman / CRPS / inférence dépendance temporelle ;
-- z-score / rangs / CDF / Mahalanobis / poids appris ;
-- singularités (\(RV=0\), …) — pas d'\(\varepsilon\) ;
+- Spearman / CRPS / inférence ;
+- singularités — pas d'\(\varepsilon\) ;
 - \(h\), \(k\) ; holdout ; Market-State Engine.
 
 **CLOSED :**
 
-- doctrine §9.16 ; \(\mathcal{M}_{S2}\), \(\mathcal{M}_{S3}\) ;
-- famille A ; \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) ;
-- \(W_{RV}:=W_X\) ;
-- **\(3\le m_Z\le W_{RV}+1\)** `ACCEPTED` (§14E.1) ;
-- \(m_Z\) **not structurally identifiable** ; classification
-  `C` (§14E.7) — arrêt quête « valeur naturelle » ;
-- framing \(C_t\) binaire stress.
+- Disp ; \(W_{RV}:=W_X\) ; domaine \(3\le m_Z\le W_{RV}+1\) ;
+- \(m_Z\) not identifiable ; class C §14E ;
+- **politique multi-échelle** §14F : relative-to-\(W_{RV}\),
+  no-primary, taxonomie MS-1…4 ; POLICY FREEZE now ;
+  NUMERICAL after \(W_X\) (`B`).
 
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
@@ -3103,9 +3289,11 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
       `STRUCTURALLY CONSTRAINED`
 - [x] Domaine **\(3\le m_Z\le W_{RV}+1\)** `ACCEPTED` (§14E.1) ;
       not identifiable ; classification **C** (§14E.7)
-- [ ] Ensemble / primaire \(m_Z\) préenregistrés (gouvernance) ;
-      stride 1 ; valeur \(W_X\) ; formule \(Z_t\) éventuellement
-      acceptée
+- [x] Gouvernance multi-échelle §14F : POLICY FREEZE ;
+      NUMERICAL \(\mathcal{M}_Z\) **après \(W_X\)** (`B`) ;
+      no-primary ; MS-1…4
+- [ ] **\(W_X\)** (prochain verrou) ; puis \(\mathcal{M}_Z\)
+      numérique ; stride 1 ; formule \(Z_t\) éventuellement acceptée
 - [x] Représentations \(S_1/S_2/S_3\) **acceptées**
 - [x] Invariant multiplicatif **accepté**
 - [ ] Observable futur **approuvé** (\(V_{t,h}\) candidat)
@@ -3129,6 +3317,7 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 | \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) `ACCEPTED` | oui |
 | \(W_{RV}:=W_X\) comparability coupling `ACCEPTED` | oui |
 | \(3\le m_Z\le W_{RV}+1\) `ACCEPTED` ; not identifiable ; class C | oui |
+| §14F multi-scale policy ; NUMERICAL after \(W_X\) (`B`) | oui |
 | `NO m_Z VALUE` ; `NO Z_t ACCEPTED` | oui |
 | I01 CLOSED ; I02 NOT OPENED | oui |
 
