@@ -5,7 +5,7 @@ contract:
   contract_version: "1.1"
   supersedes: "1.0"
   compatibility: backward-compatible (additive) — see section `compatibility`
-  status: "inspected (HAT #5 PASS) — C02 v1.1 remains OPEN pending human acceptance"
+  status: "CLOSED / ACCEPTED — human acceptance PASS (baseline a9254bb)"
   protocol: QDP-v0.1
   decision_record: docs/adr/DR-004-c02-data-provenance-architecture.md
   resolves: [DATA-GAP-01, DATA-GAP-02]  # research/I01/DATA-REQ-I01.md §7.3
@@ -48,6 +48,12 @@ revisions:
       - FrozenMap / Knowable.known(mapping) sérialisables par model_dump / JSON officiel (M1)
       - "TransformationRecord.parameters : objet QCJ-1 récursif (mappings imbriqués) (M2)"
     report: docs/validation/C02-v1.1-CA-04-report.md
+  - revision: CLOSURE
+    trigger: "human acceptance PASS after HAT #5 (a9254bb)"
+    changes:
+      - "C02 v1.1 CLOSED / ACCEPTED — baseline a9254bb, pièce de clôture documentaire"
+      - "autorise l'ouverture séparée de DR-003 v1.1 et DR-005 ; n'autorise pas l'acquisition"
+    report: docs/validation/C02-v1.1-CLOSURE.md
 
 description: >
   Provenance vérifiable des données scientifiques : de l'artefact brut effectivement reçu
@@ -668,3 +674,4 @@ implementations:
       - tests/contracts/test_profile_i01.py
       - tests/trace/test_decision_trace_c02_v11.py
       - tests/invariants/test_temporal.py
+      - docs/validation/C02-v1.1-CLOSURE.md

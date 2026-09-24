@@ -3,7 +3,7 @@
 | Version | Fichier | Statut | Notes |
 |---------|---------|--------|-------|
 | 1.0 | [C02_v1.0.yaml](C02_v1.0.yaml) | Remplacée par 1.1 (objets 1.0 toujours valides) | Publiée en P0. Texte de précondition `availability_cutoff` erroné : voir erratum E-01 |
-| **1.1** | [C02_v1.1.yaml](C02_v1.1.yaml) | **Courante — OUVERTE** : HAT #5 PASS, acceptation humaine pending | Rétrocompatible (voir `compatibility.behaviour_changes`). Résout DATA-GAP-01 et DATA-GAP-02 |
+| **1.1** | [C02_v1.1.yaml](C02_v1.1.yaml) | **Courante — CLOSED / ACCEPTED** | Rétrocompatible (voir `compatibility.behaviour_changes`). Résout DATA-GAP-01 et DATA-GAP-02. Baseline de sourcing ; n'autorise pas l'acquisition |
 
 ## Historique de validation de la v1.1
 
@@ -19,6 +19,7 @@
 | HAT #4 | [C02-v1.1-HAT-4.md](../../../docs/validation/C02-v1.1-HAT-4.md) | FAIL |
 | Action corrective CA-04 | [C02-v1.1-CA-04-report.md](../../../docs/validation/C02-v1.1-CA-04-report.md) | PASS (ne clôture pas) |
 | HAT #5 | [C02-v1.1-HAT-5.md](../../../docs/validation/C02-v1.1-HAT-5.md) | PASS |
+| Acceptation humaine / clôture | [C02-v1.1-CLOSURE.md](../../../docs/validation/C02-v1.1-CLOSURE.md) | **CLOSED / ACCEPTED** |
 
 ## Profils de validation
 
@@ -38,3 +39,5 @@ version suivante.
 ## Décision
 
 [DR-004 — C02 Data Provenance architecture](../../../docs/adr/DR-004-c02-data-provenance-architecture.md)
+
+Clôture v1.1 : [C02-v1.1-CLOSURE.md](../../../docs/validation/C02-v1.1-CLOSURE.md) — acceptation humaine PASS. Baseline autorisée pour ouvrir séparément DR-003 v1.1 et DR-005 ; l'acquisition reste interdite tant que ces deux décisions ne sont pas ACCEPTED.
