@@ -27,7 +27,7 @@
 > **Draft v0.17 m_Z domain + identifiability :** `08f845d`
 > **Draft v0.18 multiscale governance :** `ef5d39c`
 > **Draft v0.19 W_X inheritance review :** `27b8102`
-> **Draft v0.20 accept W_X=20 :** *(ce commit)*
+> **Draft v0.20 accept W_X=20 :** `e42b3a8`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
