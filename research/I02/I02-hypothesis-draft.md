@@ -24,7 +24,7 @@
 > **Draft v0.14 temporal architecture :** `6e0b4c7`
 > **Draft v0.15 W_RV := W_X :** `e3fc32c`
 > **Draft v0.16 m_Z admissibility :** `52a8a4a`
-> **Draft v0.17 m_Z domain + identifiability :** *(ce commit)*
+> **Draft v0.17 m_Z domain + identifiability :** `08f845d`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
