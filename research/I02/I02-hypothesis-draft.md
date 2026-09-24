@@ -20,7 +20,7 @@
 > **Draft v0.10 A vs D / m :** `22ddd95`
 > **Draft v0.11 family A primary candidate :** `e7cecc2`
 > **Draft v0.12 Disp review :** `ab6645f`
-> **Draft v0.13 Disp = Std_pop :** *(ce commit)*
+> **Draft v0.13 Disp = Std_pop :** `98ddec6`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
