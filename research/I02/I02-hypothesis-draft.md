@@ -8,6 +8,7 @@
 > **Protocol :** QDP v0.1
 > **Parent :** I01 exploratoire CLOSE @ `116374b`
 > **Draft v0.1 :** `0e893c2`
+> **Draft v0.2 :** `1057d85`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -20,8 +21,11 @@ $$
 
 E01–E04 ont **généré** la piste. Ils ne peuvent pas la valider.
 
-Les propositions de ce texte (cible \(V_{t,h}\), CRPS, H1-v0.2) sont
-**à évaluer**, pas des décisions finales. Rien n'est figé.
+Les propositions de ce texte (\(V_{t,h}\), CRPS, H1-v0.2, \(S_1/S_2/S_3\))
+sont **à évaluer**, pas des décisions finales. Rien n'est figé.
+CRPS reste `ACCEPTABLE CANDIDATE`, pas `ACCEPTED`.
+\(S_1,S_2,S_3\) sont des **candidats documentés**, pas une batterie
+`ACCEPTED`.
 
 ---
 
@@ -33,7 +37,8 @@ Les propositions de ce texte (cible \(V_{t,h}\), CRPS, H1-v0.2) sont
 - pas E05 ;
 - pas un contrat empirique pour un Market-State / Regime Engine ;
 - pas un choix de seuil, de source, ni d'instrument ;
-- pas une acceptation de CRPS, de \(h\), de \(S_t\) ou de \(C_t\).
+- pas une acceptation de CRPS, de \(h\), de \(S_1/S_2/S_3\), de leur
+  distance, ni de \(C_t\).
 
 ---
 
@@ -198,7 +203,8 @@ Objets :
 
 - \(X_t\in\mathbb{R}^{W}\) — structure multivariée du passé (**définition
   finale OPEN**) ;
-- \(S_t\) — résumés simples du passé (**composition OPEN**) ;
+- \(S_t\) — famille de résumés simples (**candidats \(S_1,S_2,S_3\)
+  documentés, §8–9 ; métrique / scaling OPEN**) ;
 - \(C_t\) — condition de marché (**non définie**, §14) ;
 - \(V_{t,h}\) — observable futur **candidat**.
 
@@ -224,7 +230,8 @@ Cette écriture **n'est pas** encore un protocole.
 ## 5. Distributions empiriques par voisinage (mécanisme candidat)
 
 **Aucun \(k\) nouveau. Aucun calcul. Aucune implémentation.**
-Distance et composition de \(S\) : **OPEN**.
+Distance et scaling de \(S\) : **OPEN**. Composition : candidats §9,
+non `ACCEPTED`.
 
 Pour une requête \(t\), candidat :
 
@@ -336,7 +343,7 @@ gate numérique.
 > distribution prédictive de la volatilité réalisée future \(V_{t,h}\)
 > contenant une information **hors échantillon** supérieure à celle
 > obtenue à partir de voisinages construits sur des résumés simples
-> pré-enregistrés de volatilité et d'énergie passées \(S_t\).
+> pré-enregistrés \(S\) (famille candidate \(S_1,S_2,S_3\), §9).
 
 Si CRPS était retenu plus tard, une opérationnalisation **possible**
 serait :
@@ -356,28 +363,25 @@ $$
 
 ---
 
-## 8. Concurrentes (inchangées dans l'esprit, recalées sur \(V\))
+## 8. Concurrentes — H2 devient une famille
 
 ### H1 — Structure géométrique conditionnelle
 
-Voir §7. Non établie.
+Voir §7. Non établie. H1 n'est intéressante que si \(X\) survit à des
+adversaires simples **raisonnables** des familles ci-dessous.
 
-### H2 — Amplitude / énergie
+### H2 — Explications simples (plus seulement « `rv_W` »)
 
-\(N_S\) (résumés simples) fournit une \(\widehat F_S\) **aussi
-informative** que \(N_X\) au sens du score retenu. `rv_W` seul a déjà
-été un contrôle insuffisant *pour `H_vol`* (E03) ; cela ne dit pas
-qu'un \(S\) mieux conçu échoue pour \(\widehat F(V)\).
+H2 ne signifie plus : « `rv_W` explique peut-être L2. »
 
-Hiérarchie conceptuelle :
+| | Explication | Adversaire candidat |
+|--|--|--|
+| **H2a — LEVEL** | Le niveau de volatilité récente suffit. | \(S_1\) |
+| **H2b — VOL DYNAMICS** | Niveau + dynamique récente de vol suffisent. | \(S_2\) |
+| **H2c — AMPLITUDE DISTRIBUTION** | Les propriétés **sans ordre** de la distribution d'amplitudes suffisent. | \(S_3\) |
 
-```text
-X bat B0 seulement                    → peu intéressant
-X bat rv_W mais pas un meilleur S     → H2
-spectacle seulement sur quelques queues → H3
-rien hors information indépendante    → H4
-X bat durablement les S sous C_t figé → H1 reste crédible
-```
+`rv_W` / \(S_1\) a déjà été insuffisant *pour `H_vol`* (E03). Cela ne
+dit pas qu'un \(S_2\) ou \(S_3\) échoue pour \(\widehat F(V)\).
 
 ### H3 — Queue / métrique
 
@@ -391,24 +395,207 @@ Pas de reproduction sur information indépendante. Issue normale.
 
 ---
 
-## 9. Hiérarchie des comparateurs
+## 9. Batterie d'adversaires \(S_1,S_2,S_3\) (candidats)
+
+**Documentés, pas `ACCEPTED`.** Aucun calcul. Aucune donnée consultée
+pour les choisir. Les redondances éliminées sont **algébriques**.
 
 ```text
-B0          témoin (hasard dans L_t)     — référence secondaire
-   ↓
-S           résumés simples (liste OPEN) — adversaire de H1
-   ↓
-X           structure multivariée        — candidat H1
+B0     hasard admissible / référence faible
+S1     niveau de volatilité
+S2     niveau + dynamique de volatilité
+S3     distribution d'amplitude sans ordre
+X      séquence multivariée ordonnée
 ```
 
-H1 **ne** se soutient **pas** parce que \(X\) bat B0. La question
-centrale : \(X\) apporte-t-il quelque chose au-delà d'explications
-simples raisonnables ? C'est H2.
+**Ce n'est pas** \(S_1\subset S_2\subset S_3\subset X\).
 
-Composition exacte de \(S\) (p. ex. familles \(S_1\) vol passée,
-\(S_2\) amplitude/énergie), métrique et normalisation de \(S\) :
-**OPEN**. À construire **avant** tout run, et **avant** \(C_t\), pour
-donner à H2 une vraie chance.
+\(S_2\) et \(S_3\) sont des **adversaires orthogonaux** (explications
+distinctes), pas des marches d'un même modèle. Ils **partagent** la
+coordonnée de niveau \(RV_t\) (donc pas des vecteurs orthogonaux).
+\(S_2\) conserve un ordre **grossier** (demi-fenêtres). \(S_3\) détruit
+volontairement l'ordre et décrit davantage la forme des amplitudes.
+
+H1 **ne** se soutient **pas** parce que \(X\) bat B0.
+
+### 9.1 Domaine : rendements bruts, pas \(X\) standardisé
+
+Tous les \(S\) sont des fonctions de
+
+\[
+(r_{t-W+1},\ldots,r_t)
+\]
+
+information \(\mathcal{O}_{\le t}\) seulement. **Pas** des coordonnées
+de \(X\) standardisé (\(M=252\)). Sinon \(S\) devient une projection
+de \(X\) : un mini-\(X\), et le contrôle n'est plus une explication
+indépendante.
+
+\(W\) n'est **pas** figé. Les formules ci-dessous sont pour une
+fenêtre de longueur \(W\) ; le partage 10+10 de \(S_2\) n'est
+défini que **si** \(W=20\) est ultérieurement hérité.
+
+### 9.2 Fausses dimensions
+
+\[
+RV_t=\sqrt{\frac1W\sum_{i=0}^{W-1}r_{t-i}^{2}},
+\qquad
+E_t=\sum_{i=0}^{W-1}r_{t-i}^{2}
+=W\,RV_t^{2}
+\]
+
+\(RV\) et \(E\) **ne** sont **pas** deux informations. Interdit :
+présenter \([RV,E]\) comme un contrôle plus riche.
+
+\[
+MA_t=\frac1W\sum_{i=0}^{W-1}|r_{t-i}|,
+\qquad
+A_t=\sum_{i=0}^{W-1}|r_{t-i}|
+=W\,MA_t
+\]
+
+\(A\) et \(MA\) sont la même information. Un seul descripteur.
+
+### 9.3 Relation \(RV\) / \(MA\) (famille S3, pas S2)
+
+Inégalité RMS–AM sur les \(|r|\) :
+
+\[
+MA_t\le RV_t
+\]
+
+Égalité ssi toutes les amplitudes \(|r|\) de la fenêtre sont égales.
+
+Variance **population** sur les \(W\) observations :
+
+\[
+\operatorname{Var}_{\mathrm{win}}(|r|)
+=\frac1W\sum_{i=0}^{W-1}(|r_{t-i}|-MA_t)^{2}
+=RV_t^{2}-MA_t^{2}
+\]
+
+Donc \([RV,MA]\) = niveau d'amplitude + hétérogénéité des amplitudes,
+**sans ordre**. Appartient à **S3**, pas à S2. Ne pas mettre \(MA\)
+dans \(S_2\).
+
+### 9.4 \(S_1\) — niveau (H2a)
+
+\[
+S^{(1)}_t=[RV_t]
+\]
+
+Niveau récent de volatilité / amplitude quadratique. Attaché à \(t\),
+indépendant du voisinage. Conceptuellement le témoin simple d'E03.
+
+Question : \(X\) apporte-t-il quelque chose **au-delà** du niveau ?
+
+### 9.5 \(S_2\) — niveau + dynamique (H2b)
+
+Question testée : L2 ne reconnaît peut-être que le niveau et le fait
+que la vol **monte ou descend**.
+
+Si \(W=20\) est hérité : division **égale** 10+10 (anti-retuning :
+on refuse 5/15, 8/12, …). Ce n'est pas une preuve que 10+10 est
+optimal. Si \(W\neq 20\) : règle de partage **OPEN**.
+
+Fenêtre ordonnée dans le temps : \(r_{t-W+1},\ldots,r_t\).
+**Early** = première moitié (plus ancienne) ; **late** = seconde
+(plus récente, inclut \(r_t\)).
+
+\[
+RV^{\mathrm{early}\,2}+RV^{\mathrm{late}\,2}=2\,RV_t^{2}
+\]
+
+(moitiés de même longueur). Le triplet \([RV,\,RV^{early},\,RV^{late}]\)
+est redondant.
+
+Candidat minimal :
+
+\[
+S^{(2)}_t=[RV_t,\;\Delta RV_t],
+\qquad
+\Delta RV_t=RV^{\mathrm{late}}_t-RV^{\mathrm{early}}_t
+\]
+
+Sous positivité et la relation quadratique, \((RV,\Delta RV)\)
+permet de retrouver les deux demi-volatilités (équation du second
+degré ; racine physique \(RV^{early},RV^{late}\ge 0\), admissible
+dès que \(|\Delta RV|\le 2\,RV\)).
+
+**Pas de \(MA\) dans \(S_2\).** Ciblé : niveau + dynamique.
+
+### 9.6 \(S_3\) — distribution sans ordre (H2c)
+
+Question testée : le sac d'amplitudes suffit-il, sans séquence ?
+
+\[
+S^{(3)}_t=[RV_t,\;MA_t]
+\]
+
+Aucun ordre. **Pas de \(\Delta RV\).** **Pas** un sur-ensemble de
+\(S_2\).
+
+### 9.7 Extra de queue — non retenu
+
+\(\max_i|r_{t-i}|\) : **OPEN QUESTION**, pas une composante.
+Pourrait tester une observation extrême récente. L'ajouter maintenant
+fabriquerait progressivement un mini-\(X\). Décision séparée avant
+ouverture, pas ici.
+
+### 9.8 Pas de drift dans \(S_3\)
+
+Pas de \(\sum r\) ni de rendement cumulé signé. \(S_3\) est un
+adversaire **volatilité / amplitude**. Un contrôle de drift /
+momentum serait une **autre** hypothèse, à nommer séparément.
+
+### 9.9 Distance / normalisation — OPEN
+
+\(RV\), \(\Delta RV\) et \(MA\) n'ont pas les mêmes échelles ni les
+mêmes lois. Un kNN euclidien **brut** sur \([RV,\Delta RV]\) ou
+\([RV,MA]\) est déjà un choix scientifique.
+
+Restent OPEN : métrique ; scaling ; standardisation éventuelle ;
+fenêtre de cette standardisation ; causalité de cette
+normalisation. **Aucun choix.**
+
+### 9.10 Interdiction de snooping de conception
+
+**Ne pas** calculer sur SPY : \(\operatorname{corr}(RV,MA)\) ;
+performance \(S_1/S_2/S_3\) ; loi de \(\Delta RV\) ; « meilleur »
+early/late ; utilité de \(\max|r|\) ; « meilleur » scaling ou
+distance. Ces choix se décident **ex ante**, pas sur le sandbox I01.
+
+### 9.11 Matrice d'interprétation (qualitative, sans résultat)
+
+| Cas | Lecture candidate |
+|-----|-------------------|
+| **A.** \(X\) bat B0 seulement | Preuve insuffisante d'une information géométrique spécifique. |
+| **B.** \(X\) bat \(S_1\), pas \(S_2\) | La dynamique récente de vol **peut** suffire (H2b). |
+| **C.** \(X\) bat \(S_2\), pas \(S_3\) | La distribution / hétérogénéité d'amplitudes **peut** suffire ; l'ordre complet n'est pas nécessaire (H2c). |
+| **D.** \(X\) bat \(S_2\) **et** \(S_3\) | La séquence multivariée **devient une question sérieuse**. |
+
+Le cas D **ne prouve pas** que « l'ordre compte ». Il dit seulement
+que \(S_2\) et \(S_3\) **n'ont pas suffi**. D'autres explications
+restent possibles (autre \(S\), métrique, queues, \(C_t\), H3, H4).
+
+### 9.12 Revue adversariale de la batterie
+
+| Risque | Statut |
+|--------|--------|
+| Redondance \(E\leftrightarrow RV\), \(A\leftrightarrow MA\) | Éliminée algébriquement. |
+| \([RV,MA]\) mis dans \(S_2\) | Interdit ; famille S3. |
+| Triplet early/late/\(RV\) | Réduit à \((RV,\Delta RV)\). |
+| Langage \(S_1\subset S_2\subset S_3\) | Interdit. |
+| \(S_2\perp S_3\) au sens vectoriel | Faux : les deux contiennent \(RV\). Orthogonalité = **explications**, pas produits scalaires. |
+| Ordre accidentel dans \(S_3\) | \([RV,MA]\) est invariant par permutation de la fenêtre. |
+| Dynamique perdue dans \(S_2\) | Conservée via early/late (si \(W=20\)). |
+| Drift dans \(S_3\) | Exclu. |
+| \(S\) projeté depuis \(X\) standardisé | Interdit. |
+| Cas D = preuve de l'ordre | Interdit. |
+| \(W\) impair / non 20 | Partage \(S_2\) sans règle. OPEN si \(W\neq 20\). |
+| Scaling silencieux du kNN | OPEN, prochaine décision scientifique probable. |
+| Choix numérique issu d'E01–E04 | Aucun (pas de corrélation, pas de 5/15). |
+| Extra \(\max\lvert r\rvert\) glissé dans \(S_3\) | Non retenu. |
 
 ---
 
@@ -430,9 +617,10 @@ donner à H2 une vraie chance.
 
 Qu'est-ce qui pourrait rendre cette formulation **trompeuse** ?
 
-**A. Dimension.** \(X\in\mathbb{R}^{W}\) a plus de coordonnées que \(S\).
-Un gain peut être « plus de dimensions », pas « géométrie ». D'où
-l'exigence d'un \(S\) sérieux (H2), pas seulement `rv_W`.
+**A. Dimension.** \(X\in\mathbb{R}^{W}\) a plus de coordonnées que
+chaque \(S_i\). Un gain peut être « plus de dimensions », pas
+« géométrie ». D'où \(S_1,S_2,S_3\) (H2a–c), pas seulement `rv_W`.
+Battre les trois ne **prouve** toujours pas l'ordre temporel.
 
 **B. kNN en haute dimension.** Localité faible, distances concentrées
 (E02 : rang 50 / médiane bibliothèque ≈ 0,67 — observation I01, pas
@@ -490,7 +678,8 @@ aucun SCI-PASS / SCI-FAIL (DR-007).
 Qualitatif. **Aucun seuil numérique.**
 
 1. Disparition du gain de score annoncé hors information indépendante (H4).
-2. \(N_S\) reproduit \(N_X\) au sens du score (H2).
+2. Un adversaire \(S_1\), \(S_2\) ou \(S_3\) reproduit \(N_X\) au
+   sens du score (H2a / H2b / H2c).
 3. Gain porté par quelques événements, sans reproductibilité sous \(C_t\)
    pré-enregistrée (H3).
 4. Dépendance à une définition de « stress » choisie après 2008/2009/2020
@@ -533,10 +722,14 @@ ce contrat.
 Ne pas résoudre dans ce draft :
 
 - définition de \(C_t\) ;
-- composition exacte de \(S_t\) ; métrique / normalisation de \(S_t\) ;
+- acceptation humaine de la batterie \(S_1/S_2/S_3\) (seulement
+  **candidats documentés**) ;
+- métrique / scaling / standardisation de \(S_2\) et \(S_3\) ;
+- extra \(\max\lvert r\rvert\) (non retenu, OPEN) ;
 - définition finale de \(X_t\) ;
-- valeur finale de \(h\) (héritage 10 = candidat argumenté, non décidé) ;
-- valeur finale de \(k\) ;
+- valeur finale de \(W\), \(h\), \(k\) (héritages 20 / 10 / 50 =
+  candidats anti-retuning, non décidés) ;
+- règle de partage \(S_2\) si \(W\neq 20\) ;
 - source de données ; instrument / univers de réplication ; holdout ;
 - gates statistiques ; seuil de « stress » ;
 - acceptation finale du CRPS (seulement `ACCEPTABLE CANDIDATE`) ;
@@ -544,10 +737,12 @@ Ne pas résoudre dans ce draft :
 
 Éléments **documentés comme candidats**, non cochés comme décisions :
 
-- observable \(V_{t,h}\) (RMS des \(h\) rendements futurs) ;
-- information supplémentaire = meilleur score de \(\widehat F\) hors
-  échantillon vs \(S\) (CRPS si retenu) ;
-- H1-v0.2 ;
+- observable \(V_{t,h}\) ;
+- information supplémentaire = meilleur score de \(\widehat F\) vs \(S\)
+  (CRPS si retenu) ;
+- H1-v0.2 ; H2a/H2b/H2c ;
+- \(S_1=[RV]\), \(S_2=[RV,\Delta RV]\), \(S_3=[RV,MA]\) sur rendements
+  bruts ;
 - rétrogradation de `H_vol` / `H_shape`.
 
 ---
@@ -560,7 +755,8 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 
 - [ ] Hypothèse finale approuvée (H1-v0.2 reste une candidate)
 - [ ] Condition de marché \(C_t\) définie ex ante (§14)
-- [ ] Comparateur(s) simple(s) \(S_t\) définis ex ante (liste fermée)
+- [ ] Comparateur(s) simple(s) **approuvés** (\(S_1/S_2/S_3\) = candidats
+      documentés ; scaling / distance encore OPEN)
 - [ ] Observable futur **approuvé** (\(V_{t,h}\) est seulement candidat)
 - [ ] Score probabiliste **approuvé** (CRPS = acceptable candidate)
 - [ ] Rôle de `H_shape` défini (témoin / mesure / non-gate)
@@ -582,7 +778,8 @@ Rien n'a été coché : les avancées de ce texte restent des propositions.
 | Aucune donnée nouvelle téléchargée | oui |
 | CRPS non calculé ; aucune métrique testée sur données | oui |
 | \(C_t\) / seuil de stress non définis | oui |
-| \(S_t\) non choisi | oui |
+| \(S_1/S_2/S_3\) formalisés, non `ACCEPTED` ; pas de scaling | oui |
+| Aucune corrélation / performance \(S\) calculée sur SPY | oui |
 | \(W/k/h\) non optimisés | oui |
 | Aucun code / test expérimental I02 | oui |
 | Pas de `protocol.md` I02 | oui |
