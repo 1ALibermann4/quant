@@ -11,6 +11,7 @@
 > **Draft v0.2 :** `1057d85`
 > **Draft v0.3 :** `15865ba`
 > **Draft v0.4 review :** `5980bc8`
+> **Draft v0.4 accept S :** `c85476c`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -23,16 +24,19 @@ $$
 
 E01–E04 ont **généré** la piste. Ils ne peuvent pas la valider.
 
-**Statut des adversaires \(S\) (acceptation humaine) :**
+**Statut des adversaires \(S\) :**
 
 ```text
 REPRESENTATION ACCEPTED / METRIC UNRESOLVED
 ```
 
-\(S_1\), \(S_2^{\mathrm{NEW}}\), \(S_3^{\mathrm{NEW}}\) : nature informationnelle
-**acceptée**. Distance, scaling, \(W\), découpage 10+10, \(C_t\), CRPS :
-**non** acceptés. CRPS reste `ACCEPTABLE CANDIDATE`. I02 reste
-`NOT OPENED`.
+\(S_1=[RV]\), \(S_2=[RV,D]\), \(S_3=[RV,Q]\) : nature informationnelle
+**acceptée** (`c85476c`).
+
+**Invariant de niveau (acceptation humaine) :** proximité en niveau de
+volatilité = **multiplicative** (§9.14). Chart candidates \(S^\star\)
+documentés. Distance complète, pondération, \(W\), 10+10, \(C_t\),
+CRPS : **non** acceptés. I02 reste `NOT OPENED`.
 
 ---
 
@@ -44,9 +48,10 @@ REPRESENTATION ACCEPTED / METRIC UNRESOLVED
 - pas E05 ;
 - pas un contrat empirique pour un Market-State / Regime Engine ;
 - pas un choix de seuil, de source, ni d'instrument ;
-- pas une acceptation de CRPS, de \(h\), de la **distance** / du
-  **scaling** de \(S\), ni de \(C_t\) ;
-- pas une ouverture d'I02 (même après acceptation des représentations \(S\)).
+- pas une acceptation de CRPS, de \(h\), d'une **distance complète**,
+  de **poids**, ni de \(C_t\) ;
+- pas une ouverture d'I02 ;
+- pas un remplacement des représentations \(S\) par les charts \(S^\star\).
 
 ---
 
@@ -592,17 +597,23 @@ Pas de \(\sum r\) ni de rendement cumulé signé. \(S_3\) est un
 adversaire **volatilité / amplitude**. Un contrôle de drift /
 momentum serait une **autre** hypothèse, à nommer séparément.
 
-### 9.9 Distance / normalisation — OPEN
+### 9.9 Distance / normalisation — OPEN (partiellement)
 
-\(RV\), \(\Delta RV\), \(D\), \(MA\) et \(Q\) n'ont pas les mêmes
-échelles ni les mêmes lois. Un kNN euclidien **brut** sur
-\([RV,\Delta RV]\), \([RV,D]\), \([RV,MA]\) ou \([RV,Q]\) est déjà un
-choix scientifique — y compris après reparamétrisation.
+**Accepté (§9.14) :** l'écart de **niveau** doit être multiplicatif
+(\(|\log RV_a-\log RV_b|\) sur \(RV>0\)).
 
-Restent OPEN : métrique ; scaling ; standardisation éventuelle ;
-fenêtre de cette standardisation ; causalité de cette
-normalisation. **Aucun choix.** La reparamétrisation **ne** résout
-**pas** le problème de distance.
+**Non accepté :** forme complète de \(d\) ; pondération entre axes ;
+Euclidienne / \(L_1\) ; z-score ; rangs ; CDF ; Mahalanobis ;
+standardisation historique.
+
+Un kNN euclidien brut sur \([RV,D]\), \([L,D]\), \([L,Q]\), etc. reste
+un choix scientifique **non** autorisé par l'invariant seul.
+
+\[
+\text{REPRESENTATION} \neq \text{METRIC CHART}
+\]
+
+Voir §9.14.
 
 ### 9.10 Interdiction de snooping de conception
 
@@ -816,26 +827,161 @@ algébrique et le secours aux singularités.
 
 **Ce qu'elle ne signifie pas**
 
-- ni \(W=20\), ni découpage 10+10, ni distance, ni scaling ;
+- ni \(W=20\), ni découpage 10+10, ni distance complète, ni pondération ;
 - ni convention \(\varepsilon\) aux zéros ;
 - ni ouverture d'I02.
 
-**Prochaine question (OPEN, non acceptée) :** avant z-score ou rangs,
-étudier les **invariances** que la distance doit satisfaire. En
-particulier, puisque \(D\) et \(Q\) sont déjà invariants d'échelle,
-traiter éventuellement le niveau en forme relative
+Invariant multiplicatif du niveau et charts \(S^\star\) : §9.14
+(ne remplacent **pas** \(S_1/S_2/S_3\)).
+
+### 9.14 Invariant multiplicatif du niveau + charts métriques
+
+**Décision humaine a priori** (aucune observation SPY, aucun CRPS,
+aucun chiffre E01–E04).
+
+#### 9.14.1 Décision acceptée
+
+Sur le domaine régulier \(RV_a>0\), \(RV_b>0\), la proximité en
+**niveau** de volatilité est **multiplicative**, non additive :
 
 \[
-S_2^\star=[\log RV,\,D],
-\qquad
-S_3^\star=[\log RV,\,Q]
+\delta_{\mathrm{level}}(a,b)
+=
+\bigl|\log RV_a-\log RV_b\bigr|
+=
+\Bigl|\log\frac{RV_a}{RV_b}\Bigr|
 \]
 
-de sorte que \(|\log RV_a-\log RV_b|=|\log(RV_a/RV_b)|\). **Non
-accepté.** À examiner documentairement **avant** z-score causal et
-rangs — pas ici.
+Exemple conceptuel : \(1\to 2\) et \(2\to 4\) réalisent le même
+facteur \(2\), donc le **même** écart de niveau. Alors que
+\(|2-1|=|3-2|\) (additive) traite autrement \(2\to 3\).
 
-Distance / scaling : **toujours OPEN**.
+Toute composante « niveau » d'une **future** métrique devra respecter
+cet invariant.
+
+#### 9.14.2 Justification
+
+\(RV\) est strictement positif sur son domaine régulier. Sous
+
+\[
+r\mapsto c r,\qquad c>0
+\]
+
+on a \(RV\mapsto c\,RV\), mais
+
+\[
+\log(c\,RV_a)-\log(c\,RV_b)=\log RV_a-\log RV_b
+\]
+
+L'écart de niveau est invariant à une multiplication commune de
+l'échelle des rendements (décimal vs pourcentage, etc.).
+
+Cohérence avec les représentations déjà acceptées :
+
+- \(D=\log(RV^{\mathrm{late}}/RV^{\mathrm{early}})\) — dynamique relative ;
+- \(Q=MA/RV\) — forme relative.
+
+#### 9.14.3 Gouvernance : représentation \(\neq\) chart
+
+**Ne pas** remplacer ni rouvrir `c85476c`.
+
+Conservé **inchangé** :
+
+\[
+S_1=[RV],\qquad S_2=[RV,D],\qquad S_3=[RV,Q]
+\]
+
+Introduit séparément — **METRIC COORDINATE / CHART CANDIDATE**
+seulement :
+
+\[
+L=\log RV
+\qquad(RV>0)
+\]
+
+\[
+S_1^\star=[L],
+\qquad
+S_2^\star=[L,D],
+\qquad
+S_3^\star=[L,Q]
+\]
+
+Ces objets servent à raisonner sur le calcul de proximité. Ils
+**ne** sont **pas** de nouvelles représentations informationnelles
+acceptées.
+
+\[
+\boxed{\text{REPRESENTATION} \neq \text{METRIC CHART}}
+\]
+
+#### 9.14.4 Accepté / non accepté
+
+| Accepté | Non accepté |
+|---------|-------------|
+| proximité de niveau multiplicative | distance Euclidienne / \(L_1\) / \(L_2\) complète |
+| \(\delta_{\mathrm{level}}=|\Delta L|\) sur \(RV>0\) | \(\sqrt{(\Delta L)^2+(\Delta D)^2}\), idem \(Q\) |
+| charts \(S^\star\) comme candidats de réflexion | poids égaux ou quelconques |
+| | z-score, rangs, CDF, Mahalanobis, std historique |
+| | kNN final, \(W\), 10+10, \(k\), \(\varepsilon\), \(C_t\), CRPS, I02 |
+
+#### 9.14.5 \(S_2^\star\) — encore ouvert
+
+\([L,D]\) : deux coordonnées logarithmiques / relatives. Cela
+**ne** justifie **pas**
+
+\[
+1\text{ unité de }L \equiv 1\text{ unité de }D
+\]
+
+Cette équivalence serait une **pondération**. OPEN.
+
+#### 9.14.6 \(S_3^\star\) — problème plus visible
+
+\([L,Q]\) combine \(L\in\mathbb{R}\) et \(Q\in(0,1]\) (domaine
+régulier). Une Euclidienne brute imposerait une pondération dictée
+par les plages numériques — **non neutre**. OPEN.
+
+#### 9.14.7 Singularité \(RV=0\)
+
+\(L=\log RV\) est **indéfini** si \(RV=0\). Aucun \(\varepsilon\),
+clipping, sentinelle, ni convention empirique. Problème de domaine
+à résoudre avant toute implémentation — relié aux singularités de
+\(D\) et \(Q\) (§9.13), **sans** les fusionner abusivement.
+
+#### 9.14.8 Exigences de conception M1–M9 (candidates)
+
+Pas toutes indépendantes mathématiquement. Exigences de conception
+pour une future métrique :
+
+| ID | Exigence | Sens |
+|----|----------|------|
+| **M1** | Causality | Aucun futur dans la définition de la proximité. |
+| **M2** | Unit / common-scale invariance | \(r\mapsto c r\) (\(c>0\)) ne change pas la proximité en **niveau** (déjà partiellement imposé par \(\delta_{\mathrm{level}}\)). |
+| **M3** | Symmetry | \(d(a,b)=d(b,a)\). |
+| **M4** | Identity | États identiques ⇒ distance nulle. |
+| **M5** | Local monotonicity | Toutes choses égales, augmenter un écart d'axe ne rapproche pas. |
+| **M6** | No predictive tuning | Aucun poids / scaling choisi pour améliorer CRPS ou un résultat I02. |
+| **M7** | Interpretability | Chaque terme de \(d\) a une interprétation explicite. |
+| **M8** | Temporal consistency | La règle ne change pas selon la date ou \(C_t\). |
+| **M9** | Adversary preservation | La métrique n'efface pas artificiellement ce que \(S_1/S_2/S_3\) représentent. |
+
+**Prochaine question OPEN :** comment **agréger** deux écarts
+conceptuellement différents — \(|\Delta L|\) vs \(|\Delta D|\)
+(\(S_2^\star\)) ; \(|\Delta L|\) vs \(|\Delta Q|\) (\(S_3^\star\)) —
+avec une pondération intrinsèquement justifiable, ou seulement une
+convention ex ante.
+
+#### 9.14.9 Revue de cohérence
+
+| Contrôle | OK |
+|----------|-----|
+| H1 / H2a–c inchangés | oui |
+| \(S_1/S_2/S_3\) non remplacés | oui |
+| Aucun résultat empirique | oui |
+| Pas de distance complète ni de poids | oui |
+| \(S^\star\) ≠ représentation acceptée | oui |
+| Pas d'\(\varepsilon\) | oui |
 
 ---
 
@@ -962,34 +1108,34 @@ ce contrat.
 Ne pas résoudre dans ce draft :
 
 - définition de \(C_t\) ;
-- métrique / scaling / standardisation de \(S_2\) et \(S_3\) ;
-- invariances souhaitées de la distance ; candidat non accepté
-  \(\log RV\) (§9.13.3) ;
-- convention pour \(D\) / \(Q\) aux singularités (zéros) — **pas**
-  d'\(\varepsilon\) choisi ici ;
+- **agrégation** \(|\Delta L|\) vs \(|\Delta D|\) / \(|\Delta Q|\)
+  (pondération intrinsèque vs convention) ;
+- forme complète de \(d\) (Euclidienne, \(L_1\), …) ;
+- z-score / rangs / CDF / Mahalanobis ;
+- convention pour \(L\), \(D\), \(Q\) aux singularités (zéros) — **pas**
+  d'\(\varepsilon\) ;
 - extra \(\max\lvert r\rvert\) (non retenu, OPEN) ;
 - définition finale de \(X_t\) ;
-- valeur finale de \(W\), \(h\), \(k\) (héritages 20 / 10 / 50 =
-  candidats anti-retuning, non décidés) ;
+- valeur finale de \(W\), \(h\), \(k\) ;
 - règle de partage \(S_2\) si \(W\neq 20\) ;
-- source de données ; instrument / univers de réplication ; holdout ;
-- gates statistiques ; seuil de « stress » ;
-- acceptation finale du CRPS (seulement `ACCEPTABLE CANDIDATE`) ;
+- source / holdout ; gates ; seuil de stress ;
+- acceptation finale du CRPS ;
 - architecture Market-State Engine.
 
-**Accepté (représentation seulement) :**
+**Accepté :**
 
-- \(S_1=[RV]\) ; \(S_2=[RV,D]\) ; \(S_3=[RV,Q]\) sur rendements bruts
-  — statut `REPRESENTATION ACCEPTED / METRIC UNRESOLVED` ;
-- H2a / H2b / H2c comme famille d'attaques distinctes.
+- \(S_1=[RV]\), \(S_2=[RV,D]\), \(S_3=[RV,Q]\) —
+  `REPRESENTATION ACCEPTED / METRIC UNRESOLVED` ;
+- H2a / H2b / H2c comme attaques distinctes ;
+- invariant : proximité de niveau **multiplicative**
+  (\(\delta_{\mathrm{level}}=|\Delta L|\), \(RV>0\)) ;
+- charts \(S^\star=[L]\), \([L,D]\), \([L,Q]\) comme **metric
+  coordinates** (≠ représentations).
 
 **Documentés comme candidats**, non décisions :
 
-- observable \(V_{t,h}\) ;
-- information supplémentaire = meilleur score de \(\widehat F\) vs \(S\)
-  (CRPS si retenu) ;
-- H1-v0.2 ;
-- rétrogradation de `H_vol` / `H_shape`.
+- observable \(V_{t,h}\) ; H1-v0.2 ; CRPS ; `H_vol` / `H_shape` ;
+- M1–M9 comme exigences de conception.
 
 ---
 
@@ -1002,9 +1148,10 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [ ] Hypothèse finale approuvée (H1-v0.2 reste une candidate)
 - [ ] Condition de marché \(C_t\) définie ex ante (§14)
 - [x] Représentations adversaires \(S_1/S_2/S_3\) **acceptées**
-      (`REPRESENTATION ACCEPTED` ; NEW)
-- [ ] Métrique / scaling / distance sur \(S\) **résolus**
-      (`METRIC UNRESOLVED`)
+- [x] Invariant multiplicatif du niveau de volatilité **accepté**
+      (§9.14) ; charts \(S^\star\) documentés
+- [ ] Agrégation / pondération / distance complète sur \(S^\star\)
+      **résolues** (`METRIC UNRESOLVED`)
 - [ ] Observable futur **approuvé** (\(V_{t,h}\) est seulement candidat)
 - [ ] Score probabiliste **approuvé** (CRPS = acceptable candidate)
 - [ ] Rôle de `H_shape` défini (témoin / mesure / non-gate)
@@ -1014,7 +1161,8 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [ ] Protocole de gel avant premier résultat défini
 - [ ] Décision explicite **OPEN I02**
 
-L'acceptation des représentations \(S\) **n'ouvre pas** I02.
+L'acceptation des représentations et de l'invariant de niveau
+**n'ouvre pas** I02.
 
 ---
 
@@ -1024,18 +1172,16 @@ L'acceptation des représentations \(S\) **n'ouvre pas** I02.
 |----------|--------|
 | Aucun chiffre nouveau calculé | oui |
 | Aucune donnée nouvelle téléchargée | oui |
-| CRPS non calculé ; aucune métrique testée sur données | oui |
-| \(C_t\) / seuil de stress non définis | oui |
-| Représentations \(S\) acceptées ; métrique unresolved | oui |
-| Aucune corrélation / performance \(S\) calculée sur SPY | oui |
-| Aucun \(\varepsilon\), aucune distance, aucun scaling choisi | oui |
+| CRPS non calculé | oui |
+| \(C_t\) non défini | oui |
+| \(S_1/S_2/S_3\) inchangés (non rouverts) | oui |
+| Invariant multiplicatif enregistré ; \(S^\star\) = charts only | oui |
+| Pas de distance complète / poids / \(\varepsilon\) | oui |
 | \(W/k/h\) non optimisés | oui |
-| Aucun code / test expérimental I02 | oui |
+| Aucun code / test I02 | oui |
 | Pas de `protocol.md` I02 | oui |
 | DR-003 / DR-005 non modifiés | oui |
-| Aucun fournisseur contacté | oui |
-| I01 reste CLOSED | oui (`116374b`) |
-| I02 reste NOT OPENED | oui |
+| I01 CLOSED ; I02 NOT OPENED | oui |
 
 ---
 
