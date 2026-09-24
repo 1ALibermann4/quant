@@ -9,6 +9,7 @@
 > **Parent :** I01 exploratoire CLOSE @ `116374b`
 > **Draft v0.1 :** `0e893c2`
 > **Draft v0.2 :** `1057d85`
+> **Draft v0.3 :** `15865ba`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -25,7 +26,9 @@ Les propositions de ce texte (\(V_{t,h}\), CRPS, H1-v0.2, \(S_1/S_2/S_3\))
 sont **à évaluer**, pas des décisions finales. Rien n'est figé.
 CRPS reste `ACCEPTABLE CANDIDATE`, pas `ACCEPTED`.
 \(S_1,S_2,S_3\) sont des **candidats documentés**, pas une batterie
-`ACCEPTED`.
+`ACCEPTED`. Les reparamétrisations §9.13 sont des **candidats
+préférés documentés** après revue mathématique — pas encore
+acceptation humaine.
 
 ---
 
@@ -410,11 +413,16 @@ X      séquence multivariée ordonnée
 
 **Ce n'est pas** \(S_1\subset S_2\subset S_3\subset X\).
 
-\(S_2\) et \(S_3\) sont des **adversaires orthogonaux** (explications
-distinctes), pas des marches d'un même modèle. Ils **partagent** la
-coordonnée de niveau \(RV_t\) (donc pas des vecteurs orthogonaux).
-\(S_2\) conserve un ordre **grossier** (demi-fenêtres). \(S_3\) détruit
-volontairement l'ordre et décrit davantage la forme des amplitudes.
+\(S_2\) et \(S_3\) sont des **adversaires à explications distinctes**,
+pas des marches d'un même modèle. Ils **partagent** la coordonnée de
+niveau \(RV_t\) (pas des vecteurs orthogonaux, pas une indépendance
+statistique). \(S_2\) conserve un ordre **grossier** (demi-fenêtres).
+\(S_3\) détruit volontairement l'ordre et décrit davantage la forme
+des amplitudes.
+
+Interdit : dire « les axes sont orthogonaux » sauf démonstration
+stricte. Préférer : **séparation conceptuelle** / **reparamétrisation
+niveau / forme** (ou niveau / dynamique).
 
 H1 **ne** se soutient **pas** parce que \(X\) bat B0.
 
@@ -509,10 +517,10 @@ RV^{\mathrm{early}\,2}+RV^{\mathrm{late}\,2}=2\,RV_t^{2}
 (moitiés de même longueur). Le triplet \([RV,\,RV^{early},\,RV^{late}]\)
 est redondant.
 
-Candidat minimal :
+**Paramétrage OLD (documenté v0.3) :**
 
 \[
-S^{(2)}_t=[RV_t,\;\Delta RV_t],
+S^{(2)}_{\mathrm{old}}=[RV_t,\;\Delta RV_t],
 \qquad
 \Delta RV_t=RV^{\mathrm{late}}_t-RV^{\mathrm{early}}_t
 \]
@@ -522,18 +530,41 @@ permet de retrouver les deux demi-volatilités (équation du second
 degré ; racine physique \(RV^{early},RV^{late}\ge 0\), admissible
 dès que \(|\Delta RV|\le 2\,RV\)).
 
+**Paramétrage NEW (candidat préféré documenté, §9.13 — pas
+`ACCEPTED`) :**
+
+\[
+S^{(2)}_{\mathrm{new}}=[RV_t,\;D_t],
+\qquad
+D_t=\log\!\left(\frac{RV^{\mathrm{late}}_t}{RV^{\mathrm{early}}_t}\right)
+\]
+
+même information H2b (niveau + dynamique), dynamique en **ratio**.
+Verdict documentaire §9.13 : `PREFER NEW`.
+
 **Pas de \(MA\) dans \(S_2\).** Ciblé : niveau + dynamique.
 
 ### 9.6 \(S_3\) — distribution sans ordre (H2c)
 
 Question testée : le sac d'amplitudes suffit-il, sans séquence ?
 
+**Paramétrage OLD (documenté v0.3) :**
+
 \[
-S^{(3)}_t=[RV_t,\;MA_t]
+S^{(3)}_{\mathrm{old}}=[RV_t,\;MA_t]
 \]
 
-Aucun ordre. **Pas de \(\Delta RV\).** **Pas** un sur-ensemble de
-\(S_2\).
+**Paramétrage NEW (candidat préféré documenté, §9.13 — pas
+`ACCEPTED`) :**
+
+\[
+S^{(3)}_{\mathrm{new}}=[RV_t,\;Q_t],
+\qquad
+Q_t=\frac{MA_t}{RV_t}\quad(RV_t>0)
+\]
+
+Aucun ordre. **Pas de \(\Delta RV\) ni \(D\).** **Pas** un sur-ensemble
+de \(S_2\). Verdict documentaire §9.13 : `PREFER NEW`.
 
 ### 9.7 Extra de queue — non retenu
 
@@ -550,13 +581,15 @@ momentum serait une **autre** hypothèse, à nommer séparément.
 
 ### 9.9 Distance / normalisation — OPEN
 
-\(RV\), \(\Delta RV\) et \(MA\) n'ont pas les mêmes échelles ni les
-mêmes lois. Un kNN euclidien **brut** sur \([RV,\Delta RV]\) ou
-\([RV,MA]\) est déjà un choix scientifique.
+\(RV\), \(\Delta RV\), \(D\), \(MA\) et \(Q\) n'ont pas les mêmes
+échelles ni les mêmes lois. Un kNN euclidien **brut** sur
+\([RV,\Delta RV]\), \([RV,D]\), \([RV,MA]\) ou \([RV,Q]\) est déjà un
+choix scientifique — y compris après reparamétrisation.
 
 Restent OPEN : métrique ; scaling ; standardisation éventuelle ;
 fenêtre de cette standardisation ; causalité de cette
-normalisation. **Aucun choix.**
+normalisation. **Aucun choix.** La reparamétrisation **ne** résout
+**pas** le problème de distance.
 
 ### 9.10 Interdiction de snooping de conception
 
@@ -596,6 +629,157 @@ restent possibles (autre \(S\), métrique, queues, \(C_t\), H3, H4).
 | Scaling silencieux du kNN | OPEN, prochaine décision scientifique probable. |
 | Choix numérique issu d'E01–E04 | Aucun (pas de corrélation, pas de 5/15). |
 | Extra \(\max\lvert r\rvert\) glissé dans \(S_3\) | Non retenu. |
+| « Axes orthogonaux » (niveau / forme) | Interdit sans preuve. Dire **séparation conceptuelle**. |
+
+### 9.13 Reparamétrisations candidates — revue mathématique
+
+**Objet :** comparer OLD vs NEW pour \(S_2\) et \(S_3\). Même H2b / H2c.
+Aucune donnée. Aucun \(\varepsilon\). Aucune distance.
+
+Question centrale (pour chaque) :
+
+| | |
+|--|--|
+| **A** | Conserve-t-elle l'information OLD sur le domaine régulier ? |
+| **B** | Sépare-t-elle mieux niveau vs dynamique relative / forme relative ? |
+| **C** | Introduit-elle une nouvelle hypothèse scientifique ? |
+| **D** | Singularités / conventions qui rendraient OLD préférable ? |
+
+#### 9.13.1 \(S_2\) : \(\Delta RV\) vs \(D=\log(RV^{late}/RV^{early})\)
+
+Domaine régulier : \(RV^{early}>0\), \(RV^{late}>0\) (moitiés égales).
+
+Propriétés de \(D\) :
+
+- \(D=0\) iff \(RV^{late}=RV^{early}\) ;
+- \(D>0\) iff \(RV^{late}>RV^{early}\) ; \(D<0\) sinon ;
+- si tous les rendements de la fenêtre sont multipliés par
+  \(\lambda>0\), alors \(RV\), \(RV^{early}\), \(RV^{late}\) scalent
+  par \(\lambda\) et **\(D\) est inchangé** ;
+- \(\Delta RV\) **scale** par \(\lambda\) (pas invariant d'échelle).
+
+Reconstruction (\(\rho=e^{D}=RV^{late}/RV^{early}\)) :
+
+\[
+RV^{early}=RV\sqrt{\frac{2}{1+\rho^{2}}},
+\qquad
+RV^{late}=\rho\,RV^{early}
+\]
+
+donc \((RV,D)\mapsto(RV^{early},RV^{late})\) est bijective sur le
+domaine régulier. Comme \((RV,\Delta RV)\) l'est déjà (sous
+\(|\Delta RV|\le 2\,RV\) et positivité), **A : même information** sur
+ce domaine.
+
+Singularités NEW (OLD reste fini) :
+
+| Cas | OLD \(\Delta RV\) | NEW \(D\) |
+|-----|-------------------|-----------|
+| \(RV^{early}=0\), \(RV^{late}>0\) | \(=RV^{late}\) | \(\to+\infty\) |
+| \(RV^{late}=0\), \(RV^{early}>0\) | \(=-RV^{early}\) | \(\to-\infty\) |
+| les deux \(=0\) (\(\Rightarrow RV=0\)) | \(=0\) | indéfini (\(0/0\)) |
+
+**Ne pas** inventer un \(\varepsilon\). Traiter les zéros serait une
+**convention supplémentaire** (choix scientifique séparé), pas une
+partie de la reparamétrisation.
+
+**B :** oui — \(RV\) = niveau absolu ; \(D\) = dynamique **relative**
+(séparation conceptuelle niveau / dynamique). Pas une orthogonalité
+géométrique ni une corrélation nulle.
+
+**C :** non. Toujours H2b.
+
+**D :** singularités log près de demi-fenêtres plates. OLD reste
+défini partout. En pratique, pour des rendements quotidiens non
+identiquement nuls sur \(W/2\) séances, le domaine régulier couvre
+presque tout ; le cas pathologique reste **documenté**.
+
+Risques adversariaux NEW : (i) deux régimes de niveaux très différents
+avec le **même ratio** late/early sont indiscernables sur \(D\) —
+voulu pour une dynamique relative, mais **masque** des écarts
+absolus que \(\Delta RV\) distinguerait ; (ii) \(D\) peut devenir
+grand en magnitude près de zéro — « sophistication » apparente si
+on oublie le domaine ; (iii) sans convention zéro, le kNN devra
+un jour traiter ces points (OPEN, pas ici).
+
+**Verdict \(S_2\) : `PREFER NEW`.**
+
+Même information sur le domaine régulier ; meilleure séparation
+conceptuelle niveau / dynamique relative ; singularités
+pathologiques documentées, sans \(\varepsilon\). Pas `ACCEPTED`.
+
+#### 9.13.2 \(S_3\) : \(MA\) vs \(Q=MA/RV\)
+
+Domaine régulier : \(RV>0\). Alors au moins un \(r\neq 0\), donc
+\(MA>0\) et
+
+\[
+0 < Q_t \le 1
+\]
+
+\(Q=1\) iff toutes les amplitudes \(|r|\) de la fenêtre sont égales
+(égalité RMS–AM). \(Q\to 0^{+}\) quand l'hétérogénéité relative des
+\(|r|\) croît.
+
+Invariance : si \(r\mapsto\lambda r\) pour \(\lambda\neq 0\), \(RV\)
+et \(MA\) scalent par \(|\lambda|\) ; **\(Q\) inchangé**.
+
+Relation déjà établie :
+
+\[
+\operatorname{Var}_{\mathrm{win}}(|r|)=RV^{2}-MA^{2}
+\quad\Rightarrow\quad
+\frac{\operatorname{Var}_{\mathrm{win}}(|r|)}{RV^{2}}=1-Q^{2}
+\quad(RV>0)
+\]
+
+Bijectivité : pour \(RV>0\), \(MA=Q\cdot RV\) avec \(Q\in(0,1]\).
+Donc **A : même information** que \((RV,MA)\) sur \(\{RV>0\}\).
+
+Singularité : \(RV=0\) (fenêtre plate) \(\Rightarrow MA=0\) ; OLD =
+\((0,0)\) bien défini ; NEW = \(0/0\) indéfini. **Pas d'\(\varepsilon\).**
+
+**B :** oui — \(RV\) = niveau ; \(Q\) = forme / homogénéité
+**relative** des amplitudes (séparation conceptuelle niveau / forme).
+Pas orthogonalité statistique.
+
+**C :** non. Toujours H2c.
+
+**D :** une seule singularité (\(RV=0\)), plus douce que le log de
+\(S_2\). OLD préférable **uniquement** si l'on veut un vecteur défini
+y compris sur la fenêtre nulle sans convention.
+
+Risques adversariaux NEW : (i) \(Q\) ignore l'échelle absolue de
+l'hétérogénéité (\(MA\) fixe à \(RV\) différent) — voulu pour la
+forme relative ; (ii) ne transforme pas \(S_3\) en objet
+sophistiqué au-delà d'un ratio borné ; (iii) ne résout toujours pas
+le scaling pour le kNN.
+
+**Verdict \(S_3\) : `PREFER NEW`.**
+
+Même information pour \(RV>0\) ; meilleure séparation conceptuelle
+niveau / forme ; singularité \(RV=0\) mineure et documentée. Pas
+`ACCEPTED`.
+
+#### 9.13.3 Synthèse
+
+| Contrôle | Verdict | Motif principal |
+|----------|---------|-----------------|
+| \(S_2\) | `PREFER NEW` | \(D\) invariant d'échelle ; même info si demi-vol \(>0\) |
+| \(S_3\) | `PREFER NEW` | \(Q\in(0,1]\) ; \(1-Q^{2}\) = var relative ; même info si \(RV>0\) |
+
+Candidats préférés **documentés** (acceptation humaine ultérieure) :
+
+\[
+S_1=[RV],
+\quad
+S_2^{\mathrm{pref}}=[RV,\,D],
+\quad
+S_3^{\mathrm{pref}}=[RV,\,Q]
+\]
+
+OLD reste la référence algébrique et le secours aux singularités.
+Distance / scaling : **toujours OPEN**.
 
 ---
 
@@ -722,8 +906,10 @@ ce contrat.
 Ne pas résoudre dans ce draft :
 
 - définition de \(C_t\) ;
-- acceptation humaine de la batterie \(S_1/S_2/S_3\) (seulement
-  **candidats documentés**) ;
+- acceptation humaine de la batterie \(S_1/S_2/S_3\) et des
+  paramétrages NEW (`PREFER NEW` ≠ `ACCEPTED`) ;
+- convention pour \(D\) / \(Q\) aux singularités (zéros) — **pas**
+  d'\(\varepsilon\) choisi ici ;
 - métrique / scaling / standardisation de \(S_2\) et \(S_3\) ;
 - extra \(\max\lvert r\rvert\) (non retenu, OPEN) ;
 - définition finale de \(X_t\) ;
@@ -741,8 +927,9 @@ Ne pas résoudre dans ce draft :
 - information supplémentaire = meilleur score de \(\widehat F\) vs \(S\)
   (CRPS si retenu) ;
 - H1-v0.2 ; H2a/H2b/H2c ;
-- \(S_1=[RV]\), \(S_2=[RV,\Delta RV]\), \(S_3=[RV,MA]\) sur rendements
-  bruts ;
+- \(S_1=[RV]\) ; \(S_2\) OLD \([RV,\Delta RV]\) / NEW préféré
+  \([RV,D]\) ; \(S_3\) OLD \([RV,MA]\) / NEW préféré \([RV,Q]\)
+  — sur rendements bruts ; verdicts `PREFER NEW` documentaires ;
 - rétrogradation de `H_vol` / `H_shape`.
 
 ---
@@ -755,8 +942,9 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 
 - [ ] Hypothèse finale approuvée (H1-v0.2 reste une candidate)
 - [ ] Condition de marché \(C_t\) définie ex ante (§14)
-- [ ] Comparateur(s) simple(s) **approuvés** (\(S_1/S_2/S_3\) = candidats
-      documentés ; scaling / distance encore OPEN)
+- [ ] Comparateur(s) simple(s) **approuvés** (\(S_1/S_2/S_3\) +
+      paramétrages NEW = candidats documentés / `PREFER NEW` ;
+      scaling / distance / convention zéros encore OPEN)
 - [ ] Observable futur **approuvé** (\(V_{t,h}\) est seulement candidat)
 - [ ] Score probabiliste **approuvé** (CRPS = acceptable candidate)
 - [ ] Rôle de `H_shape` défini (témoin / mesure / non-gate)
@@ -778,8 +966,9 @@ Rien n'a été coché : les avancées de ce texte restent des propositions.
 | Aucune donnée nouvelle téléchargée | oui |
 | CRPS non calculé ; aucune métrique testée sur données | oui |
 | \(C_t\) / seuil de stress non définis | oui |
-| \(S_1/S_2/S_3\) formalisés, non `ACCEPTED` ; pas de scaling | oui |
+| \(S_1/S_2/S_3\) formalisés ; NEW `PREFER` documentaire, non `ACCEPTED` | oui |
 | Aucune corrélation / performance \(S\) calculée sur SPY | oui |
+| Aucun \(\varepsilon\), aucune distance, aucun scaling choisi | oui |
 | \(W/k/h\) non optimisés | oui |
 | Aucun code / test expérimental I02 | oui |
 | Pas de `protocol.md` I02 | oui |
