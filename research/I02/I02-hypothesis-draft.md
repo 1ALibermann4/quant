@@ -21,7 +21,7 @@
 > **Draft v0.11 family A primary candidate :** `e7cecc2`
 > **Draft v0.12 Disp review :** `ab6645f`
 > **Draft v0.13 Disp = Std_pop :** `98ddec6`
-> **Draft v0.14 temporal architecture :** *(ce commit)*
+> **Draft v0.14 temporal architecture :** `6e0b4c7`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
