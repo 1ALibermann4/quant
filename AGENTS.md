@@ -21,9 +21,9 @@ Lire ce fichier avant de modifier le dépôt.
 - Ne pas connecter de broker avant **P6**.
 - Toute décision technique figée → **Decision Record** dans `docs/adr/`.
 - P0 est **clos** (HAT PASS, commit `a4c55b9`).
-- **P1 / I01** est ouvert — protocole SCI voisinage géométrique.
+- **P1 / I01** : protocole SCI v0.2 toujours le texte pré-enregistré ; la séquence exploratoire E01–E04 est **CLOSE** (voir [I01-exploratory-synthesis.md](research/I01/I01-exploratory-synthesis.md)).
 - **DR-007 ACCEPTED** — deux classes exclusives : `EXPLORATORY` (`UNQUALIFIED`, amont de C02 ; aucun DATA-PASS / SCI-PASS / SCI-FAIL / PRED / ECON / promotion) et `CONFIRMATORY` (C02 + DR-003 D-1 ACCEPTED + DR-005 ACCEPTED). `intended_use: technical` reste sur la voie qualifiée. Un résultat exploratoire, positif ou négatif, n'est pas un verdict SCI.
-- **Ne pas implémenter** I01 confirmatoire avant DATA-REQ-I01 + `DR-003 D-1 ACCEPTED ∧ DR-005 ACCEPTED`. I01 exploratoire : E01–**E04** (E04 = anatomie de \(D_t\), blocs préfixés, **aucun** seuil recherché) — source sandbox `SPY / yfinance 1.6.0 / daily` — **EXPLORATORY ONLY / UNQUALIFIED** ([DR-008](docs/adr/DR-008-i01-e01-exploratory-source.md)). Revue E03 : CONTINUE — mécanisme non expliqué. Après E04 : **décision finale de l'exploratoire I01**. Pas de retuning `W/k/h/L2/B0`. Pas d'E05 automatique. Pas de reprise automatique DR-003 / DR-005. Pas d'acquisition payante ; pas de qualification C02 ; yfinance n'est pas admissible au confirmatoire (DR-003 L-13 inchangé).
+- **I01 exploratoire CLOSE** — verdict : *ORIGINAL HYPOTHESIS NOT RECOMMENDED FOR CONFIRMATION; REGIME-CONDITIONAL PHENOMENON IDENTIFIED*. Pas un SCI-FAIL (DR-007). **Ne pas** confirmer I01 tel quel. **Ne pas** ouvrir DR-003 / DR-005 pour I01. **Pas d'E05.** Toute poursuite = **nouvelle investigation** (I02 non ouvert), hypothèse pré-enregistrée avant tout calcul. Source sandbox E01–E04 : `SPY / yfinance 1.6.0 / daily` — UNQUALIFIED ([DR-008](docs/adr/DR-008-i01-e01-exploratory-source.md)). Les observations I01 ne prouvent pas la nouvelle hypothèse. Pas d'acquisition payante ; pas de qualification C02 ; yfinance n'est pas admissible au confirmatoire (DR-003 L-13 inchangé).
 - **Ne pas choisir d'API confirmatoire** avant que les besoins data soient dérivés du protocole.
 
 ## Protocol

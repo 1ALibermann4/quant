@@ -2,6 +2,7 @@
 
 > **Identifier :** I01
 > **Status :** ACCEPTED — protocol v0.2 (post review)
+> **Exploratory sequence :** COMPLETE @ `4a920c3` — hypothèse originale **non recommandée** à la confirmation ; phénomène conditionnel au régime *identifié*, non validé. Pas un SCI-FAIL. Synthèse : [I01-exploratory-synthesis.md](I01-exploratory-synthesis.md)
 > **Authority class :** RESEARCH
 > **Protocol :** QDP v0.1
 > **Phase :** P1
@@ -40,6 +41,7 @@ P0 (contrats, invariants) ──► I01 (SCI voisinage) ──► I02+ / PRED (s
 ```text
 I01/
 ├── README.md
+├── I01-exploratory-synthesis.md   clôture E01–E04 (pas un SCI)
 ├── hypothesis.md
 ├── protocol.md
 ├── configuration.yaml
@@ -49,9 +51,9 @@ I01/
 ├── experiments/E04/       I01-E04 anatomie conditionnelle de D_t (blocs préfixés)
 ```
 
-I01 confirmatoire reste bloqué par DR-003 ∧ DR-005. I01-E01…E04 (DR-007 / DR-008)
-ne sont pas une validation scientifique. Revue E03 : CONTINUE — mécanisme
-non expliqué. E04 est le dernier diagnostic exploratoire prévu.
+Séquence exploratoire E01–E04 **CLOSE**. I01 confirmatoire **non recommandé**
+tel quel (pas un SCI-FAIL). Pas d'ouverture DR-003 / DR-005 pour I01.
+Pas d'E05. Toute poursuite = nouvelle investigation, pas encore ouverte.
 
 ## Documents normatifs I01
 
