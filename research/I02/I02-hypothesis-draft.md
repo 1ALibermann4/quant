@@ -26,6 +26,7 @@
 > **Draft v0.16 m_Z admissibility :** `52a8a4a`
 > **Draft v0.17 m_Z domain + identifiability :** `08f845d`
 > **Draft v0.18 multiscale governance :** `ef5d39c`
+> **Draft v0.19 W_X inheritance review :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -51,11 +52,11 @@ REPRESENTATION ACCEPTED / METRIC ROBUSTNESS SETS ACCEPTED
 **Doctrine §9.16 :** `ACCEPTED` (locale I02) — \(\mathcal{M}_{S3}\),
 \(\mathcal{M}_{S2}\) figés ; sujet métrique pré-cadrage **CLOSED**.
 
-**État \(Z_t\) :** famille **A** ; Disp / \(W_{RV}:=W_X\) / domaine
-\(m_Z\) `ACCEPTED` ; \(m_Z\) not identifiable ; gouvernance
-multi-échelle §14F — **POLICY FREEZE** possible maintenant ;
-**NUMERICAL \(\mathcal{M}_Z\)** après \(W_X\) (`B`) ; **aucune**
-valeur ; formule \(Z_t\) **incomplète**.
+**État \(Z_t\) :** Disp / \(W_{RV}:=W_X\) / domaine \(m_Z\) /
+politique multi-échelle figés en forme ; revue \(W_X\) §14G —
+**not structurally identified** ; héritage I01
+**methodologically preferred** (class `B`) — **aucune** valeur
+acceptée ici ; formule \(Z_t\) **incomplète**.
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
@@ -3229,6 +3230,203 @@ contrainte méthodologique.
 
 ---
 
+## 14G. Identifiabilité et héritage de \(W_X\)
+
+**Nature :** mathématique / méthodologique / documentaire. **Aucune
+donnée.** Aucune valeur de \(W_X\) acceptée. \(m_Z\) POLICY FREEZE
+(§14F) ; NUMERICAL \(\mathcal{M}_Z\) attend \(W_X\). I02 =
+`NOT OPENED`.
+
+**Objectif :** A hériter d'I01 / B redéfinir / C non identifiable +
+gouvernance — **sans** choisir un chiffre.
+
+**Fait historique (pas une acceptation) :** I01 utilisait \(W=20\),
+préspécifié avant E01–E04. I02 est une **nouvelle** investigation
+**générée** par I01 ; \(W_{RV}:=W_X\) propage désormais \(W_X\) vers
+\(RV\), \(\Delta L\), domaine \(m_Z\), \(\mathcal{M}_Z\) numérique.
+
+### 14G.0 Rôles de \(W_X\) dans I02
+
+| # | Conséquence |
+|---|-------------|
+| 1 | dimension de \(X_t\) |
+| 2 | quantité d'histoire représentée |
+| 3 | géométrie kNN / curse of dimensionality |
+| 4 | pool de candidats historiques (taille relative) |
+| 5 | \(W_{RV}:=W_X\) |
+| 6 | lissage du niveau \(RV\) |
+| 7 | structure mécanique de \(\Delta L\) (rotation / dipôle) |
+| 8 | borne \(m_Z\le W_X+1\) |
+| 9 | matérialisation numérique de \(\mathcal{M}_Z\) |
+| 10 | empan causal de \(Z\) (\(\approx W_X+m_Z\)) |
+| 11 | comparabilité \(X\) vs \(S_1/S_2/S_3\) (même support nominal) |
+
+**Effet net sur l'héritage :** plus **lourd** qu'en I01 — hériter
+propage une convention dans toute l'architecture d'état ; **mais**
+changer \(W_X\) en même temps que question / adversaires / score
+casse l'attribution. Les deux tensions coexistent.
+
+### 14G.1 Arguments pour héritage (adversariaux)
+
+| ID | Argument | Évaluation |
+|----|----------|------------|
+| **H1** Anti-retuning | ne pas retoucher \(W\) après E01–E04 | **fort** si on hérite le choix *préenregistré* I01, pas s'il est « retenu parce que E04 a marché » |
+| **H2** Continuité de représentation | phénomène découvert sous \(X\) de longueur 20 | **fort** pour une investigation de *disséction* du même objet générateur |
+| **H3** Attribution causale | différences I01↔I02 attribuables à la question, pas à une nouvelle \(X\) | **fort** méthodologiquement |
+| **H4** Simplicité de gouvernance | pas de nouvelle liberté | **défendable** ; insuffisant seul |
+
+### 14G.2 Arguments contre héritage (adversariaux)
+
+| ID | Argument | Évaluation |
+|----|----------|------------|
+| **C1** Nouvel objet scientifique | I02 ≠ I01 | **vrai** pour la *cible* ; n'implique pas automatiquement un nouveau \(W\) |
+| **C2** Propagation architecturale | \(W\) irrigue \(W_{RV}\), \(m_Z\), \(\mathcal{M}_Z\) | **vrai et sérieux** — coût de l'héritage élevé ; motive une revue, pas un rejet automatique |
+| **C3** Géométrie haute dimension | kNN / tâche probabiliste | **ouvert** ; pas de forçage a priori vers une autre valeur sans critère |
+| **C4** Accident historique | 20 raisonnable pour I01 ≠ structurel pour I02 | **vrai** que 20 n'est pas structurel ; n'implique pas qu'un autre chiffre le soit |
+
+### 14G.3 Contamination / snooping — BLOCKING
+
+| Option | Nature de la contamination |
+|--------|----------------------------|
+| **Hériter \(W=20\)** | le générateur I01 (préenregistré) est **exposé** aux résultats E01–E04 ; l'héritage pour *disséquer* le même phénomène est une contamination de **continuité** (même objet), pas une optimisation post-hoc de \(W\) **si** on ne le justifie pas par la performance E04 |
+| **Choisir un nouveau \(W_X\) maintenant** | sans critère structurel = liberté de recherche **après** avoir vu E04 — contamination de **sélection** plus dangereuse (shopping d'échelle) |
+
+**Verdict contamination :** hériter le choix **préenregistré** du
+générateur est **différemment** contaminé (continuité d'objet), en
+général **moins** dangereux que sélectionner une nouvelle valeur
+aujourd'hui **sans** axiome nouveau. Condition : formuler l'héritage
+comme *inherited fixed design constraint*, **pas** comme « 20 a
+marché en E04 ».
+
+### 14G.4 Alternatives à une valeur unique
+
+| Option | Évaluation |
+|--------|------------|
+| **A** Hériter single \(W_X\) d'I01 | parcimonieux ; attribution propre ; propage l'architecture |
+| **B** Nouveau single préenregistré | exige un critère a priori **non** empirique — actuellement **absent** |
+| **C** Multi-\(W_X\) sensitivity | chaque \(W_X\) ⇒ \(W_{RV}\), domaine \(m_Z\), \(\mathcal{M}_Z\), dim \(X\) — **explosion combinatoire** avec la multi-échelle \(m_Z\) déjà requise |
+| **D** Famille représentation multi-\(W_X\) | pire que C pour I02 au stade actuel |
+
+**Risque combinatoire :** multi-\(W_X\) × multi-\(m_Z\) ≈ grille
+2D déguisée. **Rejet** de C/D comme politique par défaut pour I02
+pré-cadrage.
+
+### 14G.5 Principle of minimal change
+
+> Parce qu'I02 est générée pour expliquer / raffiner un phénomène
+> observé sous la représentation \(X\) d'I01, préserver \(W_X\)
+> d'I01 **sauf** si la nouvelle hypothèse **exige logiquement** de
+> le changer.
+
+**Classification du principe :** `DEFENSIBLE`.
+
+Pas `STRONG` (la propagation \(W_{RV}\)/\(m_Z\) affaiblit
+l'automaticité). Pas `REJECT` (attribution scientifique réelle).
+
+La nouvelle hypothèse (état \(Z\), adversaires \(S\), score candidat)
+**n'exige pas logiquement** un autre \(W_X\) : elle exige un état et
+des contrôles, construits **sur** le même support de représentation
+si l'on veut isoler leur contribution.
+
+### 14G.6 Contre-factual
+
+> Si I01 avait utilisé un autre \(W\) **préenregistré** et produit
+> la même découverte qualitative E04, aurions-nous une raison
+> principée de changer ce \(W\) avant I02 ?
+
+**Réponse :** non — sauf exigence logique nouvelle. Donc toute
+envie de « corriger 20 » *parce qu'on a vu E04* est un signal de
+justification **post-hoc**. Symétriquement, garder 20 *parce que*
+E04 est favorable serait aussi contaminé — d'où la formulation
+**design constraint héritée**, pas performance.
+
+### 14G.7 Justifications interdites
+
+CRPS / Spearman / \(D^{\mathrm{CRPS}}\) ; séparation stress ;
+2008/2009/2020 ; tertile E04 ; trading ; « un mois » seul ;
+littérature cherchée après coup pour justifier 20.
+
+### 14G.8 Identifiabilité
+
+\[
+W_X\text{ IS NOT STRUCTURALLY IDENTIFIABLE}
+\]
+
+Aucune valeur unique ne découle des axiomes I02 seuls.
+
+### 14G.9 Classification
+
+\[
+\boxed{\texttt{B — NOT STRUCTURALLY IDENTIFIED, BUT I01 INHERITANCE IS METHODOLOGICALLY PREFERRED}}
+\]
+
+**Statut exact recommandé (pas encore décision d'acceptation de
+valeur) :**
+
+```text
+inherited fixed design constraint (candidate)
+```
+
+— héritage du \(W\) **préenregistré** d'I01 comme contrainte de
+continuité expérimentale / anti-retuning / attribution, **sous réserve
+d'acceptation humaine formelle**.
+
+**Cette revue n'accepte pas \(W_X=20\).**
+
+### 14G.10 Si héritage (conséquences conditionnelles)
+
+Si une décision humaine ultérieure accepte l'héritage :
+
+| Objet | Conséquence |
+|-------|-------------|
+| \(W_{RV}\) | \(:=W_X\) hérité |
+| Domaine \(m_Z\) | \([3,W_X+1]\) |
+| \(\mathcal{M}_Z\) numérique | matérialisable (politique §14F relative, no-primary) |
+| Comparateurs \(S\) | même \(W_{RV}\) |
+| Sensibilité | **pas** multi-\(W_X\) par défaut ; multi-\(m_Z\) seulement |
+
+Sensibilité ultérieure sur \(W_X\) = **nouvelle investigation** /
+réplication, pas un amendement silencieux.
+
+### 14G.11 Si héritage rejeté
+
+Procédure sans données confirmatoires : exiger un **critère a priori
+écrit** (sémantique / géométrie / contrainte expérimentale) **avant**
+tout chiffre ; à défaut, I02 ne peut pas ouvrir sur un \(W_X\)
+choisi « parce que nouveau ». **Aucun** chiffre proposé ici.
+
+### 14G.12 Verdicts synthétiques
+
+| Item | Verdict |
+|------|---------|
+| H1–H4 | H1–H3 forts (sous formulation design) ; H4 faible seul |
+| C1–C4 | C2 le plus sérieux ; n'impose pas un nouveau \(W\) |
+| Contamination | héritage design < sélection nouvelle post-E04 |
+| Minimal change | `DEFENSIBLE` |
+| Multi-\(W_X\) | rejeté par défaut (combinatoire) |
+| Classification | **`B`** |
+| Valeur | **aucune acceptée** |
+
+\[
+\boxed{\text{NO NEW }W_X\text{ SELECTED}}
+\quad
+\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\]
+
+**Prochaine décision humaine :** accepter ou rejeter formellement
+l'héritage \(W_X\) d'I01 comme *inherited fixed design constraint*.
+
+### 14G.13 Cohérence
+
+| Contrôle | OK |
+|----------|-----|
+| Pas d'acceptation automatique de 20 | oui |
+| Pas de nouvelle valeur / grille | oui |
+| Multi-\(W_X\) non promu | oui |
+| I02 NOT OPENED | oui |
+
+---
+
 ## 15. Market-State / Regime Engine
 
 **Aucun contrat empirique n'est dérivé d'I01.** Aucune architecture
@@ -3241,26 +3439,24 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 Ne pas résoudre dans ce draft :
 
-- **valeur de \(W_X\)** (donc \(W_{RV}\)) — **prochain verrou** ;
-  matérialisation numérique de \(\mathcal{M}_Z\) **après** ;
+- **acceptation formelle de l'héritage \(W_X\)** (candidat class `B`
+  §14G — *inherited fixed design constraint*) ;
+- valeurs numériques \(W_X\) / \(\mathcal{M}_Z\) ;
 - acceptation formelle rolling / stride 1 ;
 - formule complète \(Z_t\) ;
-- ensemble numérique \(\mathcal{M}_Z\) ; \(q\) chiffré ;
 - correction statistique de multiplicité ;
 - empan / redondance du **pool** de voisins ;
-- définition protocolaire du « désaccord matériel » sous §9.16 ;
-- détail d'agrégation \(L\)+forme dans l'opérateur kNN ;
+- désaccord matériel §9.16 ; agrégation \(L\)+forme ;
 - Spearman / CRPS / inférence ;
 - singularités — pas d'\(\varepsilon\) ;
 - \(h\), \(k\) ; holdout ; Market-State Engine.
 
 **CLOSED :**
 
-- Disp ; \(W_{RV}:=W_X\) ; domaine \(3\le m_Z\le W_{RV}+1\) ;
-- \(m_Z\) not identifiable ; class C §14E ;
-- **politique multi-échelle** §14F : relative-to-\(W_{RV}\),
-  no-primary, taxonomie MS-1…4 ; POLICY FREEZE now ;
-  NUMERICAL after \(W_X\) (`B`).
+- Disp ; \(W_{RV}:=W_X\) (relation) ; domaine \(m_Z\) ; politique
+  multi-échelle §14F ;
+- revue \(W_X\) §14G : not identifiable ; héritage I01
+  **methodologically preferred** (`B`) — valeur non acceptée.
 
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
@@ -3292,8 +3488,10 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [x] Gouvernance multi-échelle §14F : POLICY FREEZE ;
       NUMERICAL \(\mathcal{M}_Z\) **après \(W_X\)** (`B`) ;
       no-primary ; MS-1…4
-- [ ] **\(W_X\)** (prochain verrou) ; puis \(\mathcal{M}_Z\)
-      numérique ; stride 1 ; formule \(Z_t\) éventuellement acceptée
+- [x] Revue \(W_X\) §14G : not identifiable ; héritage I01
+      **preferred** (class `B`) — **pas** d'acceptation de valeur
+- [ ] Décision humaine : héritage \(W_X\) oui/non ; puis
+      \(\mathcal{M}_Z\) numérique ; stride 1 ; formule \(Z_t\)
 - [x] Représentations \(S_1/S_2/S_3\) **acceptées**
 - [x] Invariant multiplicatif **accepté**
 - [ ] Observable futur **approuvé** (\(V_{t,h}\) candidat)
@@ -3317,8 +3515,9 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 | \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) `ACCEPTED` | oui |
 | \(W_{RV}:=W_X\) comparability coupling `ACCEPTED` | oui |
 | \(3\le m_Z\le W_{RV}+1\) `ACCEPTED` ; not identifiable ; class C | oui |
-| §14F multi-scale policy ; NUMERICAL after \(W_X\) (`B`) | oui |
-| `NO m_Z VALUE` ; `NO Z_t ACCEPTED` | oui |
+| §14F multi-scale policy ; NUMERICAL after \(W_X\) | oui |
+| §14G \(W_X\) class `B` preferred inheritance ; no value accepted | oui |
+| `NO NEW W_X` ; `NO Z_t ACCEPTED` | oui |
 | I01 CLOSED ; I02 NOT OPENED | oui |
 
 ---
