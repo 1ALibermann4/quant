@@ -18,7 +18,7 @@
 > **Draft v0.8 accept §9.16 :** `ceb224c`
 > **Draft v0.9 Z_t review :** `5681916`
 > **Draft v0.10 A vs D / m :** `22ddd95`
-> **Draft v0.11 family A primary candidate :** *(ce commit)*
+> **Draft v0.11 family A primary candidate :** `e7cecc2`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
