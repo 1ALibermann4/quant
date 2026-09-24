@@ -18,6 +18,7 @@
 > **Draft v0.8 accept §9.16 :** `ceb224c`
 > **Draft v0.9 Z_t review :** `5681916`
 > **Draft v0.10 A vs D / m :** `22ddd95`
+> **Draft v0.11 family A primary candidate :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -43,9 +44,12 @@ REPRESENTATION ACCEPTED / METRIC ROBUSTNESS SETS ACCEPTED
 **Doctrine §9.16 :** `ACCEPTED` (locale I02) — \(\mathcal{M}_{S3}\),
 \(\mathcal{M}_{S2}\) figés ; sujet métrique pré-cadrage **CLOSED**.
 
-**État / conditionnement :** revue \(Z_t\) §14–§14A ; **aucune**
-\(Z_t\) acceptée. Prochaine décision humaine : cas 5
-(transition vs instabilité) pour trancher A vs \(E\).
+**État \(Z_t\) :** famille **A** = `PRIMARY SEMANTIC CANDIDATE`
+(§14A.12) ; \(E=\mathrm{TV}-\lvert\mathrm{net}\rvert\) = mécanisme
+**alternatif** (pas robustesse de A) ; Disp et \(m\) UNRESOLVED.
+\[
+\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\]
 I02 reste `NOT OPENED`.
 
 ---
@@ -1790,22 +1794,15 @@ d'un centre proche de 0.
 | **\(E\)** | uniquement le **backtracking** — un changement brutal mais monotone n'en est **pas** |
 | **SF** | aucun retournement |
 
-**Question forcée :**
+**Question forcée (tranchée en §14A.12) :**
 
 > Un changement brutal mais unidirectionnel de régime est-il une
 > *instabilité*, ou seulement une *transition* ?
 
-Sous la sémantique déjà cadrée (*volatility-regime instability* :
-distinguer régime **établi** vs **erratique** ; high-\(L\) / low-\(Z\)
-admissible) :
-
-- traiter le cas 5 comme **instabilité** ⇒ favoriser **A**
-  (et accepter qu'accélération monotone = instabilité d'incréments) ;
-- le traiter comme **transition vers un nouveau régime établi**
-  (pas d'erratisme) ⇒ favoriser **\(E\)** / D-TV-NET.
-
-Ce n'est **pas** une question de sophistication : c'est le cœur
-sémantique A vs D. **Non tranché ici** (pas d'acceptation \(Z_t\)).
+**Décision humaine :** ce sont des manifestations **pertinentes**
+d'instabilité locale du régime (avec l'accélération monotone,
+cas 3). ⇒ famille **A** retenue comme primaire candidate ;
+voir §14A.12. **Pas** d'acceptation de \(Z_t\).
 
 ### 14A.5 A vs D — concepts irréductibles ?
 
@@ -1909,41 +1906,50 @@ Pas de résolution empirique.
 | Backtracking ≠ regime instability | objection sémantique restante — le terme démontré est backtracking, pas « instabilité » au sens large |
 | Dépendance à \(m\) | **oui** |
 
-### 14A.10 Verdicts (aucune acceptation)
+### 14A.10 Verdicts documentaires (§14A, avant décision §14A.12)
 
-| Objet | Verdict |
-|-------|---------|
-| **A** | `PROMISING` (confirmé ; tensions cas 3 et 5) |
-| **D-TV-NET** (\(E\)) | `PROMISING` (objet mathématique le plus propre de D) |
-| **D-sign-flips** | `WEAK` — discrétisation grossière du même concept que \(E\) ; règle \(\mathrm{sign}(0)\) OPEN ; bruyant |
+| Objet | Verdict §14A |
+|-------|----------------|
+| **A** | `PROMISING` |
+| **D-TV-NET** (\(E\)) | `PROMISING` |
+| **D-sign-flips** | `WEAK` |
 | **\(m=W\)** | `DEFENSIBLE BUT NOT FORCED` |
 
-**Réponses imposées :**
+A et \(E\) **distincts** (cas 3, 5). Suite : §14A.12.
 
-1. **A et D distincts ?** **Oui** (cas 3, 5).
-2. **Plus direct pour « volatility-regime instability » ?**
-   Dépend de la réponse au cas 5. Si instabilité = **erratisme /
-   non-établissement du chemin** ⇒ **D-\(E\)** plus direct. Si
-   instabilité = **non-constance des variations du niveau
-   multiplicatif** ⇒ **A** plus direct. **Non tranché** —
-   décision humaine sémantique suivante.
-3. **Statut de l'autre :** l'objet non retenu comme primaire devrait
-   rester au minimum **robustness / alternative mechanism
-   préenregistrable** (esprit §9.16), **pas** rejeté sans la décision
-   cas 5 — sauf D-sign-flips, déjà `WEAK` comme membre secondaire.
+### 14A.12 Décision humaine — famille A primaire candidate
+
+**Statut :** décision sémantique humaine. **Pas** une acceptation de
+\(Z_t\).
+
+| Objet | Statut figé |
+|-------|-------------|
+| Famille **A** (\(\operatorname{Disp}(\Delta L)\), Disp UNFIXED) | `PRIMARY SEMANTIC CANDIDATE` pour \(Z_t\) |
+| Cas 3 (accélération monotone) | manifestation **pertinente** d'instabilité locale |
+| Cas 5 (saut unidirectionnel brutal) | manifestation **pertinente** d'instabilité locale |
+| \(E=\mathrm{TV}-\lvert\mathrm{net}\rvert\) | **mécanisme alternatif** (backtracking / path reversal) — **pas** métrique de robustesse de A |
+| D-sign-flips | `WEAK` (inchangé) |
+| Disp | `UNRESOLVED` / UNFIXED |
+| \(m\) | `UNRESOLVED` |
+| Formule \(Z_t\) | **non acceptée** |
 
 \[
+\boxed{\text{Family A = primary semantic candidate}}
+\quad
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
 
-**Recommandation documentaire (étape suivante) :** trancher
-**humainement** la question du cas 5 (transition vs instabilité),
-**puis** seulement figer A vs \(E\) ; traiter \(m\) ensuite, avec
-préférence documentaire pour éviter un \(m\) libre (M1) tant que
-possible. Pas de Disp choisie ; pas de combinaison A+D ; pas de
-donnée.
+**Clarification §9.16 :** \(E\) n'entre **pas** dans un ensemble de
+robustesse métrique pour A. Ce sont deux **mécanismes** distincts ;
+A est le candidat sémantique primaire ; \(E\) reste disponible comme
+piste alternative / future investigation, sans obligation de
+co-survie avec A pour interpréter un résultat sur A.
 
-### 14A.11 Cohérence
+**Prochaines questions OPEN (étroit) :** Disp ; \(m\) (dont statut
+\(m=W\)). Toujours sans donnée, sans \(\varepsilon\), sans acceptation
+\(Z_t\).
+
+### 14A.13 Cohérence
 
 | Contrôle | OK |
 |----------|-----|
@@ -1952,6 +1958,8 @@ donnée.
 | Pas de Disp / \(m\) / \(W\) / \(\varepsilon\) choisis | oui |
 | Pas de données marché | oui |
 | Décisions ACCEPTED antérieures intactes | oui |
+| A primaire candidate ; \(Z_t\) non acceptée | oui |
+| \(E\) = alternatif, ≠ robustesse de A | oui |
 | I02 NOT OPENED | oui |
 
 ---
@@ -1968,28 +1976,32 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 Ne pas résoudre dans ce draft :
 
-- **choix A vs \(E\)** (dépend de la décision sémantique cas 5) ;
-- Disp (UNFIXED) ; \(m\) (UNRESOLVED ; \(m=W\) défendable non forcé) ;
-- forme \(E/\mathrm{TV}\) (non acceptée) ; règle sign(0) ;
+- **Disp** (UNFIXED) ; **\(m\)** (UNRESOLVED ; \(m=W\) défendable non forcé) ;
+- formule exacte \(Z_t\) (famille A candidate seulement) ;
 - définition protocolaire du « désaccord matériel » sous §9.16 ;
 - détail d'agrégation \(L\)+forme dans l'opérateur kNN ;
 - Spearman / CRPS / inférence dépendance temporelle ;
 - temporal redundancy control du pool ;
 - z-score / rangs / CDF / Mahalanobis / poids appris ;
-- singularités (\(RV=0\), \(\mathrm{TV}=0\) pour ratios) — pas d'\(\varepsilon\) ;
+- singularités (\(RV=0\), …) — pas d'\(\varepsilon\) ;
 - \(W\), \(h\), \(k\), partage 10+10 ; holdout ; Market-State Engine.
 
 **CLOSED :**
 
 - doctrine §9.16 ; \(\mathcal{M}_{S3}\), \(\mathcal{M}_{S2}\) ;
-- B `REJECT`, C `WEAK` (non rouverts) ;
-- D-sign-flips comme candidat primaire (`WEAK`) ;
+- B `REJECT`, C `WEAK` ; D-sign-flips `WEAK` ;
+- décision cas 3 / cas 5 ⇒ famille **A** primaire candidate ;
+- \(E\) = mécanisme alternatif (≠ robustesse de A) ;
 - framing \(C_t\) binaire stress.
 
-**Accepté :** \(S_1/S_2/S_3\) ; invariant multiplicatif ; §9.16 locale
-I02.
+**Accepté (représentations / métriques) :** \(S_1/S_2/S_3\) ; invariant
+multiplicatif ; §9.16 locale I02.
 
-**Documentés :** §14 ; §14A (A vs D, \(m\)) ; `NO Z ACCEPTED`.
+**Candidat sémantique (non formule) :** famille A pour \(Z_t\).
+
+\[
+\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\]
 
 ---
 
@@ -2001,11 +2013,11 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 
 - [ ] Hypothèse finale approuvée (H1-v0.2 reste une candidate)
 - [x] Doctrine §9.16 **acceptée** ; métriques pré-cadrage **CLOSED**
-- [x] Revue documentaire \(Z_t\) (§14) + A vs D / \(m\) (§14A) —
-      **aucune** \(Z\) acceptée
-- [ ] Décision sémantique **cas 5** (transition vs instabilité) ;
-      puis choix A vs \(E\)
-- [ ] Statut de \(m\) tranché (éviter M1 si possible)
+- [x] Revue documentaire \(Z_t\) (§14–§14A)
+- [x] Décision sémantique cas 3 / cas 5 : famille **A** =
+      `PRIMARY SEMANTIC CANDIDATE` ; \(E\) = mécanisme alternatif
+      (≠ robustesse de A) — **pas** de \(Z_t\) acceptée (§14A.12)
+- [ ] Disp et \(m\) résolus ; formule \(Z_t\) éventuellement acceptée
 - [x] Représentations \(S_1/S_2/S_3\) **acceptées**
 - [x] Invariant multiplicatif **accepté**
 - [ ] Observable futur **approuvé** (\(V_{t,h}\) candidat)
@@ -2025,9 +2037,9 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 |----------|--------|
 | Aucun chiffre / donnée / CRPS | oui |
 | \(S_1/S_2/S_3\) / §9.16 inchangés | oui |
-| Revue A/B/C/D + §14A A vs D / \(m\) | oui |
-| B `REJECT` ; D-SF `WEAK` ; A et \(E\) `PROMISING` | oui |
-| `NO Z_t ACCEPTED` | oui |
+| Famille A = primary semantic candidate (§14A.12) | oui |
+| \(E\) = alternatif ≠ robustesse de A | oui |
+| Disp / \(m\) UNRESOLVED ; `NO Z_t ACCEPTED` | oui |
 | I01 CLOSED ; I02 NOT OPENED | oui |
 
 ---
