@@ -15,6 +15,7 @@
 > **Draft v0.5 level invariant :** `9a9cf89`
 > **Draft v0.6 Q vs φ review :** `8b652f7`
 > **Draft v0.7 metric robustness :** `2a92da7`
+> **Draft v0.8 accept §9.16 :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -30,18 +31,18 @@ E01–E04 ont **généré** la piste. Ils ne peuvent pas la valider.
 **Statut des adversaires \(S\) :**
 
 ```text
-REPRESENTATION ACCEPTED / METRIC UNRESOLVED
+REPRESENTATION ACCEPTED / METRIC ROBUSTNESS SETS ACCEPTED
 ```
 
 \(S_1=[RV]\), \(S_2=[RV,D]\), \(S_3=[RV,Q]\) : nature informationnelle
 **acceptée** (`c85476c`).
 
 **Invariant de niveau :** proximité multiplicative (§9.14) — accepté.
-**Forme \(S_3\) :** pas de « vraie géométrie » déduite (§9.15) ;
-doctrine candidat §9.16 — incertitude métrique → robustesse
-préenregistrée (pas chart suivant). **\(d_{S2}^{(E)}\) :**
-`ACCEPTABLE CANDIDATE`, non accepté. **Avant \(C_t\).**
-I02 reste `NOT OPENED`.
+**Doctrine §9.16 :** `ACCEPTED` (locale I02) —
+\(\mathcal{M}_{S3}=\{d_Q,d_\phi\}\) (aucune primaire) ;
+\(\mathcal{M}_{S2}=\{d_2,d_1\}\) (\(d_2\) PRIMARY, \(d_1\) ROBUSTNESS
+VARIANT). **Sujet métrique pré-cadrage : CLOSED.** Prochaine
+décision conceptuelle : \(C_t\). I02 reste `NOT OPENED`.
 
 ---
 
@@ -248,8 +249,9 @@ Cette écriture **n'est pas** encore un protocole.
 ## 5. Distributions empiriques par voisinage (mécanisme candidat)
 
 **Aucun \(k\) nouveau. Aucun calcul. Aucune implémentation.**
-Distance et scaling de \(S\) : **OPEN** (`METRIC UNRESOLVED`).
-Composition informationnelle : **acceptée** (§9).
+Distance et scaling de \(S\) : ensembles de robustesse §9.16
+`ACCEPTED` ; détail d'opérateur kNN / agrégation \(L\)+forme :
+protocole futur. Composition informationnelle : **acceptée** (§9).
 
 Pour une requête \(t\), candidat :
 
@@ -415,13 +417,13 @@ Pas de reproduction sur information indépendante. Issue normale.
 
 ## 9. Batterie d'adversaires \(S_1,S_2,S_3\)
 
-**Statut :** `REPRESENTATION ACCEPTED / METRIC UNRESOLVED`
-(acceptation humaine après revue §9.13 @ `5980bc8`).
+**Statut :** `REPRESENTATION ACCEPTED / METRIC ROBUSTNESS SETS ACCEPTED`
+(représentations @ `c85476c` ; doctrine §9.16 @ ce draft).
 
 Ce qui est accepté : la **nature informationnelle** des trois
-adversaires et leurs coordonnées NEW. Ce qui **ne** l'est **pas** :
-distance, scaling, \(W\), partage 10+10, convention aux singularités,
-\(C_t\).
+adversaires ; \(\mathcal{M}_{S2}\), \(\mathcal{M}_{S3}\) (§9.16).
+Ce qui **ne** l'est **pas** : \(W\), partage 10+10, convention aux
+singularités, \(C_t\), détail protocolaire du désaccord matériel.
 
 Les redondances éliminées sont **algébriques**. Aucun calcul sur
 données pour les choisir.
@@ -797,7 +799,7 @@ niveau / forme ; singularité \(RV=0\) mineure et documentée. Pas
 | \(S_2\) | `PREFER NEW` | **oui** — représentation |
 | \(S_3\) | `PREFER NEW` | **oui** — représentation |
 
-**Représentations acceptées** (`REPRESENTATION ACCEPTED / METRIC UNRESOLVED`) :
+**Représentations acceptées** ; métriques de robustesse : §9.16 :
 
 \[
 \boxed{S_1(t)=[RV_t]}
@@ -1149,21 +1151,13 @@ L=\log RV,\quad D=\log\frac{RV^{\mathrm{late}}}{RV^{\mathrm{early}}}
 | Pas de z-score / rang / donnée | Norme \(L_2\) vs \(L_1\) non tranchée ; M5 OK pour les deux |
 | Cohérent avec M2 (niveau) et structure relative de \(D\) | N'implique pas l'agrégation avec une future forme \(S_3\) |
 
-**Verdict documentaire \(d_{S2}^{(E)}\) :** `ACCEPTABLE CANDIDATE` pour
-*étude* — **pas** `ACCEPTED`. Première métrique a priori digne
-d'examen pour \(S_2^\star\) ; n'isole pas encore l'opérateur kNN du
-choix de norme.
+**Verdict documentaire \(d_{S2}^{(E)}\) (historique) :** devenu
+\(d_2\in\mathcal{M}_{S2}\) — **PRIMARY** sous §9.16 `ACCEPTED`.
 
-#### 9.15.3 Ce qui reste strictement OPEN (reframé par §9.16)
+#### 9.15.3 Suite — §9.16
 
-- choix **unique** \(|\Delta Q|\) vs \(|\Delta\phi|\) : **ne plus**
-  chercher à le forcer par une nouvelle transformation — voir doctrine
-  candidat §9.16 ;
-- agrégation \(L\) avec forme (sous la même discipline de robustesse) ;
-- acceptation de \(d_{S2}^{(E)}\) comme primaire, avec éventuelle
-  variante \(L_1\) préenregistrée (§9.16.3) ;
-- z-scores, rangs, poids appris — **interdits** comme résolution de
-  l'incertitude métrique.
+Choix unique \(Q\) vs \(\phi\) **abandonné** au profit de
+\(\mathcal{M}_{S3}=\{d_Q,d_\phi\}\). Voir §9.16 (`ACCEPTED`).
 
 #### 9.15.4 Cohérence
 
@@ -1173,142 +1167,117 @@ choix de norme.
 | \(\phi\) ≠ nouvelle représentation acceptée | oui |
 | Pas de « \(Q\) = métrique neutre » | oui |
 | Pas de gaussien = \(Q\approx1\) | oui |
-| \(d_{S2}^{(E)}\) non accepté | oui |
+| Suite métierrique : §9.16 | oui |
 | Aucune donnée / CRPS | oui |
 
-### 9.16 Doctrine candidat — incertitude métrique → robustesse préenregistrée
+### 9.16 Doctrine — incertitude métrique → robustesse préenregistrée
 
-**Nature :** méthodologique, documentaire. **Avant \(C_t\).** Aucune
-donnée. Aucune métrique unique imposée. I02 reste `NOT OPENED`.
+**Nature :** méthodologique, documentaire. Aucune donnée. I02 reste
+`NOT OPENED`.
 
-**Statut :** `METHODOLOGICAL CANDIDATE` — pas encore acceptation
-humaine formelle.
-
-#### 9.16.0 Constat d'asymétrie (post-`8b652f7`)
-
-\[
-S_2^\star=[L,D]
-\quad\text{dispose d'un candidat complet défendable non accepté :}\quad
-d_{S2}^{(E)}=\sqrt{(\Delta L)^{2}+(\Delta D)^{2}}
-\]
+**Statut :** `ACCEPTED` (décision humaine) — **locale à I02**.
+Promotion éventuelle en principe QDP général : **hors scope** ;
+prématuré.
 
 \[
-S_3^\star=[L,Q]
-\quad\text{n'a pas de composante de forme arrêtée :}\quad
-\lvert\Delta Q\rvert
-\;\text{vs}\;
-\lvert\Delta\phi\rvert,\quad
-\phi=\arccos Q
+\boxed{\text{Metric uncertainty} \rightarrow \text{pre-registered robustness}}
 \]
+
+#### 9.16.0 Constat d'asymétrie (historique, post-`8b652f7`)
 
 §9.15 a montré qu'on **ne** déduit **pas** une métrique \(S_3\) de
-la seule interprétation géométrique \(\phi=\arccos Q\). C'est un
-résultat utile : la belle géométrie ne tranche pas.
+la seule interprétation \(\phi=\arccos Q\). Chemin « chart suivant »
+**fermé**.
 
-**Interdit désormais (chemin fermé) :** enchaîner de nouvelles
-transformations / charts « élégants » pour départager \(Q\) et \(\phi\)
-sans critère a priori indépendant des données. Risque : succession
-infinie de coordonnées mathématiquement défendables.
+#### 9.16.1 Principe accepté
 
-#### 9.16.1 Ce qu'on exige réellement d'un adversaire
+Lorsqu'il existe plusieurs métriques **a priori défendables** pour un
+même adversaire informationnel et qu'aucune justification mathématique
+ne désigne une canonique :
 
-Pour I02, \(S_3\) n'a **pas** besoin d'être « la vraie géométrie » du
-profil d'amplitudes. Il doit être un **contrôle simple, crédible et
-difficile à battre artificiellement** pour H2c.
+1. on **ne** sélectionne **pas** celle qui produit le résultat souhaité ;
+2. on **préenregistre** l'ensemble admissible \(\mathcal{M}\) ;
+3. la **conclusion scientifique** préenregistrée doit survivre à
+   \(\mathcal{M}\).
 
-Question méthodologique (remplace la quête de la métrique parfaite) :
+**Nuance :** la robustesse porte sur la **conclusion scientifique**
+préenregistrée (ex. « \(X\) résiste à H2c »), **pas** sur l'égalité
+des valeurs numériques ni des tailles d'effet. Le protocole futur
+devra définir précisément ce qu'est un « désaccord matériel » sur
+cette conclusion — **sans** ouvrir ici de seuil.
 
-> Parmi plusieurs métriques a priori également défendables pour un
-> même contrôle informationnel, faut-il en sélectionner arbitrairement
-> une, ou exiger que la conclusion concernant \(X\) survive aux
-> variantes raisonnables **préenregistrées** ?
-
-La seconde voie est la doctrine candidat.
+**Interdit explicite :**
 
 \[
-\boxed{\text{incertitude métrique} \rightarrow \text{robustesse préenregistrée}}
+\text{run}\rightarrow\text{voir laquelle gagne}\rightarrow\text{retenir celle-là}.
 \]
 
-plutôt que
+**Interdit explicite :** introduire une métrique **après** observation
+du résultat. Toute métrique additionnelle = **nouvelle investigation**,
+pas un amendement silencieux de \(\mathcal{M}\).
+
+#### 9.16.2 \(\mathcal{M}_{S3}\) — accepté (aucune primaire)
 
 \[
-\text{incertitude métrique} \rightarrow \text{chercher la métrique parfaite}.
+\mathcal{M}_{S3}=\{d_Q,\,d_\phi\}
 \]
 
-#### 9.16.2 Règle candidat pour H2c / \(S_3\)
-
-Soit \(\mathcal{M}_{S3}\) un **ensemble fini préenregistré** de
-métriques de forme raisonnables partageant le même contrôle
-informationnel \(S_3=[RV,Q]\) — au minimum les deux géométries déjà
-auditées :
-
 \[
-d_Q=\lvert\Delta Q\rvert,
+d_Q(a,b)=\lvert Q_a-Q_b\rvert,
 \qquad
-d_\phi=\lvert\Delta\phi\rvert=\lvert\arccos Q_a-\arccos Q_b\rvert
+d_\phi(a,b)=\lvert\arccos Q_a-\arccos Q_b\rvert
 \]
 
-(plus, le cas échéant, une règle d'agrégation avec \(L\) **identique**
-pour chaque membre, elle aussi préenregistrée — non choisie ici).
+Ensemble de **metric robustness** : les deux membres sont égaux en
+statut ; **aucune** primaire. \(Q\) reste la statistique
+informationnelle de \(S_3\) ; \(\phi\) reste l'interprétation
+angulaire — ni l'une ni l'autre n'est « la » métrique canonique.
 
-**Interprétation candidat de « \(X\) résiste à H2c » :**
+**Règle H2c :** pour conclure que \(X\) résiste à H2c, la conclusion
+doit être **compatible sous les deux** métriques.
 
 \[
-X \succ S_3
-\quad\text{n'est interprétable comme résistance à H2c}
-\quad\text{que si le résultat ne dépend pas du choix}
-\quad\text{raisonnable dans }\mathcal{M}_{S3}.
+\boxed{\text{désaccord matériel}\Rightarrow\text{H2c comparison = INCONCLUSIVE}}
 \]
 
-Conséquences :
+Pas d'invitation à retenir le membre favorable à \(X\).
 
-| Observation | Verdict candidat |
-|-------------|------------------|
-| \(X\) bat \(S_3\) sous **toutes** les \(d\in\mathcal{M}_{S3}\) | résistance à H2c **interprétable** (sous les autres gates) |
-| \(X\) bat \(S_3\) sous **une** \(d\), pas sous une autre | **`INCONCLUSIVE`** — **pas** une invitation à retenir celle qui arrange \(X\) |
-| \(S_3\) reproduit \(N_X\) sous **au moins une** \(d\in\mathcal{M}_{S3}\) | H2c **non écartée** (kill / non-résistance) |
+#### 9.16.3 \(\mathcal{M}_{S2}\) — accepté (primaire + variante)
 
-`INCONCLUSIVE` reçoit ici un rôle **exactement adapté** : l'incertitude
-géométrique a priori, une fois préenregistrée comme famille, devient
-un test de robustesse, pas un levier de sélection empirique.
+\[
+\mathcal{M}_{S2}=\{d_2,\,d_1\}
+\]
 
-**Ce que cette règle n'est pas :**
+\[
+d_2=\sqrt{(\Delta L)^{2}+(\Delta D)^{2}}
+\quad\text{(PRIMARY)}
+\]
 
-- pas une optimisation sur CRPS pour choisir \(d_Q\) ou \(d_\phi\) ;
-- pas un z-score, rang, CDF, Mahalanobis, poids appris ;
-- pas une acceptation de \(d_Q\) ni de \(d_\phi\) comme « la » métrique ;
-- pas une ouverture de I02 ni un seuil numérique.
+\[
+d_1=\lvert\Delta L\rvert+\lvert\Delta D\rvert
+\quad\text{(ROBUSTNESS VARIANT)}
+\]
 
-#### 9.16.3 Extension candidat pour \(S_2\)
+Ce n'est **pas** un vote \(L_1\) vs \(L_2\). \(d_2\) est la première
+candidature géométriquement motivée (ex-\(d_{S2}^{(E)}\)) ; \(d_1\)
+teste la robustesse de la **conclusion** H2b, pas un concurrent à
+optimiser.
 
-Même logique **potentielle**, sans symétrie forcée avec \(S_3\) :
+Même règle : désaccord matériel sur la conclusion H2b ⇒
+`INCONCLUSIVE` (H2b comparison), jamais sélection post-hoc.
 
-- \(d_{S2}^{(E)}\) reste le **candidat primaire** (`ACCEPTABLE
-  CANDIDATE`, non accepté) ;
-- une norme alternative **préenregistrée** (ex. \(L_1\) :
-  \(\lvert\Delta L\rvert+\lvert\Delta D\rvert\)) peut servir de
-  **test de robustesse géométrique**, non de concurrent à optimiser
-  après coup.
+#### 9.16.4 Portée et clôture pré-cadrage
 
-Si retenue : « \(X\succ S_2\) » interprétable comme résistance à H2b
-seulement si le résultat survit à la variante préenregistrée ; sinon
-`INCONCLUSIVE` / non-résistance selon la même grille logique que
-§9.16.2. **Non figé** ici — parallèle méthodologique seulement.
-
-#### 9.16.4 Ce qui doit encore être décidé humainement (sans \(C_t\))
-
-Avant toute définition de \(C_t\) :
-
-1. **Accepter ou rejeter** la doctrine §9.16
-   (`incertitude → robustesse préenregistrée`) ;
-2. si acceptée : figer \(\mathcal{M}_{S3}\) (au minimum
-   \(\{d_Q,d_\phi\}\)) et la règle d'agrégation avec \(L\) **commune**
-   aux membres ;
-3. décider si \(S_2\) adopte le même schéma (primaire + variante) ;
-4. **ne pas** ouvrir la boîte des charts suivants pour \(S_3\).
-
-\(C_t\), holdout, \(W/k/h\), CRPS final : **après** cette discipline,
-pas avant comme substitut.
+| Objet | Statut |
+|-------|--------|
+| Doctrine §9.16 | `ACCEPTED` (I02 only) |
+| \(\mathcal{M}_{S3}\) | `ACCEPTED` |
+| \(\mathcal{M}_{S2}\) | `ACCEPTED` |
+| Sujet métrique (pré-cadrage) | **CLOSED** |
+| Définition protocolaire du « désaccord matériel » | OPEN (protocole futur) |
+| Agrégation exacte \(L\)+forme dans l'opérateur kNN | OPEN (protocole ; pas de chart nouveau) |
+| \(C_t\) | **prochaine** décision conceptuelle |
+| Promotion QDP générale | **non** |
 
 #### 9.16.5 Cohérence
 
@@ -1316,9 +1285,9 @@ pas avant comme substitut.
 |----------|-----|
 | Pas de nouvelle transformation \(S_3\) | oui |
 | \(S_1/S_2/S_3\) informationnels inchangés | oui |
-| Pas de sélection empirique de métrique | oui |
-| `INCONCLUSIVE` défini comme verdict, pas comme invitation à cherry-pick | oui |
-| Avant \(C_t\) | oui |
+| Pas de sélection empirique / post-hoc | oui |
+| `INCONCLUSIVE` = verdict, pas cherry-pick | oui |
+| Locale I02 ; pas de règle QDP globale | oui |
 | I02 NOT OPENED | oui |
 
 ---
@@ -1411,11 +1380,11 @@ Qualitatif. **Aucun seuil numérique.**
 5. Résultat entièrement dû au comportement de la métrique (CRPS à
    échelle brute, ou `H_vol`) sans structure de voisinage.
 6. Instabilité à des choix **pré-enregistrés** raisonnables (pas :
-   chercher \(W\) après coup) — y compris, si §9.16 est acceptée,
-   dépendance du verdict H2c (resp. H2b) au seul membre favorable
-   de \(\mathcal{M}_{S3}\) (resp. variante \(S_2\)) : alors
-   `INCONCLUSIVE` / non-résistance, **pas** sélection de la métrique
-   qui arrange \(X\).
+   chercher \(W\) après coup) — en particulier, sous §9.16
+   `ACCEPTED` : dépendance du verdict H2c (resp. H2b) au seul
+   membre favorable de \(\mathcal{M}_{S3}\) (resp. \(\mathcal{M}_{S2}\))
+   ⇒ `INCONCLUSIVE` / non-résistance, **pas** sélection post-hoc ;
+   ajout d'une métrique après observation ⇒ nouvelle investigation.
 
 Un kill n'est pas un SCI-FAIL d'I01.
 
@@ -1449,29 +1418,29 @@ ce contrat.
 
 Ne pas résoudre dans ce draft :
 
-- **acceptation de la doctrine §9.16** (prioritaire, **avant \(C_t\)**) ;
-- si doctrine acceptée : figement de \(\mathcal{M}_{S3}\) et règle
-  d'agrégation \(L\)+forme commune ; parallèle \(S_2\) oui/non ;
-- définition de \(C_t\) (**après** discipline métrique) ;
-- acceptation de \(d_{S2}^{(E)}\) comme primaire
-  (`ACCEPTABLE CANDIDATE`) ;
+- définition de \(C_t\) (**prochaine** décision conceptuelle) ;
+- définition protocolaire du « désaccord matériel » sous §9.16 ;
+- détail d'agrégation \(L\)+forme dans l'opérateur kNN (protocole ;
+  **pas** de nouvelle métrique / chart) ;
 - z-score / rangs / CDF / Mahalanobis / poids appris ;
 - convention aux singularités (\(RV=0\), demi-vol nulle) — pas d'\(\varepsilon\) ;
 - \(W\), \(h\), \(k\), partage 10+10 ; holdout ; CRPS final ; Market-State Engine.
 
-**Chemin fermé :** départager \(Q\) vs \(\phi\) par une nouvelle
-transformation / chart « plus fondamental ».
+**CLOSED (pré-cadrage métrique) :**
+
+- doctrine §9.16 ;
+- \(\mathcal{M}_{S3}=\{d_Q,d_\phi\}\) ;
+- \(\mathcal{M}_{S2}=\{d_2,d_1\}\) ;
+- chemin « chart suivant » pour \(S_3\).
 
 **Accepté :**
 
 - \(S_1=[RV]\), \(S_2=[RV,D]\), \(S_3=[RV,Q]\) ;
 - invariant multiplicatif \(\delta_{\mathrm{level}}=\lvert\Delta L\rvert\) ;
 - charts \(S^\star\) (≠ représentations) ;
-- \(Q\) statistique ; \(\phi=\arccos Q\) interprétation (pas métrique
-  unique figée).
+- §9.16 locale I02 ; \(\mathcal{M}_{S3}\), \(\mathcal{M}_{S2}\).
 
-**Documentés :** H1-v0.2 ; \(V_{t,h}\) ; CRPS ; M1–M9 ; §9.15 ;
-doctrine candidat §9.16.
+**Documentés :** H1-v0.2 ; \(V_{t,h}\) ; CRPS ; M1–M9 ; §9.15.
 
 ---
 
@@ -1482,20 +1451,16 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 **I02 = NOT OPENED.**
 
 - [ ] Hypothèse finale approuvée (H1-v0.2 reste une candidate)
-- [ ] Doctrine §9.16 (robustesse métrique préenregistrée) **acceptée
-      ou rejetée** — **avant \(C_t\)**
-- [ ] Si doctrine acceptée : \(\mathcal{M}_{S3}\) (+ agrégation \(L\))
-      figé ; décision parallèle \(S_2\)
-- [ ] Condition de marché \(C_t\) définie ex ante (§14) — **après**
-      discipline métrique
+- [x] Doctrine §9.16 **acceptée** (locale I02) ; \(\mathcal{M}_{S3}\),
+      \(\mathcal{M}_{S2}\) figés — sujet métrique pré-cadrage **CLOSED**
+- [ ] Condition de marché \(C_t\) définie ex ante (§14)
 - [x] Représentations adversaires \(S_1/S_2/S_3\) **acceptées**
 - [x] Invariant multiplicatif du niveau **accepté** ; charts \(S^\star\)
-- [x] Chemin « chart suivant pour \(S_3\) » **fermé** (§9.16.0)
-- [ ] \(d_{S2}^{(E)}\) accepté/rejeté comme primaire (évent. + variante)
+- [x] Chemin « chart suivant pour \(S_3\) » **fermé**
 - [ ] Observable futur **approuvé** (\(V_{t,h}\) candidat)
 - [ ] Score probabiliste **approuvé** (CRPS = acceptable candidate)
 - [ ] Rôle de `H_shape` défini
-- [ ] Kill criteria approuvés (dont §13.6 aligné §9.16)
+- [ ] Kill criteria approuvés
 - [ ] Stratégie de données / réplication définie
 - [ ] Risque de data snooping documenté
 - [ ] Protocole de gel avant premier résultat
@@ -1509,10 +1474,10 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 |----------|--------|
 | Aucun chiffre / donnée / CRPS | oui |
 | \(S_1/S_2/S_3\) inchangés | oui |
-| Pas de nouvelle transformée \(S_3\) | oui |
-| Doctrine §9.16 = candidat, non acceptée | oui |
-| Avant \(C_t\) | oui |
-| \(d_{S2}^{(E)}\) non accepté | oui |
+| §9.16 `ACCEPTED` ; \(\mathcal{M}\) figés | oui |
+| Locale I02 ; pas de règle QDP globale | oui |
+| Sujet métrique pré-cadrage CLOSED | oui |
+| \(C_t\) encore OPEN | oui |
 | I01 CLOSED ; I02 NOT OPENED | oui |
 
 ---
