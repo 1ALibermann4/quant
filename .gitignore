@@ -26,3 +26,6 @@ Thumbs.db
 data/
 *.parquet
 *.csv
+
+# Exploratory UNQUALIFIED caches (DR-008) — never commit
+data/exploratory/
