@@ -5,7 +5,7 @@ contract:
   contract_version: "1.1"
   supersedes: "1.0"
   compatibility: backward-compatible (additive) — see section `compatibility`
-  status: "corrected (CA-04) — C02 v1.1 remains OPEN"
+  status: "inspected (HAT #5 PASS) — C02 v1.1 remains OPEN pending human acceptance"
   protocol: QDP-v0.1
   decision_record: docs/adr/DR-004-c02-data-provenance-architecture.md
   resolves: [DATA-GAP-01, DATA-GAP-02]  # research/I01/DATA-REQ-I01.md §7.3
