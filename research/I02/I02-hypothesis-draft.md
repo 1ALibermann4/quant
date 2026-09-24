@@ -23,6 +23,7 @@
 > **Draft v0.13 Disp = Std_pop :** `98ddec6`
 > **Draft v0.14 temporal architecture :** `6e0b4c7`
 > **Draft v0.15 W_RV := W_X :** `e3fc32c`
+> **Draft v0.16 m_Z admissibility :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -49,10 +50,10 @@ REPRESENTATION ACCEPTED / METRIC ROBUSTNESS SETS ACCEPTED
 \(\mathcal{M}_{S2}\) figés ; sujet métrique pré-cadrage **CLOSED**.
 
 **État \(Z_t\) :** famille **A** ; \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\)
-`ACCEPTED` ; \(W_{RV}:=W_X\) `ACCEPTED` (§14C.9) —
-**comparability coupling**, pas identité conceptuelle ; \(m_Z\) OPEN
-et **distinct** ; stride 1 = baseline candidate non acceptée ;
-formule \(Z_t\) **incomplète**.
+`ACCEPTED` ; \(W_{RV}:=W_X\) `ACCEPTED` (comparability coupling) ;
+revue \(m_Z\) §14D — `STRUCTURALLY CONSTRAINED` ; **aucune** valeur
+\(m_Z\) ; stride 1 = baseline candidate non acceptée ; formule \(Z_t\)
+**incomplète**.
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
@@ -2585,8 +2586,8 @@ spécifique à l'un d'eux.
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
 
-**Prochaine étape documentaire (hors mandat) :** propriétés
-d'admissibilité d'un \(m_Z\), plutôt qu'une valeur à tuner.
+**Prochaine étape documentaire :** revue §14D (admissibilité
+\(m_Z\)) — **faite** ; valeur \(m_Z\) encore OPEN.
 
 ### 14C.10 Cohérence (post-décision)
 
@@ -2596,6 +2597,279 @@ d'admissibilité d'un \(m_Z\), plutôt qu'une valeur à tuner.
 | \(m_Z\) non posé égal à \(W_X\) | oui |
 | Overlap / empan §14C.1–2 inchangés | oui |
 | Pas de valeur numérique ; stride non accepté | oui |
+| I02 NOT OPENED | oui |
+
+---
+
+## 14D. Temporal response and admissibility of \(m_Z\)
+
+**Nature :** mathématique / documentaire. **Aucune donnée.** Aucune
+valeur de \(m_Z\), \(W_X\), \(W_{RV}\). Décisions ACCEPTED non
+rouvertes. I02 = `NOT OPENED`.
+
+**Objectif :** ce que \(m_Z\) contrôle (détection, mémoire, dilution,
+récupération) ; propriétés d'admissibilité ; classification
+structurelle — **pas** un choix numérique.
+
+### 14D.0 Convention documentaire (anti off-by-one)
+
+\[
+\boxed{m_Z=\text{nombre de niveaux successifs }L\text{ utilisés}}
+\]
+
+\[
+n_Z=m_Z-1
+=\text{nombre d'incréments }\Delta L
+\]
+
+Fenêtre à la date \(t\) (exiger \(m_Z\ge 3\) i.e. \(n_Z\ge 2\) pour
+une Disp non dégénérée — MZ-1) :
+
+\[
+\bigl(L_{t-m_Z+1},\ldots,L_t\bigr)
+\quad\longrightarrow\quad
+y
+=
+\bigl(\Delta L_{t-n_Z+1},\ldots,\Delta L_t\bigr)
+=
+\bigl(\Delta L_{t-m_Z+2},\ldots,\Delta L_t\bigr)
+\]
+
+\[
+Z_t=\mathrm{Std}_{\mathrm{pop}}(y)
+=
+\sqrt{\frac1{n_Z}\sum_{i=1}^{n_Z}(y_i-\bar y)^{2}}
+\]
+
+**Interdit :** confondre \(m_Z\) et \(n_Z\) sans le dire.
+
+### 14D.1 Niveau I — réponse intrinsèque de \(\mathrm{Std}_{\mathrm{pop}}\)
+
+Espace \(y_i=\Delta L_i\) **sans** construction \(RV\).
+
+#### A. Constant-rate — \(y_i=c\)
+
+\[
+Z=0
+\quad\text{pour tout }c\text{ (Disp centrée).}
+\]
+
+#### B. Single impulse dans \(y\)
+
+Fond \(0\), un seul \(y_\tau=\delta\neq 0\), \(n_Z\ge 2\) :
+
+\[
+Z
+=
+\lvert\delta\rvert\,\frac{\sqrt{n_Z-1}}{n_Z}
+\]
+
+Dilution : ordre \(\lvert\delta\rvert/\sqrt{n_Z}\). Présence à \(t\) ssi
+\(t-n_Z+1\le\tau\le t\), i.e. \(\tau\le t\le\tau+n_Z-1\).
+Durée exacte \(Z>0\) : **\(n_Z\)** dates. Retour à \(0\) dès
+\(t=\tau+n_Z\).
+
+#### C. Step dans \(y\)
+
+\(y=0\) avant \(\tau\), \(y=c\neq 0\) après. Avec \(k\) incréments à
+\(c\) et \(n_Z-k\) à \(0\) :
+
+\[
+Z
+=
+\lvert c\rvert
+\sqrt{\frac{k(n_Z-k)}{n_Z^{2}}}.
+\]
+
+Pic vers \(k\sim n_Z/2\). Quand \(k=n_Z\) (nouveau taux entièrement
+établi) : \(Z=0\). Récupération exacte après \(n_Z\) pas.
+
+#### D. Accélération finie
+
+Support fini de non-constance de \(y\), puis \(y\equiv c'\).
+Détection / persistance \(\le n_Z\) après la fin de l'épisode ;
+récupération exacte (MZ-4).
+
+#### E. Oscillation \(y_i=(-1)^i a\) (\(a\neq 0\), \(n_Z\ge 2\))
+
+| \(n_Z\) | \(\bar y\) | \(Z\) |
+|---------|------------|-------|
+| pair | \(0\) | \(\lvert a\rvert\) |
+| impair | \(\pm a/n_Z\) | \(\lvert a\rvert\sqrt{1-1/n_Z^{2}}\) |
+
+\(Z>0\) toujours — MZ-6. Effet pair/impair : mineur, pas un critère
+de choix de \(m_Z\).
+
+### 14D.2 Propriétés d'admissibilité
+
+| ID | Propriété | Statut |
+|----|-----------|--------|
+| **MZ-1** Identifiability | \(n_Z\ge 2\) (\(m_Z\ge 3\)) | **contrainte dure** |
+| **MZ-2** Locality | état local ⇒ \(m_Z\) pas « arbitrairement grand » | **qualitative** ; pas de borne chiffrée ici |
+| **MZ-3** Shock detection | saut isolé ⇒ \(Z>0\) | **OK** \(\forall n_Z\ge 2\) |
+| **MZ-4** Finite memory | retour exact à \(0\) après durée déterminable | **OK** (\(=n_Z\) après fin de perturbation dans \(y\)) |
+| **MZ-5** No drift confusion | \(y_i=c\Rightarrow Z=0\) | **OK** |
+| **MZ-6** Persistent instability | oscillation ⇒ \(Z>0\) | **OK** |
+| **MZ-7** No empirical tuning | pas SPY / E01–E04 / crises / CRPS | **méthodologique** |
+| **MZ-8** Interpretable memory | mémoire Disp = \(n_Z\) incréments / sessions de présence | **OK** |
+
+### 14D.3 Niveau II — rolling \(RV\) (stride 1 = hypothèse de travail, NOT ACCEPTED)
+
+\[
+W_{RV}:=W_X,
+\quad
+RV_t^{2}=\frac1{W_{RV}}\sum_{j=0}^{W_{RV}-1}r_{t-j}^{2}.
+\]
+
+#### Choc synthétique dans \(r^{2}\)
+
+Baseline \(r_u^{2}=a>0\) ; une seule date \(s\) : \(r_s^{2}=a+\delta\)
+(\(\delta\neq 0\), \(a+\delta>0\)) ; retour immédiat à \(a\).
+
+| Quantité | Comportement |
+|----------|--------------|
+| Présence dans \(RV\) | \(t\in\{s,\ldots,s+W_{RV}-1\}\) — **\(W_{RV}\) sessions** |
+| \(RV_t^{2}\) | \(a+\delta/W_{RV}\) sur cet intervalle ; \(a\) sinon |
+| \(\Delta L\) non nuls | **dipôle** : entrée \(t=s\) (signe de \(\delta\)) ; sortie \(t=s+W_{RV}\) (signe **opposé**) |
+| Séparation | **\(W_{RV}\)** pas entre les deux impulsions \(y\) |
+| Entre les deux | \(\Delta L=0\) ( \(L\) plat tant que le choc est entièrement dans \(RV\) ) |
+
+Un choc unique de \(r^{2}\) **n'est pas** une seule impulsion dans
+\(y\) : c'est une structure **entrée/sortie** produite par la mémoire
+rolling (mémoire A).
+
+Retour baseline complet de \(Z\) : après sortie de la dernière
+signature hors de la fenêtre Disp — horizon d'ordre
+\(s+W_{RV}+n_Z\).
+
+### 14D.4 Empan causal vs mémoire effective
+
+\[
+\operatorname{span}_{\mathrm{causal}}(Z_t)
+=
+W_{RV}+m_Z-1
+\]
+
+(ordre \(W_{RV}+m_Z\) ; surveiller l'inclusion des bornes —
+off-by-one documentaire, pas une liberté de tuning).
+
+| Notion | |
+|--------|--|
+| Empan brut | \(W_{RV}+m_Z-1\) |
+| Nb d'incréments \(y\) | \(n_Z=m_Z-1\) |
+| Info indépendante | **≪** \(n_Z\) (overlap) |
+| Persistance d'une impulsion \(y\) dans \(Z\) | \(n_Z\) dates |
+
+**Interdit :** assimiler \(W_{RV}+m_Z\) à un effectif i.i.d.
+
+### 14D.5 Deux mémoires
+
+| Mémoire | Contrôle | Effet |
+|---------|----------|-------|
+| **A** | \(W_{RV}\) | rolling \(RV\) ; **dipôle** entrée/sortie espacé de \(W_{RV}\) |
+| **B** | \(m_Z\) / \(n_Z\) | \(\mathrm{Std}_{\mathrm{pop}}\) ; dilution / rétention pendant \(n_Z\) dates |
+
+Mémoire totale de \(Z\) = **composition** A puis B.
+
+### 14D.6 Classes \(m_Z\) vs \(W_{RV}\) — seuil exact du dipôle
+
+Indices des signatures : \(s\) et \(s+W_{RV}\) (écart \(W_{RV}\)).
+Les deux tiennent dans une fenêtre de \(n_Z\) incréments ssi
+
+\[
+n_Z\ge W_{RV}+1
+\quad\Leftrightarrow\quad
+m_Z\ge W_{RV}+2.
+\]
+
+**Attention :** les classes naïves \(m_Z\lessgtr W_{RV}\) **ne**
+coïncident **pas** avec ce seuil (off-by-one structurel).
+
+| Classe | Dual-signature dans \(Z\) ? | Interprétation |
+|--------|----------------------------|----------------|
+| \(m_Z\le W_{RV}+1\) i.e. \(n_Z\le W_{RV}\) | **non** | au plus une signature du dipôle à la fois |
+| \(m_Z=W_{RV}\) | **non** (\(n_Z=W_{RV}-1\)) | idem — **\(m_Z=W_{RV}\) n'aligne pas entrée/sortie** |
+| \(m_Z=W_{RV}+2\) i.e. \(n_Z=W_{RV}+1\) | **oui**, aux extrémités quand \(t=s+W_{RV}\) | fenêtre exacte du dipôle |
+| \(m_Z>W_{RV}+2\) | **oui**, avec slack | entrée et sortie simultanées + zéros entre |
+
+**Conséquences sémantiques :**
+
+- Sous \(m_Z\le W_{RV}+1\), \(Z\) ne « voit » jamais le dipôle complet
+  d'un choc \(r^{2}\) : plutôt des fronts séparés (entrée puis, plus
+  tard, sortie).
+- Sous \(m_Z\ge W_{RV}+2\), \(Z\) peut classifier comme instabilité
+  la **coexistence** entrée+sortie du **même** choc rolling — objet
+  différent d'une instabilité de régime « purement locale » en
+  \(\Delta L\).
+- **Aucune classe interdite par théorème** ; la distinction change
+  l'interprétation. Pas de forçage \(m_Z=W_{RV}\) (esthétique /
+  symétrie) — cette égalité **ne** réalise **pas** l'alignement
+  dipôle.
+
+### 14D.7 Classification de \(m_Z\)
+
+\[
+\boxed{m_Z:\ \texttt{STRUCTURALLY CONSTRAINED}\ (B)}
+\]
+
+| Éliminé / contraint | Reste ouvert |
+|---------------------|--------------|
+| \(n_Z=1\) (\(m_Z=2\)) — MZ-1 | tout \(m_Z\ge 3\) |
+| \(m_Z=W_{RV}\) comme « identité naturelle » — **non justifié** par le dipôle | horizon propre vs conventions explicites préenregistrées |
+| localité qualitative (MZ-2) sans borne chiffrée | choix humain non empirique |
+
+**Pas** `STRUCTURALLY DETERMINED` : pas de construction unique.
+**Pas** `FREE` pur : MZ-1 et la sémantique dual-signature vs
+front-unique **contrainent** la discussion.
+
+Aucune valeur numérique.
+
+### 14D.8 Revue adversariale
+
+| Attaque | Évaluation |
+|---------|------------|
+| \(m_Z\) minimal pour « éviter un paramètre » | \(m_Z=3\) (\(n_Z=2\)) admissible MZ-1 mais proche d'un détecteur de choc / contraste — tension MZ-2 |
+| \(m_Z=W_{RV}\) par symétrie | **esthétique** ; n'aligne pas le dipôle ; ne pas adopter sans justification séparée |
+| Grand \(m_Z\) | détruit la localité ; dilue les impulsions (\(1/\sqrt{n_Z}\)) |
+| Petit \(m_Z\) | détecteur de choc ; peu de « régime » |
+| Double smoothing | mémoire A + B — **réel** ; à assumer, pas nier |
+| Empan = info i.i.d. | **faux** |
+| Autocorrélation rolling | **structurelle** |
+| Off-by-one \(m_Z\)/\(n_Z\) / seuil dipôle | documenté §14D.0 et §14D.6 |
+| Tuning futur de \(m_Z\) | interdit (MZ-7) |
+
+### 14D.9 Verdicts
+
+| Item | Résultat |
+|------|----------|
+| Convention | \(m_Z\) = # niveaux \(L\) ; \(n_Z=m_Z-1\) |
+| Impulse \(y\) | \(Z=\lvert\delta\rvert\sqrt{n_Z-1}/n_Z\) ; durée \(n_Z\) |
+| Step \(y\) | \(Z=\lvert c\rvert\sqrt{k(n_Z-k)}/n_Z\) ; \(Z=0\) si \(k=n_Z\) |
+| Oscillation | \(Z\approx\lvert a\rvert\) ; toujours \(>0\) |
+| Empan causal | \(W_{RV}+m_Z-1\) |
+| Choc \(r^{2}\) | dipôle \(\Delta L\) séparé de \(W_{RV}\) |
+| Dual-signature | ssi \(m_Z\ge W_{RV}+2\) |
+| Classification | **`STRUCTURALLY CONSTRAINED`** |
+
+\[
+\boxed{\text{NO }m_Z\text{ VALUE SELECTED}}
+\quad
+\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\]
+
+**Étape suivante (humaine) :** décider si l'on veut autoriser la
+coexistence dual-signature (\(m_Z\ge W_{RV}+2\)) ou l'exclure
+sémantiquement ; puis préenregistrer un \(m_Z\) admissible —
+**sans** optimisation empirique.
+
+### 14D.10 Cohérence
+
+| Contrôle | OK |
+|----------|-----|
+| Pas de valeur \(m_Z\)/\(W\) | oui |
+| Couplage / Disp / A non rouverts | oui |
+| Stride 1 non accepté | oui |
+| Deux mémoires distinguées | oui |
 | I02 NOT OPENED | oui |
 
 ---
@@ -2612,8 +2886,8 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 Ne pas résoudre dans ce draft :
 
-- **\(m_Z\)** — horizon distinct ; propriétés d'admissibilité puis
-  éventuelle valeur (pas \(m_Z=W_X\) implicite) ;
+- **valeur de \(m_Z\)** (classe `STRUCTURALLY CONSTRAINED` ; décision
+  sémantique dual-signature vs fronts — §14D.6–9) ;
 - valeur numérique de \(W_X\) (donc de \(W_{RV}\)) ;
 - acceptation formelle rolling / stride 1 ;
 - formule complète \(Z_t\) ;
@@ -2629,9 +2903,9 @@ Ne pas résoudre dans ce draft :
 
 - doctrine §9.16 ; \(\mathcal{M}_{S2}\), \(\mathcal{M}_{S3}\) ;
 - famille A ; \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) ;
-- MAD REJECT ; MeanAD non retenue ; \(E\) = alternatif ;
-- **\(W_{RV}:=W_X\)** `ACCEPTED` (§14C.9) —
-  `METHODOLOGICAL COMPARABILITY COUPLING` ;
+- \(W_{RV}:=W_X\) comparability coupling ;
+- convention \(m_Z\) / \(n_Z\) ; propriétés MZ-1…8 ; classification
+  \(m_Z\) = `STRUCTURALLY CONSTRAINED` (§14D) — **sans** valeur ;
 - framing \(C_t\) binaire stress.
 
 \[
@@ -2657,8 +2931,11 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [x] Revue architecture temporelle §14C
 - [x] **\(W_{RV}:=W_X\)** `ACCEPTED` (§14C.9) —
       `METHODOLOGICAL COMPARABILITY COUPLING` ; sémantiques distinctes
-- [ ] \(m_Z\) (propriétés d'admissibilité / valeur) ; stride 1 ;
-      valeur \(W_X\) ; formule \(Z_t\) éventuellement acceptée
+- [x] Revue admissibilité \(m_Z\) (§14D) —
+      `STRUCTURALLY CONSTRAINED` ; **aucune** valeur
+- [ ] Décision humaine sur classe dual-signature / valeur \(m_Z\) ;
+      stride 1 ; valeur \(W_X\) ; formule \(Z_t\) éventuellement
+      acceptée
 - [x] Représentations \(S_1/S_2/S_3\) **acceptées**
 - [x] Invariant multiplicatif **accepté**
 - [ ] Observable futur **approuvé** (\(V_{t,h}\) candidat)
@@ -2681,8 +2958,9 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 | Famille A = primary semantic candidate (§14A.12) | oui |
 | \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) `ACCEPTED` | oui |
 | \(W_{RV}:=W_X\) comparability coupling `ACCEPTED` | oui |
-| \(m_Z\) indépendant OPEN ; `NO Z_t ACCEPTED` | oui |
-| I01 CLOSED ; I02 NOT OPENED | oui |
+| §14D : \(m_Z\) `STRUCTURALLY CONSTRAINED` ; no value | oui |
+| Dipôle \(r^{2}\) / seuil \(m_Z\ge W_{RV}+2\) documenté | oui |
+| `NO Z_t ACCEPTED` ; I02 NOT OPENED | oui |
 
 ---
 
