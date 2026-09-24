@@ -21,6 +21,7 @@
 > **Draft v0.11 family A primary candidate :** `e7cecc2`
 > **Draft v0.12 Disp review :** `ab6645f`
 > **Draft v0.13 Disp = Std_pop :** `98ddec6`
+> **Draft v0.14 temporal architecture :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -46,9 +47,10 @@ REPRESENTATION ACCEPTED / METRIC ROBUSTNESS SETS ACCEPTED
 **Doctrine §9.16 :** `ACCEPTED` (locale I02) — \(\mathcal{M}_{S3}\),
 \(\mathcal{M}_{S2}\) figés ; sujet métrique pré-cadrage **CLOSED**.
 
-**État \(Z_t\) :** famille **A** = `PRIMARY SEMANTIC CANDIDATE` ;
-\(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) `ACCEPTED` (§14B.11) —
-géométrie \(L_2\) ; \(m\) UNRESOLVED ; formule \(Z_t\) **incomplète**.
+**État \(Z_t\) :** famille **A** ; \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\)
+`ACCEPTED` ; architecture temporelle §14C —
+\((W_X,W_{RV},m_Z)\) **trois rôles distincts** ; aucun horizon figé ;
+formule \(Z_t\) **incomplète**.
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
@@ -2271,10 +2273,9 @@ d'incréments à l'espace des incréments constants
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
 
-**Encore OPEN :** \(m\) ; \(m\) vs \(W\) ; empan effectif ; \(W\) ;
-construction RV si non gelée ; redondance temporelle ; CRPS ;
-Spearman ; inférence ; ouverture I02. La formule complète de \(Z_t\)
-reste **incomplète** sans \(m\).
+**Encore OPEN :** architecture §14C \((W_X,W_{RV},m_Z)\) ; CRPS ;
+Spearman ; inférence ; ouverture I02. Formule \(Z_t\) **incomplète**
+sans horizons.
 
 ### 14B.12 Cohérence (post-décision)
 
@@ -2285,6 +2286,238 @@ reste **incomplète** sans \(m\).
 | \(E\) inchangé (alternatif) | oui |
 | Pas de choix \(m\)/\(W\) | oui |
 | `NO Z_t ACCEPTED` ; I02 NOT OPENED | oui |
+
+---
+
+## 14C. Architecture temporelle de \(Z_t\) — trois horizons
+
+**Nature :** documentaire / mathématique. **Aucun chiffre**
+(pas 10 / 20 / 63 / 252). Disp §14B.11 **non rouverte.** Aucune
+\(Z_t\) acceptée. I02 = `NOT OPENED`.
+
+### 14C.0 Chaîne causale candidate
+
+\[
+r
+\xrightarrow[\text{estimation}]{W_{RV}}
+RV
+\xrightarrow{\log}
+L
+\xrightarrow{\Delta}
+\Delta L
+\xrightarrow[\mathrm{Std}_{\mathrm{pop}}]{m_Z}
+Z
+\]
+
+Trois symboles **obligatoires** (rôles distincts) :
+
+| Symbole | Rôle |
+|---------|------|
+| \(\boxed{W_X}\) | horizon de **représentation** : combien de rendements constituent l'objet géométrique \(X_t\) (et, par alignement, les adversaires \(S\) si même \(W\)) |
+| \(\boxed{W_{RV}}\) | horizon d'**estimation du niveau** de volatilité : échelle de \(RV_t\), donc de \(L_t\) |
+| \(\boxed{m_Z}\) | horizon d'**observation de l'instabilité** de ce niveau : combien d'incréments \(\Delta L\) entrent dans \(\mathrm{Std}_{\mathrm{pop}}\) |
+
+**Aucune raison mathématique** qu'ils soient égaux *par nature*. Une
+égalité éventuelle serait une **convention de parcimonie** à justifier,
+pas une identité structurelle.
+
+**Ordre de décision :** \(m_Z\) **ne** se résout **pas** avant
+\(W_{RV}\). Dépendance :
+
+\[
+W_{RV}\;\rightarrow\;L_t\;\rightarrow\;\Delta L_t\;\rightarrow\;
+\mathrm{Std}_{\mathrm{pop}}^{(m_Z)}\;\rightarrow\;Z_t.
+\]
+
+Choisir \(m_Z\) sans savoir ce qu'est une observation élémentaire
+\(\Delta L_t\) serait prématuré.
+
+### 14C.1 Identités rolling (stride 1) — overlap mécanique
+
+Construction candidate **explicite** (pas encore acceptée comme seule
+possible) : \(RV\) rolling, pas journalier = 1.
+
+\[
+RV_t
+=
+\sqrt{
+\frac1{W_{RV}}
+\sum_{j=0}^{W_{RV}-1}r_{t-j}^{2}
+}
+\quad(RV_t>0)
+\]
+
+Différence de variance réalisée au carré :
+
+\[
+RV_t^{2}-RV_{t-1}^{2}
+=
+\frac{r_t^{2}-r_{t-W_{RV}}^{2}}{W_{RV}}.
+\]
+
+Deux \(RV\) consécutifs ne diffèrent que par **une sortie et une
+entrée**. Propriété structurelle forte : une grande partie du
+« mouvement » de \(RV_t\) est la **rotation** des observations dans
+la fenêtre.
+
+Après log :
+
+\[
+\Delta L_t
+=
+\log RV_t-\log RV_{t-1}
+=
+\frac12
+\log\!
+\left(
+\frac{\sum_{j=0}^{W_{RV}-1}r_{t-j}^{2}}
+{\sum_{j=1}^{W_{RV}}r_{t-j}^{2}}
+\right).
+\]
+
+**Conséquence sémantique :** \(Z_t=\mathrm{Std}_{\mathrm{pop}}\) sur une
+fenêtre de \(\Delta L\) ne mesure **pas** une mystérieuse « vol-of-vol »
+abstraite. Il mesure la dispersion d'une **variation de volatilité
+rolling**, dont la dynamique dépend structurellement de \(W_{RV}\).
+
+### 14C.2 Empan causal et observations non indépendantes
+
+Pour produire \(Z_t\) à la date \(t\) (sous rolling / stride 1) :
+
+| Étape | Empan en rendements (ordre de grandeur) |
+|-------|----------------------------------------|
+| Un \(RV_s\) | \(W_{RV}\) sessions |
+| Un \(\Delta L_s\) | implique deux \(RV\) ⇒ empan \(W_{RV}+1\) |
+| \(m_Z\) niveaux \(L\) (donc \(n=m_Z-1\) incréments) | du plus ancien rendement dans \(RV_{t-m_Z+1}\) au plus récent dans \(RV_t\) |
+
+Empan calendaire causal exact (rendements) :
+
+\[
+\operatorname{span}(Z_t)
+=
+W_{RV}+(m_Z-1)
+\]
+
+sessions (du rendement d'indice \(t-W_{RV}-m_Z+2\) à \(t\), selon
+convention d'indexation inclusive — l'ordre de grandeur est
+\(W_{RV}+m_Z\), **pas** \(m_Z\) seul).
+
+**Point critique :** cet empan calendaire **ne** signifie **pas**
+autant d'observations **indépendantes** d'information sur
+l'instabilité. Les \(\Delta L\) successifs sont **fortement
+dépendants** via l'overlap des fenêtres \(RV\) (rotation d'une seule
+observation). Nominal \(m_Z\) ≠ taille d'échantillon i.i.d.
+
+### 14C.3 Stride / blocs — liberté à ne pas multiplier
+
+Constructions conceptuellement possibles :
+
+| Construction | Propriété |
+|--------------|-----------|
+| Rolling, stride 1 | \(Z_t\) disponible chaque jour ; overlap maximal |
+| Blocs non chevauchants | \(\Delta L\) moins mécaniquement corrélés ; \(Z\) moins fréquemment défini / ou sur grille |
+| Autre stride préspécifié | paramètre supplémentaire |
+
+**Baseline naturelle candidate :** rolling / stride 1, parce que
+\(Z_t\) doit être un état de **query journalière**. Ce n'est **pas**
+encore une acceptation formelle — mais c'est le défaut à rendre
+**explicite** plutôt qu'accidentel.
+
+**Interdit dans ce mandat :** introduire un hyperparamètre `stride`
+à optimiser. Identifier le nécessaire ; éliminer les libertés
+inutiles. Si stride 1 est retenu plus tard, le figer comme
+construction, pas comme bouton.
+
+### 14C.4 \(W_{RV}\) peut-il être dérivé de \(W_X\) ?
+
+**Question déterminante.**
+
+| Argument pour dériver (\(W_{RV}:=W_X\) ou lien déterministe) | Argument contre (décision indépendante) |
+|---------------------------------------------------------------|------------------------------------------|
+| Parcimonie : un seul horizon « local » | Rôles distincts : représentation géométrique ≠ estimation du **niveau** de vol |
+| Même cutoff informationnel que \(X\) | \(X\) encode la trajectoire des \(r\) ; \(RV\) **agrège** les \(r^{2}\) — sémantiques différentes |
+| Alignement adversaires \(S\) si \(S\) utilise le même \(RV\) | Les adversaires \(S_1/S_2/S_3\) **utilisent déjà** un \(RV\) de fenêtre \(W\) (héritage I01 candidat) — coupler \(W_{RV}\) à \(W_X\) est naturel **pour la cohérence \(X\) vs \(S\)**, mais ce n'est pas une preuve que ce \(W\) est l'échelle juste pour \(L\) dans \(Z\) |
+| Évite un hyperparamètre | Dénaturer l'expérience : si \(W_X\) est choisi pour la géométrie kNN / dimension, forcer la même échelle pour le **niveau** de vol peut fausser ce que \(\Delta L\) signifie |
+
+**Verdict documentaire :**
+
+\[
+\boxed{W_{RV}\text{ vs }W_X:\ \texttt{DEFENSIBLE TO COUPLE},\ \texttt{NOT FORCED}}
+\]
+
+Plus précisément :
+
+- Pour l'expérience **adversariale** \(X\) vs \(S\) : utiliser le
+  **même** estimateur \(RV\) (donc même \(W_{RV}\)) dans \(S\) et dans
+  la construction de \(L\) pour \(Z\) est **fortement défendable** —
+  sinon \(Z\) et \(S\) ne parlent pas du même « niveau ».
+- Identifier ce \(W_{RV}\) commun avec \(W_X\) (longueur du vecteur
+  \(X\)) est une **convention de parcimonie / héritage**, **pas** une
+  nécessité mathématique. Ce peut être la même décision humaine
+  (« un seul \(W\) local ») ou deux décisions si l'on sépare
+  représentation et estimation de niveau.
+
+**Ne pas** résoudre \(W_{RV}\) par calibration. **Ne pas** choisir de
+valeur.
+
+### 14C.5 Une fois \(W_{RV}\) fixé — justification structurelle de \(m_Z\) ?
+
+| Option | Contenu | Évaluation |
+|--------|---------|------------|
+| \(m_Z:=W_{RV}\) | même profondeur que l'estimation de niveau | parcimonieux ; **non forcé** — horizon d'instabilité ≠ horizon d'agrégation \(r^{2}\) |
+| \(m_Z:=W_X\) | aligné sur la représentation | idem ; confond encore les rôles |
+| \(m_Z=2\) (minimal : un seul \(\Delta L\)) | \(\mathrm{Std}_{\mathrm{pop}}\) sur \(n=1\) **dégénéré** / indéfini | élimine « régime » ; **REJECT** comme seule définition |
+| \(m_Z\) indépendant | horizon propre d'instabilité | liberté maximale ; snooping si non préenregistré |
+
+Sous rolling stride 1, même \(m_Z=W_{RV}\) **ne** donne **pas**
+\(W_{RV}\) « degrés de liberté » indépendants — l'overlap demeure.
+
+**Verdict documentaire :**
+
+\[
+\boxed{m_Z:\ \texttt{NO STRUCTURAL FORCING};\ \texttt{OWN HORIZON OR PARSIMONY CONVENTION}}
+\]
+
+Il n'existe **pas**, dans cette revue, de dérivation qui fixe \(m_Z\)
+uniquement à partir de \(W_{RV}\) sans convention supplémentaire.
+\(m_Z\) reste soit un **horizon propre** à préenregistrer, soit une
+**convention de parcimonie** explicite (\(m_Z=W_{RV}\) ou
+\(m_Z=W_X\)) — à trancher **après** (ou conjointement avec) le
+statut de \(W_{RV}\), **pas avant**.
+
+### 14C.6 Implications pour le pré-cadrage
+
+1. Remplacer le framing « problème de \(m\) » par
+   **architecture temporelle à trois horizons**.
+2. Ordre : clarifier / figer le rôle de \(W_{RV}\) (et son lien éventuel
+   à \(W_X\) et aux \(RV\) des adversaires) **avant** ou **avec**
+   \(m_Z\), jamais \(m_Z\) isolément.
+3. Rendre explicite rolling / stride 1 comme baseline candidate.
+4. Aucune valeur numérique ; aucun test.
+
+### 14C.7 Verdicts
+
+| Question | Verdict |
+|----------|---------|
+| Trois rôles distincts \(W_X,W_{RV},m_Z\) ? | **Oui** — établi |
+| Empan calendaire = info i.i.d. ? | **Non** — overlap mécanique |
+| \(W_{RV}\) dérivable de \(W_X\) sans dénaturer ? | `DEFENSIBLE TO COUPLE`, `NOT FORCED` |
+| \(m_Z\) forcé une fois \(W_{RV}\) fixé ? | `NO` — convention ou horizon propre |
+| Stride 1 | baseline candidate explicite ; **non** accepté ici |
+| Valeurs numériques | **interdites** / non choisies |
+
+\[
+\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\]
+
+### 14C.8 Cohérence
+
+| Contrôle | OK |
+|----------|-----|
+| Disp / A / \(E\) non rouverts | oui |
+| Aucun chiffre d'horizon | oui |
+| Pas de stride à optimiser | oui |
+| I02 NOT OPENED | oui |
 
 ---
 
@@ -2300,27 +2533,28 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 Ne pas résoudre dans ce draft :
 
-- **\(m\)** (UNRESOLVED ; \(m=W\) défendable non forcé) — **prochain
-  verrou** ;
-- formule complète \(Z_t\) (Disp figée ; \(m\) manquant) ;
-- \(m\) vs \(W\) ; empan historique effectif ;
+- **architecture temporelle** : lien \(W_{RV}\)–\(W_X\) ; statut de
+  \(m_Z\) (horizon propre vs convention de parcimonie) — **prochain
+  verrou humain** après §14C ;
+- acceptation formelle rolling / stride 1 ;
+- formule complète \(Z_t\) ;
+- empan / redondance temporelle du **pool** de voisins (distinct de
+  l'overlap \(RV\)) ;
 - définition protocolaire du « désaccord matériel » sous §9.16 ;
 - détail d'agrégation \(L\)+forme dans l'opérateur kNN ;
 - Spearman / CRPS / inférence dépendance temporelle ;
-- temporal redundancy control du pool ;
 - z-score / rangs / CDF / Mahalanobis / poids appris ;
 - singularités (\(RV=0\), …) — pas d'\(\varepsilon\) ;
-- \(W\), \(h\), \(k\), partage 10+10 ; holdout ; Market-State Engine.
+- valeurs de \(W_X\), \(W_{RV}\), \(m_Z\), \(h\), \(k\) ; holdout ;
+  Market-State Engine.
 
 **CLOSED :**
 
-- doctrine §9.16 ; \(\mathcal{M}_{S3}\), \(\mathcal{M}_{S2}\) ;
-- B/C ; D-sign-flips `WEAK` ; \(E\) = alternatif ;
-- famille **A** primaire candidate ;
-- MAD `REJECTED FOR I02/A` ;
-- **\(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) `ACCEPTED`**
-  (§14B.11) — \(L_1/L_2\) clos sauf contradiction mathématique ;
-- MeanAD = géométrie \(L_1\) valide **non retenue** (≠ robustesse) ;
+- doctrine §9.16 ; \(\mathcal{M}_{S2}\), \(\mathcal{M}_{S3}\) ;
+- famille A ; \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) ;
+- MAD REJECT ; MeanAD non retenue ; \(E\) = alternatif ;
+- *framing* « \(m\) isolé » remplacé par trois horizons (§14C) —
+  relations documentées, **valeurs** non choisies ;
 - framing \(C_t\) binaire stress.
 
 \[
@@ -2343,7 +2577,10 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
       (≠ robustesse de A) — **pas** de \(Z_t\) acceptée (§14A.12)
 - [x] Revue Disp §14B ; **\(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\)
       `ACCEPTED`** (§14B.11) ; MAD REJECT ; MeanAD non retenue
-- [ ] \(m\) tranché ; formule \(Z_t\) éventuellement acceptée
+- [x] Revue architecture temporelle §14C
+      (\((W_X,W_{RV},m_Z)\)) — **aucune** valeur ; \(Z_t\) non acceptée
+- [ ] Décisions humaines : lien \(W_{RV}\)–\(W_X\) ; statut \(m_Z\) ;
+      stride 1 ; puis formule \(Z_t\) éventuellement acceptée
 - [x] Représentations \(S_1/S_2/S_3\) **acceptées**
 - [x] Invariant multiplicatif **accepté**
 - [ ] Observable futur **approuvé** (\(V_{t,h}\) candidat)
@@ -2365,8 +2602,8 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 | \(S_1/S_2/S_3\) / §9.16 inchangés | oui |
 | Famille A = primary semantic candidate (§14A.12) | oui |
 | \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) `ACCEPTED` (§14B.11) | oui |
-| MeanAD non retenue (≠ robustesse) ; MAD REJECT | oui |
-| \(m\) OPEN ; `NO Z_t ACCEPTED` | oui |
+| §14C : trois horizons ; overlap mécanique documenté | oui |
+| Aucune valeur \(W_X/W_{RV}/m_Z\) ; `NO Z_t ACCEPTED` | oui |
 | I01 CLOSED ; I02 NOT OPENED | oui |
 
 ---
