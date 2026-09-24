@@ -10,6 +10,7 @@
 > **Draft v0.1 :** `0e893c2`
 > **Draft v0.2 :** `1057d85`
 > **Draft v0.3 :** `15865ba`
+> **Draft v0.4 review :** `5980bc8`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -22,13 +23,16 @@ $$
 
 E01–E04 ont **généré** la piste. Ils ne peuvent pas la valider.
 
-Les propositions de ce texte (\(V_{t,h}\), CRPS, H1-v0.2, \(S_1/S_2/S_3\))
-sont **à évaluer**, pas des décisions finales. Rien n'est figé.
-CRPS reste `ACCEPTABLE CANDIDATE`, pas `ACCEPTED`.
-\(S_1,S_2,S_3\) sont des **candidats documentés**, pas une batterie
-`ACCEPTED`. Les reparamétrisations §9.13 sont des **candidats
-préférés documentés** après revue mathématique — pas encore
-acceptation humaine.
+**Statut des adversaires \(S\) (acceptation humaine) :**
+
+```text
+REPRESENTATION ACCEPTED / METRIC UNRESOLVED
+```
+
+\(S_1\), \(S_2^{\mathrm{NEW}}\), \(S_3^{\mathrm{NEW}}\) : nature informationnelle
+**acceptée**. Distance, scaling, \(W\), découpage 10+10, \(C_t\), CRPS :
+**non** acceptés. CRPS reste `ACCEPTABLE CANDIDATE`. I02 reste
+`NOT OPENED`.
 
 ---
 
@@ -40,8 +44,9 @@ acceptation humaine.
 - pas E05 ;
 - pas un contrat empirique pour un Market-State / Regime Engine ;
 - pas un choix de seuil, de source, ni d'instrument ;
-- pas une acceptation de CRPS, de \(h\), de \(S_1/S_2/S_3\), de leur
-  distance, ni de \(C_t\).
+- pas une acceptation de CRPS, de \(h\), de la **distance** / du
+  **scaling** de \(S\), ni de \(C_t\) ;
+- pas une ouverture d'I02 (même après acceptation des représentations \(S\)).
 
 ---
 
@@ -233,8 +238,8 @@ Cette écriture **n'est pas** encore un protocole.
 ## 5. Distributions empiriques par voisinage (mécanisme candidat)
 
 **Aucun \(k\) nouveau. Aucun calcul. Aucune implémentation.**
-Distance et scaling de \(S\) : **OPEN**. Composition : candidats §9,
-non `ACCEPTED`.
+Distance et scaling de \(S\) : **OPEN** (`METRIC UNRESOLVED`).
+Composition informationnelle : **acceptée** (§9).
 
 Pour une requête \(t\), candidat :
 
@@ -398,10 +403,18 @@ Pas de reproduction sur information indépendante. Issue normale.
 
 ---
 
-## 9. Batterie d'adversaires \(S_1,S_2,S_3\) (candidats)
+## 9. Batterie d'adversaires \(S_1,S_2,S_3\)
 
-**Documentés, pas `ACCEPTED`.** Aucun calcul. Aucune donnée consultée
-pour les choisir. Les redondances éliminées sont **algébriques**.
+**Statut :** `REPRESENTATION ACCEPTED / METRIC UNRESOLVED`
+(acceptation humaine après revue §9.13 @ `5980bc8`).
+
+Ce qui est accepté : la **nature informationnelle** des trois
+adversaires et leurs coordonnées NEW. Ce qui **ne** l'est **pas** :
+distance, scaling, \(W\), partage 10+10, convention aux singularités,
+\(C_t\).
+
+Les redondances éliminées sont **algébriques**. Aucun calcul sur
+données pour les choisir.
 
 ```text
 B0     hasard admissible / référence faible
@@ -517,7 +530,7 @@ RV^{\mathrm{early}\,2}+RV^{\mathrm{late}\,2}=2\,RV_t^{2}
 (moitiés de même longueur). Le triplet \([RV,\,RV^{early},\,RV^{late}]\)
 est redondant.
 
-**Paramétrage OLD (documenté v0.3) :**
+**Paramétrage OLD (référence algébrique / secours aux singularités) :**
 
 \[
 S^{(2)}_{\mathrm{old}}=[RV_t,\;\Delta RV_t],
@@ -530,17 +543,17 @@ permet de retrouver les deux demi-volatilités (équation du second
 degré ; racine physique \(RV^{early},RV^{late}\ge 0\), admissible
 dès que \(|\Delta RV|\le 2\,RV\)).
 
-**Paramétrage NEW (candidat préféré documenté, §9.13 — pas
-`ACCEPTED`) :**
+**Paramétrage NEW — `REPRESENTATION ACCEPTED` (métrique unresolved) :**
 
 \[
-S^{(2)}_{\mathrm{new}}=[RV_t,\;D_t],
+S^{(2)}_t=[RV_t,\;D_t],
 \qquad
 D_t=\log\!\left(\frac{RV^{\mathrm{late}}_t}{RV^{\mathrm{early}}_t}\right)
 \]
 
 même information H2b (niveau + dynamique), dynamique en **ratio**.
-Verdict documentaire §9.13 : `PREFER NEW`.
+Revue §9.13 : `PREFER NEW` → acceptation humaine de la représentation.
+Domaines / singularités : §9.13.1. **Pas** d'\(\varepsilon\).
 
 **Pas de \(MA\) dans \(S_2\).** Ciblé : niveau + dynamique.
 
@@ -548,23 +561,23 @@ Verdict documentaire §9.13 : `PREFER NEW`.
 
 Question testée : le sac d'amplitudes suffit-il, sans séquence ?
 
-**Paramétrage OLD (documenté v0.3) :**
+**Paramétrage OLD (référence algébrique) :**
 
 \[
 S^{(3)}_{\mathrm{old}}=[RV_t,\;MA_t]
 \]
 
-**Paramétrage NEW (candidat préféré documenté, §9.13 — pas
-`ACCEPTED`) :**
+**Paramétrage NEW — `REPRESENTATION ACCEPTED` (métrique unresolved) :**
 
 \[
-S^{(3)}_{\mathrm{new}}=[RV_t,\;Q_t],
+S^{(3)}_t=[RV_t,\;Q_t],
 \qquad
 Q_t=\frac{MA_t}{RV_t}\quad(RV_t>0)
 \]
 
 Aucun ordre. **Pas de \(\Delta RV\) ni \(D\).** **Pas** un sur-ensemble
-de \(S_2\). Verdict documentaire §9.13 : `PREFER NEW`.
+de \(S_2\). Revue §9.13 : `PREFER NEW` → acceptation humaine.
+Domaines / singularités : §9.13.2.
 
 ### 9.7 Extra de queue — non retenu
 
@@ -761,24 +774,67 @@ Même information pour \(RV>0\) ; meilleure séparation conceptuelle
 niveau / forme ; singularité \(RV=0\) mineure et documentée. Pas
 `ACCEPTED`.
 
-#### 9.13.3 Synthèse
+#### 9.13.3 Synthèse et acceptation humaine
 
-| Contrôle | Verdict | Motif principal |
-|----------|---------|-----------------|
-| \(S_2\) | `PREFER NEW` | \(D\) invariant d'échelle ; même info si demi-vol \(>0\) |
-| \(S_3\) | `PREFER NEW` | \(Q\in(0,1]\) ; \(1-Q^{2}\) = var relative ; même info si \(RV>0\) |
+| Contrôle | Verdict revue | Acceptation humaine |
+|----------|---------------|---------------------|
+| \(S_2\) | `PREFER NEW` | **oui** — représentation |
+| \(S_3\) | `PREFER NEW` | **oui** — représentation |
 
-Candidats préférés **documentés** (acceptation humaine ultérieure) :
+**Représentations acceptées** (`REPRESENTATION ACCEPTED / METRIC UNRESOLVED`) :
 
 \[
-S_1=[RV],
-\quad
-S_2^{\mathrm{pref}}=[RV,\,D],
-\quad
-S_3^{\mathrm{pref}}=[RV,\,Q]
+\boxed{S_1(t)=[RV_t]}
 \]
 
-OLD reste la référence algébrique et le secours aux singularités.
+\[
+\boxed{
+S_2(t)=\bigl[RV_t,\;D_t\bigr],
+\qquad
+D_t=\log\Bigl(\frac{RV_t^{\mathrm{late}}}{RV_t^{\mathrm{early}}}\Bigr)
+}
+\]
+
+\[
+\boxed{
+S_3(t)=\bigl[RV_t,\;Q_t\bigr],
+\qquad
+Q_t=\frac{MA_t}{RV_t}
+}
+\]
+
+Domaines / singularités : §9.13.1–9.13.2. OLD reste la référence
+algébrique et le secours aux singularités.
+
+**Ce que cette acceptation signifie**
+
+- \(S_1\) : niveau ;
+- \(S_2\) : niveau + dynamique **relative** ;
+- \(S_3\) : niveau + forme **relative** des amplitudes ;
+- \(S_2\) et \(S_3\) = **deux attaques distinctes** contre H1, pas
+  deux marches d'un même modèle.
+
+**Ce qu'elle ne signifie pas**
+
+- ni \(W=20\), ni découpage 10+10, ni distance, ni scaling ;
+- ni convention \(\varepsilon\) aux zéros ;
+- ni ouverture d'I02.
+
+**Prochaine question (OPEN, non acceptée) :** avant z-score ou rangs,
+étudier les **invariances** que la distance doit satisfaire. En
+particulier, puisque \(D\) et \(Q\) sont déjà invariants d'échelle,
+traiter éventuellement le niveau en forme relative
+
+\[
+S_2^\star=[\log RV,\,D],
+\qquad
+S_3^\star=[\log RV,\,Q]
+\]
+
+de sorte que \(|\log RV_a-\log RV_b|=|\log(RV_a/RV_b)|\). **Non
+accepté.** À examiner documentairement **avant** z-score causal et
+rangs — pas ici.
+
 Distance / scaling : **toujours OPEN**.
 
 ---
@@ -906,11 +962,11 @@ ce contrat.
 Ne pas résoudre dans ce draft :
 
 - définition de \(C_t\) ;
-- acceptation humaine de la batterie \(S_1/S_2/S_3\) et des
-  paramétrages NEW (`PREFER NEW` ≠ `ACCEPTED`) ;
+- métrique / scaling / standardisation de \(S_2\) et \(S_3\) ;
+- invariances souhaitées de la distance ; candidat non accepté
+  \(\log RV\) (§9.13.3) ;
 - convention pour \(D\) / \(Q\) aux singularités (zéros) — **pas**
   d'\(\varepsilon\) choisi ici ;
-- métrique / scaling / standardisation de \(S_2\) et \(S_3\) ;
 - extra \(\max\lvert r\rvert\) (non retenu, OPEN) ;
 - définition finale de \(X_t\) ;
 - valeur finale de \(W\), \(h\), \(k\) (héritages 20 / 10 / 50 =
@@ -921,15 +977,18 @@ Ne pas résoudre dans ce draft :
 - acceptation finale du CRPS (seulement `ACCEPTABLE CANDIDATE`) ;
 - architecture Market-State Engine.
 
-Éléments **documentés comme candidats**, non cochés comme décisions :
+**Accepté (représentation seulement) :**
+
+- \(S_1=[RV]\) ; \(S_2=[RV,D]\) ; \(S_3=[RV,Q]\) sur rendements bruts
+  — statut `REPRESENTATION ACCEPTED / METRIC UNRESOLVED` ;
+- H2a / H2b / H2c comme famille d'attaques distinctes.
+
+**Documentés comme candidats**, non décisions :
 
 - observable \(V_{t,h}\) ;
 - information supplémentaire = meilleur score de \(\widehat F\) vs \(S\)
   (CRPS si retenu) ;
-- H1-v0.2 ; H2a/H2b/H2c ;
-- \(S_1=[RV]\) ; \(S_2\) OLD \([RV,\Delta RV]\) / NEW préféré
-  \([RV,D]\) ; \(S_3\) OLD \([RV,MA]\) / NEW préféré \([RV,Q]\)
-  — sur rendements bruts ; verdicts `PREFER NEW` documentaires ;
+- H1-v0.2 ;
 - rétrogradation de `H_vol` / `H_shape`.
 
 ---
@@ -942,9 +1001,10 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 
 - [ ] Hypothèse finale approuvée (H1-v0.2 reste une candidate)
 - [ ] Condition de marché \(C_t\) définie ex ante (§14)
-- [ ] Comparateur(s) simple(s) **approuvés** (\(S_1/S_2/S_3\) +
-      paramétrages NEW = candidats documentés / `PREFER NEW` ;
-      scaling / distance / convention zéros encore OPEN)
+- [x] Représentations adversaires \(S_1/S_2/S_3\) **acceptées**
+      (`REPRESENTATION ACCEPTED` ; NEW)
+- [ ] Métrique / scaling / distance sur \(S\) **résolus**
+      (`METRIC UNRESOLVED`)
 - [ ] Observable futur **approuvé** (\(V_{t,h}\) est seulement candidat)
 - [ ] Score probabiliste **approuvé** (CRPS = acceptable candidate)
 - [ ] Rôle de `H_shape` défini (témoin / mesure / non-gate)
@@ -954,7 +1014,7 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [ ] Protocole de gel avant premier résultat défini
 - [ ] Décision explicite **OPEN I02**
 
-Rien n'a été coché : les avancées de ce texte restent des propositions.
+L'acceptation des représentations \(S\) **n'ouvre pas** I02.
 
 ---
 
@@ -966,7 +1026,7 @@ Rien n'a été coché : les avancées de ce texte restent des propositions.
 | Aucune donnée nouvelle téléchargée | oui |
 | CRPS non calculé ; aucune métrique testée sur données | oui |
 | \(C_t\) / seuil de stress non définis | oui |
-| \(S_1/S_2/S_3\) formalisés ; NEW `PREFER` documentaire, non `ACCEPTED` | oui |
+| Représentations \(S\) acceptées ; métrique unresolved | oui |
 | Aucune corrélation / performance \(S\) calculée sur SPY | oui |
 | Aucun \(\varepsilon\), aucune distance, aucun scaling choisi | oui |
 | \(W/k/h\) non optimisés | oui |
