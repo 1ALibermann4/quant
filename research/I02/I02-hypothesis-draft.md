@@ -16,7 +16,7 @@
 > **Draft v0.6 Q vs φ review :** `8b652f7`
 > **Draft v0.7 metric robustness :** `2a92da7`
 > **Draft v0.8 accept §9.16 :** `ceb224c`
-> **Draft v0.9 Z_t review :** *(ce commit)*
+> **Draft v0.9 Z_t review :** `5681916`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
