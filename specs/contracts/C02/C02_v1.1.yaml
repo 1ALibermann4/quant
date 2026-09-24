@@ -5,7 +5,7 @@ contract:
   contract_version: "1.1"
   supersedes: "1.0"
   compatibility: backward-compatible (additive) — see section `compatibility`
-  status: "corrected (CA-03) — HAT #4 pending"
+  status: "corrected (CA-04) — C02 v1.1 remains OPEN"
   protocol: QDP-v0.1
   decision_record: docs/adr/DR-004-c02-data-provenance-architecture.md
   resolves: [DATA-GAP-01, DATA-GAP-02]  # research/I01/DATA-REQ-I01.md §7.3
@@ -41,6 +41,13 @@ revisions:
       - domaine UTF-8 à la validation (M7) ; INV-05 borné à l'état scientifique (M8)
       - R1/R2 corrigés (ValueError / rapport de profil) ; BC-11 rendu factuel
     report: docs/validation/C02-v1.1-CA-03-report.md
+  - revision: CA-04
+    trigger: "docs/validation/C02-v1.1-HAT-4.md (HAT #4 FAIL, 2aff2b0)"
+    changes:
+      - "Knowable[T] n'est pas plus permissif que T : type brut int/bool contrôlé avant coercition Pydantic (B1, BC-14 transitif)"
+      - FrozenMap / Knowable.known(mapping) sérialisables par model_dump / JSON officiel (M1)
+      - "TransformationRecord.parameters : objet QCJ-1 récursif (mappings imbriqués) (M2)"
+    report: docs/validation/C02-v1.1-CA-04-report.md
 
 description: >
   Provenance vérifiable des données scientifiques : de l'artefact brut effectivement reçu
@@ -62,6 +69,11 @@ Knowable:
     Métadonnée à connaissance partielle. Type générique unique pour toute information
     fournisseur ou externe susceptible d'être inconnue. Aucune convention ad hoc par champ.
     value (status=KNOWN) est gelée en profondeur (listes→tuples, mappings→FrozenMap).
+    Knowable[T] ne rend pas plus permissive la politique de validation définie pour T.
+    Pour T = int et T = bool, le type brut d'entrée est examiné avant toute conversion
+    Pydantic (type(x) is int / type(x) is bool ; un bool n'est pas un int scientifique).
+    Les coercitions JSON déjà normatives de T (str→date, str→enum, dict→modèle, list→tuple)
+    restent celles de T. Un mapping KNOWN est sérialisé en objet JSON (model_dump / JSON).
   fields:
     status: {type: enum, values: [KNOWN, UNKNOWN, NOT_APPLICABLE]}
     value: {type: T, description: "présent si et seulement si status = KNOWN"}
@@ -287,7 +299,7 @@ objects:
         - transformation_type      # vocabulaire ouvert : PARSE, DATE_NORMALIZATION, SORT, DEDUPLICATION,
                                    # COLUMN_SELECTION, CALENDAR_ALIGNMENT, QUALITY_FILTER, …
         - implementation_version
-        - parameters               # objet QCJ-1
+        - parameters               # objet QCJ-1 (scalaires, listes et objets imbriqués)
         - input_fingerprints       # liste ordonnée non vide
         - output_fingerprint
         - executed_at              # instant UTC — métadonnée d'exécution
@@ -502,7 +514,7 @@ compatibility:
       octet à octet à la sortie du code v1.0 ; le code v1.0 la relit (clés inconnues ignorées)
     fingerprints: >
       aucune empreinte scientifique (QCT-1 / QCC-1 / QCJ-1 d'identité, raw, lignée, calendrier)
-      modifiée par v1.1, CA-01, CA-02 ni CA-03 (vecteurs de test et valeurs épinglées). La
+      modifiée par v1.1, CA-01, CA-02, CA-03 ni CA-04 (vecteurs de test et valeurs épinglées). La
       sérialisation JSON d'un snapshot dont les instants étaient stockés avec un fuseau non-UTC
       change d'offset (même instant, forme UTC) — BC-12
     python_api: NON totalement compatible — voir behaviour_changes BC-03 à BC-14
@@ -558,10 +570,13 @@ compatibility:
       lineage, …) n'est plus ignoré : le champ est interprété et doit être valide, ou l'objet
       viole C02-INV-17. Les clés vraiment inconnues restent ignorées
     BC-14: >
-      booléens et entiers scientifiques sont stricts (plus de « yes »→True, True→1, 1.0→1).
-      Conservé pour l'interop JSON : str→datetime/date, str→enum, str→KnowledgeStatus. Les
-      identifiants restent des chaînes. Décision CA-03 : strict là où la coercition change le
-      sens (gates, comptages, ACK booléen) ; pas de strict modèle-entier (casserait str→datetime)
+      booléens et entiers scientifiques sont stricts (plus de « yes »→True, True→1, 1.0→1),
+      y compris lorsqu'ils traversent Knowable[int] / Knowable[bool] (constructeur, .known,
+      model_validate, JSON, objets imbriqués, revalidation). Conservé pour l'interop JSON :
+      str→datetime/date, str→enum, str→KnowledgeStatus. Les identifiants restent des chaînes.
+      Décision CA-03 / CA-04 : strict là où la coercition change le sens (gates, comptages,
+      ACK booléen) ; le contrôle porte sur le type brut avant conversion Pydantic ; pas de
+      strict modèle-entier (casserait str→datetime)
   behaviour_changes_rationale: >
     BC-04 à BC-06 suppriment des capacités de mutation que la postcondition v1.0 (« snapshot immutable
     after publish ») interdisait déjà : elles corrigent un défaut d'implémentation, pas le contrat.
@@ -570,8 +585,9 @@ compatibility:
     des tuples ou convertir. Politique de version inchangée par CA-01. BC-07 à BC-11 (CA-02)
     corrigent des défauts contre des règles déjà normatives.
     BC-12 à BC-14 (CA-03) rendent explicites la frontière UTC, les clés homonymes v1.1 et
-    les coercitions scientifiques ; aucune empreinte d'identité n'est modifiée. Politique de
-    version inchangée par CA-03.
+    les coercitions scientifiques ; CA-04 rend BC-14 transitif à travers Knowable.
+    Aucune empreinte d'identité n'est modifiée. Politique de version inchangée par CA-03
+    et CA-04.
   exigences_investigation: >
     Les exigences propres à une investigation sont exprimées par des PROFILS de validation,
     pas par des champs obligatoires du contrat générique.
@@ -644,6 +660,7 @@ implementations:
       - tests/contracts/test_c02_compatibility.py
       - tests/contracts/test_c02_utc_normalization.py
       - tests/contracts/test_c02_properties.py
+      - tests/contracts/test_ca04_knowable_composition.py
       - tests/contracts/test_provider_artifact.py
       - tests/contracts/test_lineage.py
       - tests/contracts/test_market_calendar.py

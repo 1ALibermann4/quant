@@ -58,6 +58,26 @@ class FrozenMap(Mapping[str, Any]):
     def __reduce__(self) -> tuple[Any, ...]:
         return (FrozenMap, (self._data,))
 
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type: Any, handler: Any) -> Any:
+        """Sérialisation officielle : FrozenMap → objet JSON (dict), récursivement."""
+        from pydantic_core import core_schema
+
+        def validate(value: Any) -> Any:
+            if isinstance(value, cls):
+                return value
+            if isinstance(value, Mapping):
+                return cls(value)
+            raise TypeError(f"FrozenMap expected a mapping, got {type(value).__name__}")
+
+        return core_schema.no_info_plain_validator_function(
+            validate,
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                lambda value: thaw(value),
+                when_used="always",
+            ),
+        )
+
 
 def deep_freeze(value: Any) -> Any:
     """Mappings → FrozenMap, listes/tuples → tuples, récursivement.
@@ -95,6 +115,8 @@ class C02Validated(BaseModel):
 
 def thaw(value: Any) -> Any:
     """Inverse de `deep_freeze` pour la sérialisation (dict / list)."""
+    if isinstance(value, BaseModel):
+        return value
     if isinstance(value, Mapping):
         return {key: thaw(item) for key, item in value.items()}
     if isinstance(value, tuple):

@@ -22,6 +22,8 @@ CONTRACT_ID = "C02"
 CONTRACT_VERSION = "1.1"
 
 JsonScalar = str | int | bool | None
+# Nœud QCJ-1 : scalaire, liste, ou objet imbriqué (TransformationRecord.parameters).
+JsonNode = JsonScalar | list[Any] | Mapping[str, Any]
 
 
 def _require_qcj(parameters: Mapping[str, Any], field: str) -> Mapping[str, Any]:
@@ -145,7 +147,7 @@ class TransformationRecord(C02Validated):
     transformation_id: str
     transformation_type: str
     implementation_version: str
-    parameters: FrozenMapping[JsonScalar | list[JsonScalar]] = Field(default_factory=FrozenMap)
+    parameters: FrozenMapping[JsonNode] = Field(default_factory=FrozenMap)
     input_fingerprints: tuple[str, ...]
     output_fingerprint: str
     executed_at: CanonicalInstant

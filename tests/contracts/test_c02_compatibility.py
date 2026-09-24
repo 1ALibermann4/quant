@@ -106,6 +106,18 @@ def test_hat3_m9_scientific_bool_and_int_are_strict():
         )
 
 
+def test_ca04_bc14_is_transitive_through_knowable_counts():
+    """HAT4-B1 : True/False ne doivent plus devenir 1/0 via Knowable[int]."""
+    with pytest.raises(ValidationError, match="exact int"):
+        ObservationCounts(
+            raw_observations=1,
+            canonical_observations=1,
+            expected_sessions=Knowable.known(True),
+            missing_sessions=Knowable.known(False),
+            invalidated_sessions=Knowable.known(0),
+        )
+
+
 def test_bc12_non_utc_input_is_stored_and_serialized_as_utc():
     from datetime import timedelta
     from zoneinfo import ZoneInfo

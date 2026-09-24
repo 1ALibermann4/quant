@@ -71,3 +71,59 @@ def test_serialization_roundtrip():
     dumped = k.model_dump(mode="json")
     assert dumped == {"status": "UNKNOWN", "value": None, "note": "n"}
     assert Knowable[str].model_validate(dumped) == k
+
+
+@pytest.mark.parametrize("raw", [True, False, 1.0, "1", 1.5])
+def test_knowable_int_rejects_non_exact_int(raw):
+    with pytest.raises(ValidationError, match="exact int"):
+        Knowable[int].known(raw)
+    with pytest.raises(ValidationError, match="exact int"):
+        Knowable[int](status=KnowledgeStatus.KNOWN, value=raw)
+    with pytest.raises(ValidationError, match="exact int"):
+        Knowable[int].model_validate({"status": "KNOWN", "value": raw})
+
+
+def test_knowable_int_rejects_json_true_and_accepts_json_int():
+    with pytest.raises(ValidationError, match="exact int"):
+        Knowable[int].model_validate_json('{"status":"KNOWN","value":true}')
+    accepted = Knowable[int].model_validate_json('{"status":"KNOWN","value":1}')
+    assert accepted.value == 1
+    assert type(accepted.value) is int
+
+
+@pytest.mark.parametrize("raw", [1, 0, "yes", "true", 1.0, 1.5])
+def test_knowable_bool_rejects_non_exact_bool(raw):
+    with pytest.raises(ValidationError, match="exact bool"):
+        Knowable[bool].known(raw)
+    with pytest.raises(ValidationError, match="exact bool"):
+        Knowable[bool](status=KnowledgeStatus.KNOWN, value=raw)
+    with pytest.raises(ValidationError, match="exact bool"):
+        Knowable[bool].model_validate({"status": "KNOWN", "value": raw})
+
+
+def test_knowable_bool_rejects_json_one_and_accepts_json_true():
+    with pytest.raises(ValidationError, match="exact bool"):
+        Knowable[bool].model_validate_json('{"status":"KNOWN","value":1}')
+    accepted = Knowable[bool].model_validate_json('{"status":"KNOWN","value":true}')
+    assert accepted.value is True
+
+
+def test_known_yes_and_known_true_are_not_scientifically_indistinguishable():
+    true = Knowable[bool].known(True)
+    with pytest.raises(ValidationError, match="exact bool"):
+        Knowable[bool].known("yes")
+    assert true.value is True
+    assert true.model_dump()["value"] is True
+
+
+def test_knowable_mapping_official_json_roundtrip():
+    raw = {"a": ["b", {"c": 1, "d": True}]}
+    k = Knowable.known(raw)
+    dumped = k.model_dump(mode="json")
+    assert dumped["value"] == raw
+    assert Knowable.model_validate(dumped) == k
+    encoded = k.model_dump_json()
+    assert Knowable.model_validate_json(encoded) == k
+    python_dump = k.model_dump()
+    assert python_dump["value"] == raw
+    assert Knowable.model_validate(python_dump) == k

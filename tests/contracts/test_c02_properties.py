@@ -81,3 +81,111 @@ def test_qct_datetime_pk_order_matches_utc_order(a, b):
         cols, ["t"], [{"t": to_canonical_utc(a)}, {"t": to_canonical_utc(b)}]
     )
     assert ny_first == utc_first
+
+
+@settings(max_examples=60, deadline=None)
+@given(
+    raw=st.one_of(
+        st.booleans(),
+        st.floats(allow_nan=False, allow_infinity=False),
+        st.text(max_size=8),
+        st.lists(st.integers(), max_size=3),
+        st.dictionaries(st.text(min_size=1, max_size=4), st.integers(), max_size=2),
+    )
+)
+def test_knowable_int_rejects_anything_that_is_not_an_exact_int(raw):
+    from pydantic import ValidationError
+
+    from quant.contracts.knowledge import Knowable
+
+    if type(raw) is int:
+        return
+    with pytest.raises(ValidationError, match="exact int"):
+        Knowable[int].known(raw)
+
+
+@settings(max_examples=40, deadline=None)
+@given(n=st.integers(min_value=-10_000, max_value=10_000))
+def test_knowable_int_json_roundtrip_preserves_exact_int(n):
+    from quant.contracts.knowledge import Knowable
+
+    known = Knowable[int].known(n)
+    assert type(known.value) is int
+    assert known.value == n
+    restored = Knowable[int].model_validate_json(known.model_dump_json())
+    assert restored == known
+    assert type(restored.value) is int
+
+
+@settings(max_examples=60, deadline=None)
+@given(
+    raw=st.one_of(
+        st.integers(),
+        st.floats(allow_nan=False, allow_infinity=False),
+        st.text(max_size=8),
+        st.just("yes"),
+        st.just("true"),
+        st.just("false"),
+    )
+)
+def test_knowable_bool_rejects_anything_that_is_not_an_exact_bool(raw):
+    from pydantic import ValidationError
+
+    from quant.contracts.knowledge import Knowable
+
+    if type(raw) is bool:
+        return
+    with pytest.raises(ValidationError, match="exact bool"):
+        Knowable[bool].known(raw)
+
+
+@settings(max_examples=20, deadline=None)
+@given(flag=st.booleans())
+def test_knowable_bool_json_roundtrip_preserves_exact_bool(flag):
+    from quant.contracts.knowledge import Knowable
+
+    known = Knowable[bool].known(flag)
+    assert known.value is flag
+    restored = Knowable[bool].model_validate_json(known.model_dump_json())
+    assert restored == known
+    assert restored.value is flag
+
+
+_ascii = st.characters(min_codepoint=32, max_codepoint=126)
+_qcj_scalars = st.one_of(st.none(), st.booleans(), st.integers(), st.text(max_size=8, alphabet=_ascii))
+
+
+@settings(max_examples=30, deadline=None)
+@given(
+    mapping=st.dictionaries(
+        st.text(min_size=1, max_size=6, alphabet=st.characters(min_codepoint=97, max_codepoint=122)),
+        st.recursive(
+            _qcj_scalars,
+            lambda children: st.one_of(
+                st.lists(children, max_size=3),
+                st.dictionaries(
+                    st.text(
+                        min_size=1,
+                        max_size=6,
+                        alphabet=st.characters(min_codepoint=97, max_codepoint=122),
+                    ),
+                    children,
+                    max_size=3,
+                ),
+            ),
+            max_leaves=8,
+        ),
+        min_size=1,
+        max_size=3,
+    )
+)
+def test_knowable_mapping_freeze_json_roundtrip_preserves_sense(mapping):
+    from quant.contracts.canonical import canonical_json_bytes
+    from quant.contracts.knowledge import Knowable
+
+    known = Knowable.known(mapping)
+    dumped = known.model_dump(mode="json")
+    restored = Knowable.model_validate_json(known.model_dump_json())
+    assert restored == known
+    assert restored.model_dump(mode="json") == dumped
+    assert canonical_json_bytes(restored.value) == canonical_json_bytes(mapping)

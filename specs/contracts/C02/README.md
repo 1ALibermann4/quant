@@ -3,7 +3,7 @@
 | Version | Fichier | Statut | Notes |
 |---------|---------|--------|-------|
 | 1.0 | [C02_v1.0.yaml](C02_v1.0.yaml) | Remplacée par 1.1 (objets 1.0 toujours valides) | Publiée en P0. Texte de précondition `availability_cutoff` erroné : voir erratum E-01 |
-| **1.1** | [C02_v1.1.yaml](C02_v1.1.yaml) | **Courante — OUVERTE** : HAT #4 FAIL, CA-04 à ouvrir | Rétrocompatible (voir `compatibility.behaviour_changes`). Résout DATA-GAP-01 et DATA-GAP-02 |
+| **1.1** | [C02_v1.1.yaml](C02_v1.1.yaml) | **Courante — OUVERTE** : CA-04 PASS, C02 v1.1 non clos | Rétrocompatible (voir `compatibility.behaviour_changes`). Résout DATA-GAP-01 et DATA-GAP-02 |
 
 ## Historique de validation de la v1.1
 
@@ -17,7 +17,7 @@
 | HAT #3 | [C02-v1.1-HAT-3.md](../../../docs/validation/C02-v1.1-HAT-3.md) | FAIL |
 | Action corrective CA-03 | [C02-v1.1-CA-03-report.md](../../../docs/validation/C02-v1.1-CA-03-report.md) | PASS (ne clôture pas) |
 | HAT #4 | [C02-v1.1-HAT-4.md](../../../docs/validation/C02-v1.1-HAT-4.md) | FAIL |
-| Action corrective CA-04 | — | à ouvrir |
+| Action corrective CA-04 | [C02-v1.1-CA-04-report.md](../../../docs/validation/C02-v1.1-CA-04-report.md) | PASS (ne clôture pas) |
 
 ## Profils de validation
 

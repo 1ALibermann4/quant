@@ -160,6 +160,38 @@ def test_parameters_accept_ordinary_sort_key():
     assert r.parameters["key"] == "session_date"
 
 
+def test_parameters_accept_nested_mappings_freeze_json_and_fingerprint():
+    nested = {
+        "window": {"size": 5, "unit": "session"},
+        "filters": [{"column": "close", "op": "gt", "value": "0"}],
+        "flags": {"drop_nulls": True, "columns": ["a", "b"]},
+    }
+    a = record(0, [RAW], OUT, parameters=nested)
+    inner = a.parameters["window"]
+    assert inner["size"] == 5
+    with pytest.raises((AttributeError, TypeError)):
+        inner["size"] = 9  # type: ignore[index]
+    dumped = a.model_dump(mode="json")["parameters"]
+    assert dumped["window"] == {"size": 5, "unit": "session"}
+    assert dumped["filters"] == [{"column": "close", "op": "gt", "value": "0"}]
+    restored = TransformationRecord.model_validate_json(a.model_dump_json())
+    assert restored.parameters == a.parameters
+    assert restored.application_key == a.application_key
+    reordered = record(
+        0,
+        [RAW],
+        OUT,
+        parameters={
+            "flags": {"columns": ["a", "b"], "drop_nulls": True},
+            "filters": [{"op": "gt", "value": "0", "column": "close"}],
+            "window": {"unit": "session", "size": 5},
+        },
+    )
+    assert reordered.application_key == a.application_key
+    with pytest.raises(ValidationError, match="K1"):
+        record(0, [RAW], OUT, parameters={"window": {"api_key": "x"}})
+
+
 def test_executed_at_timezone_required_and_inputs_non_empty():
     with pytest.raises(ValidationError, match="timezone-aware"):
         record(0, [RAW], OUT, executed_at=datetime(2020, 1, 1))
