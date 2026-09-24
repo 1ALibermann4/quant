@@ -24,6 +24,7 @@
 > **Draft v0.14 temporal architecture :** `6e0b4c7`
 > **Draft v0.15 W_RV := W_X :** `e3fc32c`
 > **Draft v0.16 m_Z admissibility :** `52a8a4a`
+> **Draft v0.17 m_Z domain + identifiability :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -50,9 +51,10 @@ REPRESENTATION ACCEPTED / METRIC ROBUSTNESS SETS ACCEPTED
 \(\mathcal{M}_{S2}\) figés ; sujet métrique pré-cadrage **CLOSED**.
 
 **État \(Z_t\) :** famille **A** ; \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\)
-`ACCEPTED` ; \(W_{RV}:=W_X\) `ACCEPTED` (comparability coupling) ;
-revue \(m_Z\) §14D — `STRUCTURALLY CONSTRAINED` ; **aucune** valeur
-\(m_Z\) ; stride 1 = baseline candidate non acceptée ; formule \(Z_t\)
+`ACCEPTED` ; \(W_{RV}:=W_X\) `ACCEPTED` ; domaine
+\(3\le m_Z\le W_{RV}+1\) `ACCEPTED` (§14E) ; \(m_Z\)
+**not structurally identifiable** — gouvernance multi-échelle
+préenregistrée (forme) ; **aucune** valeur ; formule \(Z_t\)
 **incomplète**.
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
@@ -2857,10 +2859,7 @@ Aucune valeur numérique.
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
 
-**Étape suivante (humaine) :** décider si l'on veut autoriser la
-coexistence dual-signature (\(m_Z\ge W_{RV}+2\)) ou l'exclure
-sémantiquement ; puis préenregistrer un \(m_Z\) admissible —
-**sans** optimisation empirique.
+**Étape suivante :** §14E — domaine admissible + identifiabilité.
 
 ### 14D.10 Cohérence
 
@@ -2870,6 +2869,173 @@ sémantiquement ; puis préenregistrer un \(m_Z\) admissible —
 | Couplage / Disp / A non rouverts | oui |
 | Stride 1 non accepté | oui |
 | Deux mémoires distinguées | oui |
+| I02 NOT OPENED | oui |
+
+---
+
+## 14E. Domaine admissible de \(m_Z\) et identifiabilité structurelle
+
+**Nature :** documentaire / mathématique. **Aucune donnée.** Aucune
+valeur de \(m_Z\). I02 = `NOT OPENED`.
+
+### 14E.1 Décision humaine — domaine admissible
+
+**Statut :** `ACCEPTED` pour I02.
+
+\[
+\boxed{3\le m_Z\le W_{RV}+1}
+\]
+
+avec \(m_Z=\#\{L\}\), \(n_Z=m_Z-1\), \(W_{RV}:=W_X\) déjà
+`ACCEPTED`.
+
+**Classification :**
+
+```text
+STRUCTURAL ADMISSIBILITY CONSTRAINT
+```
+
+**Justification acceptée :**
+
+| Borne | Motif |
+|-------|--------|
+| \(m_Z\ge 3\) | \(n_Z\ge 2\) — \(\mathrm{Std}_{\mathrm{pop}}\) sur ≥2 incréments (MZ-1) |
+| \(m_Z\le W_{RV}+1\) | empêche la **dual-signature** dans une même fenêtre \(Z_t\) (seuil §14D.6 : coexistence possible si \(m_Z\ge W_{RV}+2\)) |
+
+Interprétation : \(W_{RV}\) = mémoire A (rolling \(RV\)) ; \(m_Z\) =
+mémoire B (état d'instabilité). \(Z_t\) ne doit pas agréger dans le
+même état local l'entrée d'un choc dans \(RV\) **et** sa sortie
+mécanique \(W_{RV}\) sessions plus tard.
+
+**Ce qui n'est pas accepté :**
+
+- la plage comme **grille de tuning** ;
+- toute valeur particulière (\(m_Z=3\), \(W_{RV}\), \(W_{RV}+1\), …)
+  sans justification structurelle **supplémentaire** ;
+- \(Z_t\) complète.
+
+### 14E.2 Identifiabilité dans \([3,\,W_{RV}+1]\)
+
+Question : existe-t-il un principe **a priori** (sans données,
+performance, calibration, esthétique, E01–E04) qui fixe une unique
+\(m_Z\) dans la plage ?
+
+#### A. Minimality — \(m_Z=3\)
+
+Mesure une Disp sur \(n_Z=2\) incréments. Admissible MZ-1, mais
+sémantiquement proche d'un **détecteur de contraste local / choc**,
+pas d'un « régime » observé sur une trajectoire. **Parcimonie ≠
+fidélité sémantique.** Verdict : **ne détermine pas** \(m_Z\).
+
+#### B. Matching — \(m_Z=W_{RV}\)
+
+Aucune raison mathématique au-delà de la **symétrie esthétique**
+(§14D : n'aligne même pas le dipôle). Les rôles A/B restent
+distincts. Verdict : **ne détermine pas** \(m_Z\).
+
+#### C. Maximal local memory — \(m_Z=W_{RV}+1\)
+
+Borne haute du domaine : maximal sans dual-signature. C'est une
+**borne**, pas une propriété qui sélectionne un optimum unique
+(« le plus grand permis » n'est pas un théorème). Verdict : **ne
+détermine pas** \(m_Z\).
+
+#### D. Fractional coupling — \(m_Z\) proportionnel à \(W_{RV}\)
+
+Aucune loi d'échelle structurelle dérivée des axiomes acceptés.
+Tout coefficient serait une **convention arbitraire**. Verdict :
+**ne détermine pas** (et aucun coefficient proposé ici).
+
+#### E. Fixed independent horizon
+
+\(m_Z\) constant (indépendant de \(W_{RV}\)) dans la plage quand
+\(W_{RV}\) varie : conceptuellement possible, mais **aucune**
+justification supérieure a priori vs une relation à \(W_{RV}\).
+Verdict : **option de gouvernance**, pas identification.
+
+### 14E.3 Conclusion d'identifiabilité
+
+Toutes les valeurs entières de la plage (dès que \(W_{RV}\ge 2\)
+autorise un intervalle non vide) restent **compatibles** avec les
+propriétés acceptées. Aucune n'est forcée.
+
+\[
+\boxed{m_Z\text{ IS NOT STRUCTURALLY IDENTIFIABLE}}
+\]
+
+Arrêt de la quête d'une « valeur naturelle ».
+
+### 14E.4 Gouvernance scientifique (forme seulement)
+
+| Forme | Contenu | Évaluation |
+|-------|---------|------------|
+| **A.** Une valeur unique préenregistrée | convention explicite | licite **si** étiquetée convention, **pas** « naturelle » |
+| **B.** Petit ensemble préenregistré (sensitivity family) | plusieurs échelles | voir §14E.5 |
+| **C.** Relation à \(W_{RV}\) avant données | ex. matching / fraction | **sans** loi d'échelle = déguisement de A |
+
+**Recommandation documentaire de forme :** la situation appelle une
+**sensibilité multi-échelle préenregistrée** (forme B du tableau
+ci-dessus), éventuellement avec une échelle **primaire**
+conventionnelle explicite — mais la primaire, si elle existe, est
+une **étiquette de reporting**, pas une identification structurelle.
+
+**Aucune** valeur ni ensemble numérique choisis ici.
+
+### 14E.5 Robustesse §9.16 vs sensibilité multi-échelle
+
+| | §9.16 (\(\mathcal{M}_{S3}\)) | Famille de \(m_Z\) |
+|--|------------------------------|-------------------|
+| Objet | même adversaire informationnel ; géométries \(d_Q\) vs \(d_\phi\) | **échelles temporelles réellement différentes** de l'instabilité |
+| Désaccord | incertitude géométrique sur un même contrôle | désaccord sur « à quelle profondeur le régime est local » |
+| Lecture correcte | robustesse préenregistrée du **même** estimand | **multi-scale scientific sensitivity** |
+| Lecture incorrecte | — | appeler cela « robustesse » comme si \(m_Z\) étaient interchangeables |
+
+Donc : une « \(m_Z\) sensitivity family » ≠ doctrine §9.16. Ce sont
+des **questions scientifiques d'échelle**, pas des variantes
+métriques d'un même \(Z\).
+
+### 14E.6 Attaques
+
+| Attaque | Rejet |
+|---------|--------|
+| \(m_Z=3\) « le plus simple » | faux argument de parcimonie / détecteur de choc |
+| \(m_Z=W_{RV}\) « même échelle » | faux matching / esthétique |
+| \(m_Z=W_{RV}+1\) « le plus grand permis » | borne ≠ optimum |
+| Fraction arbitraire de \(W_{RV}\) | pas de loi d'échelle |
+| Symétrie / parcimonie / pseudo-naturel | non structurel |
+| Sélection future via CRPS / Spearman / crises | **interdit** (MZ-7) |
+
+### 14E.7 Classification finale
+
+\[
+\boxed{\texttt{C — NOT IDENTIFIED, PRE-REGISTERED MULTI-SCALE SENSITIVITY REQUIRED}}
+\]
+
+**Justification :** le domaine \(3\le m_Z\le W_{RV}+1\) est
+structurellement motivé ; **aucune** valeur unique n'en découle ;
+différents \(m_Z\) sont des échelles distinctes (pas une robustesse
+§9.16). La gouvernance scientifiquement appropriée est une
+**sensibilité multi-échelle préenregistrée** (éventuellement avec
+primaire conventionnelle explicite), **sans** inventer une valeur
+naturelle et **sans** tuning empirique.
+
+*(La catégorie B — horizon unique préenregistré — reste une option
+humaine de reporting, mais uniquement comme **convention assumée**,
+pas comme issue de ce mandat d'identifiabilité.)*
+
+\[
+\boxed{\text{NO }m_Z\text{ VALUE SELECTED}}
+\quad
+\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\]
+
+### 14E.8 Cohérence
+
+| Contrôle | OK |
+|----------|-----|
+| Domaine \(3\le m_Z\le W_{RV}+1\) ACCEPTED | oui |
+| Aucune valeur / grille numérique | oui |
+| Pas de confusion avec §9.16 | oui |
 | I02 NOT OPENED | oui |
 
 ---
@@ -2886,8 +3052,9 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 Ne pas résoudre dans ce draft :
 
-- **valeur de \(m_Z\)** (classe `STRUCTURALLY CONSTRAINED` ; décision
-  sémantique dual-signature vs fronts — §14D.6–9) ;
+- **gouvernance concrète de \(m_Z\)** : ensemble multi-échelle
+  préenregistré (et éventuelle primaire conventionnelle) — **forme**
+  recommandée §14E.7 ; **aucune** valeur ici ;
 - valeur numérique de \(W_X\) (donc de \(W_{RV}\)) ;
 - acceptation formelle rolling / stride 1 ;
 - formule complète \(Z_t\) ;
@@ -2903,9 +3070,10 @@ Ne pas résoudre dans ce draft :
 
 - doctrine §9.16 ; \(\mathcal{M}_{S2}\), \(\mathcal{M}_{S3}\) ;
 - famille A ; \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) ;
-- \(W_{RV}:=W_X\) comparability coupling ;
-- convention \(m_Z\) / \(n_Z\) ; propriétés MZ-1…8 ; classification
-  \(m_Z\) = `STRUCTURALLY CONSTRAINED` (§14D) — **sans** valeur ;
+- \(W_{RV}:=W_X\) ;
+- **\(3\le m_Z\le W_{RV}+1\)** `ACCEPTED` (§14E.1) ;
+- \(m_Z\) **not structurally identifiable** ; classification
+  `C` (§14E.7) — arrêt quête « valeur naturelle » ;
 - framing \(C_t\) binaire stress.
 
 \[
@@ -2932,8 +3100,10 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [x] **\(W_{RV}:=W_X\)** `ACCEPTED` (§14C.9) —
       `METHODOLOGICAL COMPARABILITY COUPLING` ; sémantiques distinctes
 - [x] Revue admissibilité \(m_Z\) (§14D) —
-      `STRUCTURALLY CONSTRAINED` ; **aucune** valeur
-- [ ] Décision humaine sur classe dual-signature / valeur \(m_Z\) ;
+      `STRUCTURALLY CONSTRAINED`
+- [x] Domaine **\(3\le m_Z\le W_{RV}+1\)** `ACCEPTED` (§14E.1) ;
+      not identifiable ; classification **C** (§14E.7)
+- [ ] Ensemble / primaire \(m_Z\) préenregistrés (gouvernance) ;
       stride 1 ; valeur \(W_X\) ; formule \(Z_t\) éventuellement
       acceptée
 - [x] Représentations \(S_1/S_2/S_3\) **acceptées**
@@ -2958,9 +3128,9 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 | Famille A = primary semantic candidate (§14A.12) | oui |
 | \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) `ACCEPTED` | oui |
 | \(W_{RV}:=W_X\) comparability coupling `ACCEPTED` | oui |
-| §14D : \(m_Z\) `STRUCTURALLY CONSTRAINED` ; no value | oui |
-| Dipôle \(r^{2}\) / seuil \(m_Z\ge W_{RV}+2\) documenté | oui |
-| `NO Z_t ACCEPTED` ; I02 NOT OPENED | oui |
+| \(3\le m_Z\le W_{RV}+1\) `ACCEPTED` ; not identifiable ; class C | oui |
+| `NO m_Z VALUE` ; `NO Z_t ACCEPTED` | oui |
+| I01 CLOSED ; I02 NOT OPENED | oui |
 
 ---
 
