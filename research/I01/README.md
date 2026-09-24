@@ -44,6 +44,7 @@ I01/
 ├── protocol.md
 ├── configuration.yaml
 ├── experiments/E01/       I01-E01 exploratoire UNQUALIFIED (pas un SCI)
+├── experiments/E02/       I01-E02 diagnostics exploratoires (paramètres figés)
 ```
 
 I01 confirmatoire reste bloqué par DR-003 ∧ DR-005. I01-E01 (DR-007 / DR-008)

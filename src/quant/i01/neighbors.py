@@ -24,6 +24,16 @@ def pairwise_l2(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     return np.sqrt(np.maximum(d2, 0.0))
 
 
+def library_l2_distances(
+    x_t: np.ndarray,
+    states: np.ndarray,
+    library: np.ndarray,
+) -> np.ndarray:
+    """L2 distances from ``x_t`` to every library state. Selection still ignores ``Y``."""
+
+    return pairwise_l2(x_t.reshape(1, -1), states[library])[0]
+
+
 def l2_neighbors(
     x_t: np.ndarray,
     states: np.ndarray,

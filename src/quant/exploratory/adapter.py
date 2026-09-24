@@ -151,3 +151,40 @@ def write_cache(cache_dir: Path, acquisition: ExploratoryAcquisition, frame: Any
         encoding="utf-8",
     )
     return csv_path
+
+
+def load_latest_cache(cache_dir: Path, ticker: str = DEFAULT_TICKER) -> ExploratoryAcquisition:
+    """Reload the newest UNQUALIFIED CSV so E02 diagnoses the same bars as E01."""
+
+    cache_dir = Path(cache_dir)
+    metas = sorted(cache_dir.glob(f"UNQUALIFIED_{ticker}_*.meta.json"))
+    if not metas:
+        raise FileNotFoundError(
+            f"no UNQUALIFIED {ticker} cache in {cache_dir}; run I01-E01 first"
+        )
+    meta_path = metas[-1]
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    csv_path = Path(meta["csv"])
+    if not csv_path.is_file():
+        csv_path = meta_path.with_suffix("").with_suffix(".csv")
+        if not csv_path.is_file():
+            raise FileNotFoundError(f"cache csv missing for {meta_path}")
+    import pandas as pd
+
+    frame = pd.read_csv(csv_path, index_col=0, parse_dates=True)
+    if "Adj Close" not in frame.columns or "Close" not in frame.columns:
+        raise RuntimeError("cached frame must contain Close and Adj Close")
+    sessions = tuple(_session_date(idx) for idx in frame.index)
+    acquired_at = datetime.fromisoformat(meta["acquired_at_utc"])
+    return ExploratoryAcquisition(
+        ticker=str(meta["ticker"]),
+        source=str(meta["source"]),
+        yfinance_version=str(meta["yfinance_version"]),
+        request_parameters=dict(meta["request_parameters"]),
+        acquired_at_utc=acquired_at,
+        series=ObservationSeries(
+            sessions=sessions,
+            adjusted_price=tuple(float(v) for v in frame["Adj Close"].tolist()),
+        ),
+        raw_close=tuple(float(v) for v in frame["Close"].tolist()),
+    )
