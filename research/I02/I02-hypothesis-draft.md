@@ -22,6 +22,7 @@
 > **Draft v0.12 Disp review :** `ab6645f`
 > **Draft v0.13 Disp = Std_pop :** `98ddec6`
 > **Draft v0.14 temporal architecture :** `6e0b4c7`
+> **Draft v0.15 W_RV := W_X :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -48,8 +49,9 @@ REPRESENTATION ACCEPTED / METRIC ROBUSTNESS SETS ACCEPTED
 \(\mathcal{M}_{S2}\) figés ; sujet métrique pré-cadrage **CLOSED**.
 
 **État \(Z_t\) :** famille **A** ; \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\)
-`ACCEPTED` ; architecture temporelle §14C —
-\((W_X,W_{RV},m_Z)\) **trois rôles distincts** ; aucun horizon figé ;
+`ACCEPTED` ; \(W_{RV}:=W_X\) `ACCEPTED` (§14C.9) —
+**comparability coupling**, pas identité conceptuelle ; \(m_Z\) OPEN
+et **distinct** ; stride 1 = baseline candidate non acceptée ;
 formule \(Z_t\) **incomplète**.
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
@@ -2501,7 +2503,7 @@ statut de \(W_{RV}\), **pas avant**.
 |----------|---------|
 | Trois rôles distincts \(W_X,W_{RV},m_Z\) ? | **Oui** — établi |
 | Empan calendaire = info i.i.d. ? | **Non** — overlap mécanique |
-| \(W_{RV}\) dérivable de \(W_X\) sans dénaturer ? | `DEFENSIBLE TO COUPLE`, `NOT FORCED` |
+| \(W_{RV}\) vs \(W_X\) (revue §14C.4) | `DEFENSIBLE TO COUPLE`, `NOT FORCED` — **tranché** §14C.9 |
 | \(m_Z\) forcé une fois \(W_{RV}\) fixé ? | `NO` — convention ou horizon propre |
 | Stride 1 | baseline candidate explicite ; **non** accepté ici |
 | Valeurs numériques | **interdites** / non choisies |
@@ -2510,13 +2512,90 @@ statut de \(W_{RV}\), **pas avant**.
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
 
-### 14C.8 Cohérence
+### 14C.8 Cohérence (revue)
 
 | Contrôle | OK |
 |----------|-----|
 | Disp / A / \(E\) non rouverts | oui |
 | Aucun chiffre d'horizon | oui |
 | Pas de stride à optimiser | oui |
+| I02 NOT OPENED | oui |
+
+### 14C.9 Décision humaine — \(W_{RV}:=W_X\) (comparability coupling)
+
+**Statut :** `ACCEPTED` pour I02.
+
+\[
+\boxed{W_{RV}:=W_X}
+\]
+
+**Classification :**
+
+```text
+METHODOLOGICAL COMPARABILITY COUPLING
+```
+
+**Pas** une identité conceptuelle. Les rôles §14C.0 restent
+**distincts** :
+
+| Symbole | Sémantique (inchangée) |
+|---------|------------------------|
+| \(W_X\) | horizon de **représentation** de \(X_t\) |
+| \(W_{RV}\) | horizon d'**estimation du niveau** (\(RV\to L\)) |
+| \(m_Z\) | horizon d'**observation de l'instabilité** (\(\mathrm{Std}_{\mathrm{pop}}\) sur \(\Delta L\)) |
+
+**Justification acceptée :** I02 compare \(X\) à \(S_1/S_2/S_3\).
+Des supports historiques nominaux **différents** mélangeraient
+(1) contenu / structure de représentation et (2) échelle temporelle
+observée — affaiblissant l'interprétation. Le couplage impose un
+**support historique nominal commun** et évite un hyperparamètre
+temporel indépendant pour les résumés de volatilité.
+
+**Ce que le couplage n'implique pas :**
+
+- \(W_X\) et \(W_{RV}\) « mesurent la même chose » conceptuellement ;
+- même mémoire effective des transformations ;
+- observations dérivées indépendantes ;
+- disparition de l'overlap rolling (§14C.1 inchangé) ;
+- empan de \(Z\) égal à \(W_X\) seulement
+  (\(\operatorname{span}\approx W_{RV}+m_Z\) demeure) ;
+- \(m_Z:=W_X\) ou \(m_Z:=W_{RV}\) — **interdit** comme conséquence
+  implicite.
+
+**Relation avec \(S_1/S_2/S_3\) :** les adversaires acceptés
+\([RV]\), \([RV,D]\), \([RV,Q]\) utilisent, pour I02, le **même**
+\(W_{RV}\) couplé à \(W_X\). Couplage **commun** — pas un avantage
+spécifique à l'un d'eux.
+
+**Statut numérique :**
+
+| Objet | Statut |
+|-------|--------|
+| Relation \(W_{RV}:=W_X\) | `ACCEPTED` |
+| Valeur numérique de \(W_X\) | **OPEN** (sauf gel indépendant ultérieur) |
+| Valeur numérique de \(W_{RV}\) | **OPEN** — dérivée de \(W_X\) dès que \(W_X\) est figé |
+| \(m_Z\) | **OPEN** — horizon **distinct** ; prochaine question : *combien de trajectoire de \(\Delta L\) rolling pour définir l'instabilité locale de régime ?* — **pas** tranchée ici |
+| Stride 1 | `BASELINE CANDIDATE` ; **NOT ACCEPTED** |
+
+\[
+\boxed{W_{RV}:=W_X\ \texttt{ACCEPTED}}
+\quad
+\boxed{m_Z\ \text{reste indépendant et OPEN}}
+\quad
+\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\]
+
+**Prochaine étape documentaire (hors mandat) :** propriétés
+d'admissibilité d'un \(m_Z\), plutôt qu'une valeur à tuner.
+
+### 14C.10 Cohérence (post-décision)
+
+| Contrôle | OK |
+|----------|-----|
+| Couplage = comparability, ≠ identité conceptuelle | oui |
+| \(m_Z\) non posé égal à \(W_X\) | oui |
+| Overlap / empan §14C.1–2 inchangés | oui |
+| Pas de valeur numérique ; stride non accepté | oui |
 | I02 NOT OPENED | oui |
 
 ---
@@ -2533,28 +2612,26 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 Ne pas résoudre dans ce draft :
 
-- **architecture temporelle** : lien \(W_{RV}\)–\(W_X\) ; statut de
-  \(m_Z\) (horizon propre vs convention de parcimonie) — **prochain
-  verrou humain** après §14C ;
+- **\(m_Z\)** — horizon distinct ; propriétés d'admissibilité puis
+  éventuelle valeur (pas \(m_Z=W_X\) implicite) ;
+- valeur numérique de \(W_X\) (donc de \(W_{RV}\)) ;
 - acceptation formelle rolling / stride 1 ;
 - formule complète \(Z_t\) ;
-- empan / redondance temporelle du **pool** de voisins (distinct de
-  l'overlap \(RV\)) ;
+- empan / redondance temporelle du **pool** de voisins ;
 - définition protocolaire du « désaccord matériel » sous §9.16 ;
 - détail d'agrégation \(L\)+forme dans l'opérateur kNN ;
 - Spearman / CRPS / inférence dépendance temporelle ;
 - z-score / rangs / CDF / Mahalanobis / poids appris ;
 - singularités (\(RV=0\), …) — pas d'\(\varepsilon\) ;
-- valeurs de \(W_X\), \(W_{RV}\), \(m_Z\), \(h\), \(k\) ; holdout ;
-  Market-State Engine.
+- \(h\), \(k\) ; holdout ; Market-State Engine.
 
 **CLOSED :**
 
 - doctrine §9.16 ; \(\mathcal{M}_{S2}\), \(\mathcal{M}_{S3}\) ;
 - famille A ; \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) ;
 - MAD REJECT ; MeanAD non retenue ; \(E\) = alternatif ;
-- *framing* « \(m\) isolé » remplacé par trois horizons (§14C) —
-  relations documentées, **valeurs** non choisies ;
+- **\(W_{RV}:=W_X\)** `ACCEPTED` (§14C.9) —
+  `METHODOLOGICAL COMPARABILITY COUPLING` ;
 - framing \(C_t\) binaire stress.
 
 \[
@@ -2578,9 +2655,10 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [x] Revue Disp §14B ; **\(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\)
       `ACCEPTED`** (§14B.11) ; MAD REJECT ; MeanAD non retenue
 - [x] Revue architecture temporelle §14C
-      (\((W_X,W_{RV},m_Z)\)) — **aucune** valeur ; \(Z_t\) non acceptée
-- [ ] Décisions humaines : lien \(W_{RV}\)–\(W_X\) ; statut \(m_Z\) ;
-      stride 1 ; puis formule \(Z_t\) éventuellement acceptée
+- [x] **\(W_{RV}:=W_X\)** `ACCEPTED` (§14C.9) —
+      `METHODOLOGICAL COMPARABILITY COUPLING` ; sémantiques distinctes
+- [ ] \(m_Z\) (propriétés d'admissibilité / valeur) ; stride 1 ;
+      valeur \(W_X\) ; formule \(Z_t\) éventuellement acceptée
 - [x] Représentations \(S_1/S_2/S_3\) **acceptées**
 - [x] Invariant multiplicatif **accepté**
 - [ ] Observable futur **approuvé** (\(V_{t,h}\) candidat)
@@ -2601,9 +2679,9 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 | Aucun chiffre / donnée / CRPS | oui |
 | \(S_1/S_2/S_3\) / §9.16 inchangés | oui |
 | Famille A = primary semantic candidate (§14A.12) | oui |
-| \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) `ACCEPTED` (§14B.11) | oui |
-| §14C : trois horizons ; overlap mécanique documenté | oui |
-| Aucune valeur \(W_X/W_{RV}/m_Z\) ; `NO Z_t ACCEPTED` | oui |
+| \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) `ACCEPTED` | oui |
+| \(W_{RV}:=W_X\) comparability coupling `ACCEPTED` | oui |
+| \(m_Z\) indépendant OPEN ; `NO Z_t ACCEPTED` | oui |
 | I01 CLOSED ; I02 NOT OPENED | oui |
 
 ---
