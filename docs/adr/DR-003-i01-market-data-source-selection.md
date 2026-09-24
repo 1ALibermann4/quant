@@ -6,6 +6,9 @@
 > **Protocol :** QDP v0.1
 > **Dérivé de :** `research/I01/DATA-REQ-I01.md` v0.1 (commit `4e117e5`)
 > **Date de consultation des sources :** 2026-09-23
+> **Révision :** v1.1 OPEN — demandes écrites ; les résultats v1.0 ci-dessous ne sont ni
+> supprimés ni réécrits. Questionnaires : [DR-003-v1.1-vendor-inquiries.md](DR-003-v1.1-vendor-inquiries.md).
+> **Baseline C02 :** `1cda21f` CLOSED / ACCEPTED. L'acquisition reste interdite.
 
 Ce DR contient **deux décisions distinctes** :
 
@@ -452,3 +455,26 @@ Toutes consultées le 2026-09-23, sauf mention contraire.
   aucun fournisseur sélectionné ; aucune acquisition autorisée.
 - D-2 (instrument) : SPY pré-enregistré selon DATA-REQ §1.2 ; il devient opposable à
   l'acquisition dès que D-1 est ACCEPTED.
+
+---
+
+## Révision v1.1 (2026-09-24)
+
+Ouverte depuis C02 v1.1 CLOSED (`1cda21f`). Cette révision **ne note aucun finaliste**.
+Elle prépare uniquement les demandes écrites destinées à lever les UNKNOWN bloquants
+(DEF-01, DEF-02, DEF-03). Le texte E.1–E.5, D-1, D-2 et les scores v1.0 restent l'autorité
+historique de cette pièce.
+
+Règles v1.1 :
+
+- un UNKNOWN REQUIRED ne devient PASS que par une preuve datée (documentation officielle
+  ou déclaration écrite du fournisseur archivée) ;
+- une absence de réponse n'est pas un PASS ;
+- « dernier survivant » n'est pas un critère ;
+- le prix n'est pas négocié et ne départage pas ;
+- DEF-04 (calendrier) est désormais porté par **DR-005**, investigation indépendante ;
+  un échec ou un INCONCLUSIVE de DR-003 ne se compense pas par DR-005, et réciproquement ;
+- l'acquisition n'est autorisée que si **D-1 ACCEPTED ∧ DR-005 ACCEPTED**.
+
+Demandes : [DR-003-v1.1-vendor-inquiries.md](DR-003-v1.1-vendor-inquiries.md).
+Statut global **inchangé : INCONCLUSIVE**.
