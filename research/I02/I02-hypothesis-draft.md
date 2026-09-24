@@ -22,7 +22,7 @@
 > **Draft v0.12 Disp review :** `ab6645f`
 > **Draft v0.13 Disp = Std_pop :** `98ddec6`
 > **Draft v0.14 temporal architecture :** `6e0b4c7`
-> **Draft v0.15 W_RV := W_X :** *(ce commit)*
+> **Draft v0.15 W_RV := W_X :** `e3fc32c`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
