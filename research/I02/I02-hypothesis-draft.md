@@ -12,6 +12,8 @@
 > **Draft v0.3 :** `15865ba`
 > **Draft v0.4 review :** `5980bc8`
 > **Draft v0.4 accept S :** `c85476c`
+> **Draft v0.5 level invariant :** `9a9cf89`
+> **Draft v0.6 Q vs φ review :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -33,10 +35,11 @@ REPRESENTATION ACCEPTED / METRIC UNRESOLVED
 \(S_1=[RV]\), \(S_2=[RV,D]\), \(S_3=[RV,Q]\) : nature informationnelle
 **acceptée** (`c85476c`).
 
-**Invariant de niveau (acceptation humaine) :** proximité en niveau de
-volatilité = **multiplicative** (§9.14). Chart candidates \(S^\star\)
-documentés. Distance complète, pondération, \(W\), 10+10, \(C_t\),
-CRPS : **non** acceptés. I02 reste `NOT OPENED`.
+**Invariant de niveau :** proximité multiplicative (§9.14) — accepté.
+**Forme \(S_3\) :** \(Q\) statistique acceptée ; \(\phi=\arccos Q\)
+interprétation ; \(\lvert\Delta Q\rvert\) vs \(\lvert\Delta\phi\rvert\)
+`INCONCLUSIVE` (§9.15). **\(d_{S2}^{(E)}\) :** `ACCEPTABLE CANDIDATE`,
+non accepté. I02 reste `NOT OPENED`.
 
 ---
 
@@ -928,19 +931,23 @@ acceptées.
 #### 9.14.5 \(S_2^\star\) — encore ouvert
 
 \([L,D]\) : deux coordonnées logarithmiques / relatives. Cela
-**ne** justifie **pas**
+**ne** justifie **pas** automatiquement
 
 \[
 1\text{ unité de }L \equiv 1\text{ unité de }D
 \]
 
-Cette équivalence serait une **pondération**. OPEN.
+Le candidat euclidien non pondéré \(d_{S2}^{(E)}=\sqrt{(\Delta L)^2+(\Delta D)^2}\)
+est **audité** en §9.15.2 — **non accepté**.
 
-#### 9.14.6 \(S_3^\star\) — problème plus visible
+#### 9.14.6 \(S_3^\star\) — \(Q\) vs géométrie de forme
 
-\([L,Q]\) combine \(L\in\mathbb{R}\) et \(Q\in(0,1]\) (domaine
-régulier). Une Euclidienne brute imposerait une pondération dictée
-par les plages numériques — **non neutre**. OPEN.
+\([L,Q]\) combine \(L\in\mathbb{R}\) et \(Q\in(0,1]\). Une Euclidienne
+brute sur \((L,Q)\) n'est **pas** neutre.
+
+\(Q=MA/RV\) reste la **statistique informationnelle** de \(S_3\).
+L'interprétation angulaire \(\phi=\arccos Q\) et le choix
+métrique \(|\Delta Q|\) vs \(|\Delta\phi|\) : §9.15.1 — **OPEN**.
 
 #### 9.14.7 Singularité \(RV=0\)
 
@@ -966,11 +973,8 @@ pour une future métrique :
 | **M8** | Temporal consistency | La règle ne change pas selon la date ou \(C_t\). |
 | **M9** | Adversary preservation | La métrique n'efface pas artificiellement ce que \(S_1/S_2/S_3\) représentent. |
 
-**Prochaine question OPEN :** comment **agréger** deux écarts
-conceptuellement différents — \(|\Delta L|\) vs \(|\Delta D|\)
-(\(S_2^\star\)) ; \(|\Delta L|\) vs \(|\Delta Q|\) (\(S_3^\star\)) —
-avec une pondération intrinsèquement justifiable, ou seulement une
-convention ex ante.
+**Prochaine question OPEN :** géométrie de forme \(Q\) vs \(\phi\)
+et agrégation avec \(L\) — §9.15. Puis pondération \(S_2^\star\).
 
 #### 9.14.9 Revue de cohérence
 
@@ -982,6 +986,191 @@ convention ex ante.
 | Pas de distance complète ni de poids | oui |
 | \(S^\star\) ≠ représentation acceptée | oui |
 | Pas d'\(\varepsilon\) | oui |
+
+### 9.15 Revue adversariale — métriques de forme \(Q\) vs \(\phi\) ; candidat \(S_2\)
+
+**Nature :** documentaire uniquement. Aucune donnée. Aucune métrique
+acceptée. Objectif : quelles géométries ont une justification
+**indépendante des données** — pas laquelle « performe ».
+
+#### 9.15.0 Identités de base (domaine régulier \(RV>0\))
+
+\[
+Q=\frac{MA}{RV}\in(0,1],
+\qquad
+1-Q^{2}=\frac{\operatorname{Var}_{\mathrm{win}}(|r|)}{RV^{2}}
+\]
+
+Soit \(\mathbf{u}=(|r_{t-W+1}|,\ldots,|r_t|)\in\mathbb{R}^{W}_{\ge 0}\)
+et \(\mathbf{1}=(1,\ldots,1)\). Alors
+
+\[
+\cos\varphi
+=
+\frac{\mathbf{u}\cdot\mathbf{1}}{\|\mathbf{u}\|_{2}\,\|\mathbf{1}\|_{2}}
+=\frac{MA}{RV}=Q
+\]
+
+avec \(\varphi=\arccos Q\in[0,\pi/2]\). Donc \(Q=\cos\varphi\) :
+**angle entre le profil d'amplitudes et le rayon uniforme**.
+
+Niveaux de gouvernance (à ne pas confondre) :
+
+| Niveau | Objet | Statut |
+|--------|-------|--------|
+| Informationnel | \(Q=MA/RV\) dans \(S_3\) | **ACCEPTED** (représentation) |
+| Interprétation | \(\phi=\arccos Q\) | **documentée** — angle à l'uniforme |
+| Métrique de forme | \(\lvert\Delta Q\rvert\) vs \(\lvert\Delta\phi\rvert\) | **OPEN** |
+
+\[
+\boxed{Q\text{ (statistique)} \neq \phi\text{ (interprétation)} \neq d_{\mathrm{forme}}}
+\]
+
+#### 9.15.1 \(Q\) vs \(\phi\) — deux géométries, aucune « neutre »
+
+**A. Dérivée et développement près de l'uniforme**
+
+\[
+\Bigl|\frac{d\phi}{dQ}\Bigr|=\frac{1}{\sqrt{1-Q^{2}}}
+\quad\text{diverge quand }Q\to 1^{-}
+\]
+
+Près de \(\phi=0\) (\(Q\to 1\)) :
+
+\[
+Q=\cos\phi=1-\frac{\phi^{2}}{2}+O(\phi^{4})
+\quad\Rightarrow\quad
+\phi\approx\sqrt{2(1-Q)}
+\]
+
+Donc \(Q\) **compresse quadratiquement** les petites déviations
+angulaires ; \(\phi\) les remet au premier ordre en angle. La dérivée
+infinie n'implique **pas** à elle seule une hypersensibilité
+pathologique de \(\phi\) : elle peut aussi corriger la dégénérescence
+locale de \(Q=\cos\phi\).
+
+Réciproquement, pour un écart angulaire fixe \(\delta\) près de
+\(\phi\),
+
+\[
+\Delta Q\approx-\sin(\phi)\,\delta
+\]
+
+Lorsque \(\phi\to 0\), \(\Delta Q\to 0\) pour un même \(\delta\).
+Donc **\(Q\) sous-discrimine** les différences de forme près de
+l'uniformité si l'on considère l'angle comme référence — autant que
+\(\phi\) peut sembler les sur-discriminer si l'on considère le cosinus
+comme référence.
+
+**B. Deux métriques extrinsèques distinctes**
+
+\[
+d_Q(a,b)=\lvert Q_a-Q_b\rvert
+\quad\text{vs}\quad
+d_\phi(a,b)=\lvert\phi_a-\phi_b\rvert=\lvert\arccos Q_a-\arccos Q_b\rvert
+\]
+
+- \(d_Q\) : différences égales de **ratio \(\ell_1/\ell_2\)** (cosinus)
+  équivalentes ;
+- \(d_\phi\) : différences égales d'**angle à l'uniforme** équivalentes.
+
+Aucune n'est « neutre ». Choisir l'une, c'est choisir une géométrie.
+
+**C. Terminologie — ce que \(Q\approx 1\) n'est pas**
+
+\(Q\approx 1\) signifie que les amplitudes \(|r_i|\) de la fenêtre sont
+**proches les unes des autres** (profil plat). Ce n'est **pas**
+« bruit blanc gaussien ». Pour une grande fenêtre i.i.d. gaussienne
+centrée, asymptotiquement
+
+\[
+Q\to\frac{\mathbb{E}|Z|}{\sqrt{\mathbb{E}[Z^{2}]}}=\sqrt{\frac{2}{\pi}}\approx 0.798
+\]
+
+pas \(1\). Interdit d'assimiler quasi-uniforme à gaussien.
+
+**D. Stabilité / perturbations de \(\mathbf{u}\)**
+
+- Petite perturbation angulaire près de \(\phi=0\) : \(\Delta Q=O(\phi\,\delta)=O(\delta^{2})\)
+  si \(\phi\sim\delta\) — \(d_Q\) voit peu ; \(d_\phi\) voit \(\delta\).
+- Près de \(Q\to 0^{+}\) (\(\phi\to\pi/2\)) : \(\lvert d\phi/dQ\rvert\to 1\),
+  les deux métriques sont localement comparables à une constante.
+- Une seule coordonnée grande dans \(\mathbf{u}\) (spike) pousse \(Q\)
+  vers le bas ; les deux distances augmentent, mais pas au même rythme.
+
+**E. Borne \(1/\sqrt{W}\) (rappel, pas un seuil)**
+
+Par Cauchy–Schwarz / RMS–AM, \(Q\le 1\) toujours. La valeur typique
+sous i.i.d. dépend de la loi des \(r\) et de \(W\) ; ce n'est **pas**
+une justification pour caler une métrique, ni pour choisir entre \(Q\)
+et \(\phi\). Mention seulement pour éviter de lire \(Q=0.8\) comme
+« loin de l'uniforme » sans modèle.
+
+**F. Extrinsèque vs intrinsèque**
+
+- Extrinsèque sur le cosinus : \(d_Q\) (plongement \(Q\in(0,1]\)).
+- Intrinsèque sur le cercle / cône des directions de \(\mathbf{u}\) :
+  écart angulaire \(d_\phi\) au rayon \(\mathbf{1}\).
+
+Les deux sont défendables a priori. **Aucune raison** de déclarer \(Q\)
+référence métrique et \(\phi\) variante (ni l'inverse) sans décision
+géométrique explicite.
+
+**Question géométrique exacte (sans SPY / CRPS) :**
+
+> Pour l'adversaire \(S_3\), veut-on préserver une différence linéaire
+> du ratio \(\ell_1/\ell_2\), ou une différence linéaire de l'angle à
+> l'uniformité ?
+
+**Verdict documentaire \(Q\) vs \(\phi\) :** `INCONCLUSIVE` —
+les deux sont des géométries légitimes ; aucune n'est neutre ;
+la statistique \(Q\) reste acceptée ; la métrique de forme reste OPEN.
+
+#### 9.15.2 Audit du candidat \(S_2\) : \(d_{S2}^{(E)}\)
+
+Candidat **non accepté** :
+
+\[
+d_{S2}^{(E)}(a,b)
+=
+\sqrt{(\Delta L)^{2}+(\Delta D)^{2}},
+\qquad
+L=\log RV,\quad D=\log\frac{RV^{\mathrm{late}}}{RV^{\mathrm{early}}}
+\]
+
+(domaine : demi-vol \(>0\), \(RV>0\)).
+
+| Argument pour | Argument contre |
+|---------------|-----------------|
+| \(L\) et \(D\) sont des log-ratios de volatilité — type d'objet comparable | « facteur \(e\) sur le niveau ≡ facteur \(e\) sur la dynamique » reste une **pondération** `1:1` |
+| Invariance commune \(r\mapsto c r\) (\(c>0\)) | \(L\) et \(D\) ne sont pas indépendants (\(RV_e^{2}+RV_l^{2}=2\,RV^{2}\)) |
+| Pas de z-score / rang / donnée | Norme \(L_2\) vs \(L_1\) non tranchée ; M5 OK pour les deux |
+| Cohérent avec M2 (niveau) et structure relative de \(D\) | N'implique pas l'agrégation avec une future forme \(S_3\) |
+
+**Verdict documentaire \(d_{S2}^{(E)}\) :** `ACCEPTABLE CANDIDATE` pour
+*étude* — **pas** `ACCEPTED`. Première métrique a priori digne
+d'examen pour \(S_2^\star\) ; n'isole pas encore l'opérateur kNN du
+choix de norme.
+
+#### 9.15.3 Ce qui reste strictement OPEN
+
+- \(|\Delta Q|\) vs \(|\Delta\phi|\) (forme \(S_3\)) ;
+- agrégation \(L\) avec forme (\(Q\) ou \(\phi\)) ;
+- acceptation de \(d_{S2}^{(E)}\) ;
+- \(L_1\) vs \(L_2\) même sur \((L,D)\) ;
+- z-scores, rangs, poids appris — toujours interdits comme « solution »
+  tant qu'une géométrie a priori n'a pas été tranchée ou rejetée.
+
+#### 9.15.4 Cohérence
+
+| Contrôle | OK |
+|----------|-----|
+| \(S_3=[RV,Q]\) non modifié | oui |
+| \(\phi\) ≠ nouvelle représentation acceptée | oui |
+| Pas de « \(Q\) = métrique neutre » | oui |
+| Pas de gaussien = \(Q\approx1\) | oui |
+| \(d_{S2}^{(E)}\) non accepté | oui |
+| Aucune donnée / CRPS | oui |
 
 ---
 
@@ -1108,34 +1297,24 @@ ce contrat.
 Ne pas résoudre dans ce draft :
 
 - définition de \(C_t\) ;
-- **agrégation** \(|\Delta L|\) vs \(|\Delta D|\) / \(|\Delta Q|\)
-  (pondération intrinsèque vs convention) ;
-- forme complète de \(d\) (Euclidienne, \(L_1\), …) ;
-- z-score / rangs / CDF / Mahalanobis ;
-- convention pour \(L\), \(D\), \(Q\) aux singularités (zéros) — **pas**
-  d'\(\varepsilon\) ;
-- extra \(\max\lvert r\rvert\) (non retenu, OPEN) ;
-- définition finale de \(X_t\) ;
-- valeur finale de \(W\), \(h\), \(k\) ;
-- règle de partage \(S_2\) si \(W\neq 20\) ;
-- source / holdout ; gates ; seuil de stress ;
-- acceptation finale du CRPS ;
-- architecture Market-State Engine.
+- métrique de forme \(S_3\) : \(\lvert\Delta Q\rvert\) vs \(\lvert\Delta\phi\rvert\)
+  (§9.15.1 — `INCONCLUSIVE`) ;
+- acceptation de \(d_{S2}^{(E)}=\sqrt{(\Delta L)^{2}+(\Delta D)^{2}}\)
+  (`ACCEPTABLE CANDIDATE`, non accepté) ;
+- \(L_1\) vs \(L_2\) ; agrégation \(L\) avec forme ;
+- z-score / rangs / CDF / Mahalanobis / poids appris ;
+- convention aux singularités (\(RV=0\), demi-vol nulle) — pas d'\(\varepsilon\) ;
+- \(W\), \(h\), \(k\), partage 10+10 ; holdout ; CRPS final ; Market-State Engine.
 
 **Accepté :**
 
-- \(S_1=[RV]\), \(S_2=[RV,D]\), \(S_3=[RV,Q]\) —
-  `REPRESENTATION ACCEPTED / METRIC UNRESOLVED` ;
-- H2a / H2b / H2c comme attaques distinctes ;
-- invariant : proximité de niveau **multiplicative**
-  (\(\delta_{\mathrm{level}}=|\Delta L|\), \(RV>0\)) ;
-- charts \(S^\star=[L]\), \([L,D]\), \([L,Q]\) comme **metric
-  coordinates** (≠ représentations).
+- \(S_1=[RV]\), \(S_2=[RV,D]\), \(S_3=[RV,Q]\) ;
+- invariant multiplicatif \(\delta_{\mathrm{level}}=\lvert\Delta L\rvert\) ;
+- charts \(S^\star\) (≠ représentations) ;
+- \(Q\) comme statistique informationnelle ; \(\phi=\arccos Q\) comme
+  **interprétation** angulaire (pas métrique figée).
 
-**Documentés comme candidats**, non décisions :
-
-- observable \(V_{t,h}\) ; H1-v0.2 ; CRPS ; `H_vol` / `H_shape` ;
-- M1–M9 comme exigences de conception.
+**Documentés :** H1-v0.2 ; \(V_{t,h}\) ; CRPS ; M1–M9 ; revue §9.15.
 
 ---
 
@@ -1148,21 +1327,18 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [ ] Hypothèse finale approuvée (H1-v0.2 reste une candidate)
 - [ ] Condition de marché \(C_t\) définie ex ante (§14)
 - [x] Représentations adversaires \(S_1/S_2/S_3\) **acceptées**
-- [x] Invariant multiplicatif du niveau de volatilité **accepté**
-      (§9.14) ; charts \(S^\star\) documentés
-- [ ] Agrégation / pondération / distance complète sur \(S^\star\)
-      **résolues** (`METRIC UNRESOLVED`)
-- [ ] Observable futur **approuvé** (\(V_{t,h}\) est seulement candidat)
+- [x] Invariant multiplicatif du niveau **accepté** ; charts \(S^\star\)
+- [ ] Géométrie de forme \(S_3\) tranchée (\(Q\) vs \(\phi\))
+- [ ] Métrique \(S_2^\star\) tranchée (dont \(d_{S2}^{(E)}\) éventuel)
+- [ ] Agrégation / distance complète **résolues**
+- [ ] Observable futur **approuvé** (\(V_{t,h}\) candidat)
 - [ ] Score probabiliste **approuvé** (CRPS = acceptable candidate)
-- [ ] Rôle de `H_shape` défini (témoin / mesure / non-gate)
+- [ ] Rôle de `H_shape` défini
 - [ ] Kill criteria approuvés
-- [ ] Stratégie de données indépendantes / réplication définie
-- [ ] Risque de data snooping documenté (héritage I01 + holdout + score)
-- [ ] Protocole de gel avant premier résultat défini
+- [ ] Stratégie de données / réplication définie
+- [ ] Risque de data snooping documenté
+- [ ] Protocole de gel avant premier résultat
 - [ ] Décision explicite **OPEN I02**
-
-L'acceptation des représentations et de l'invariant de niveau
-**n'ouvre pas** I02.
 
 ---
 
@@ -1170,17 +1346,12 @@ L'acceptation des représentations et de l'invariant de niveau
 
 | Contrôle | Statut |
 |----------|--------|
-| Aucun chiffre nouveau calculé | oui |
-| Aucune donnée nouvelle téléchargée | oui |
-| CRPS non calculé | oui |
-| \(C_t\) non défini | oui |
-| \(S_1/S_2/S_3\) inchangés (non rouverts) | oui |
-| Invariant multiplicatif enregistré ; \(S^\star\) = charts only | oui |
-| Pas de distance complète / poids / \(\varepsilon\) | oui |
-| \(W/k/h\) non optimisés | oui |
-| Aucun code / test I02 | oui |
-| Pas de `protocol.md` I02 | oui |
-| DR-003 / DR-005 non modifiés | oui |
+| Aucun chiffre / donnée / CRPS | oui |
+| \(S_1/S_2/S_3\) inchangés | oui |
+| \(\phi\) ≠ représentation acceptée ; métrique forme OPEN | oui |
+| \(d_{S2}^{(E)}\) audité, non accepté | oui |
+| Pas de « neutre » pour \(Q\) ou \(\phi\) | oui |
+| Terminologie gaussien ≠ \(Q\approx1\) | oui |
 | I01 CLOSED ; I02 NOT OPENED | oui |
 
 ---
