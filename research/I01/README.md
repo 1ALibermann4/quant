@@ -46,11 +46,12 @@ I01/
 ├── experiments/E01/       I01-E01 exploratoire UNQUALIFIED (pas un SCI)
 ├── experiments/E02/       I01-E02 diagnostics exploratoires (paramètres figés)
 ├── experiments/E03/       I01-E03 mécanisme volatilité (contrôle ≠ B0)
+├── experiments/E04/       I01-E04 anatomie conditionnelle de D_t (blocs préfixés)
 ```
 
-I01 confirmatoire reste bloqué par DR-003 ∧ DR-005. I01-E01/E02/E03 (DR-007 / DR-008)
-ne sont pas une validation scientifique. Revue E02 : poursuivre l'investigation,
-pas confirmer.
+I01 confirmatoire reste bloqué par DR-003 ∧ DR-005. I01-E01…E04 (DR-007 / DR-008)
+ne sont pas une validation scientifique. Revue E03 : CONTINUE — mécanisme
+non expliqué. E04 est le dernier diagnostic exploratoire prévu.
 
 ## Documents normatifs I01
 

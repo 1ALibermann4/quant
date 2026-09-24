@@ -33,6 +33,7 @@ class PastFeatures:
     sigma_m: np.ndarray
     x_norm: np.ndarray
     raw_amp: np.ndarray
+    window_sum: np.ndarray
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,14 +76,98 @@ def past_window_features(
     sigma_m = np.full(n, np.nan, dtype=np.float64)
     x_norm = np.full(n, np.nan, dtype=np.float64)
     raw_amp = np.full(n, np.nan, dtype=np.float64)
+    window_sum = np.full(n, np.nan, dtype=np.float64)
     for t in range(params.M, n):
         window = returns[t - params.W + 1 : t + 1]
         rv_w[t] = float(np.std(window, ddof=1))
         raw_amp[t] = float(np.linalg.norm(window))
+        window_sum[t] = float(np.sum(window))
         _mu, sigma = causal_mu_sigma(returns, t, params)
         sigma_m[t] = sigma
         x_norm[t] = float(np.linalg.norm(states[t]))
-    return PastFeatures(rv_w=rv_w, sigma_m=sigma_m, x_norm=x_norm, raw_amp=raw_amp)
+    return PastFeatures(
+        rv_w=rv_w,
+        sigma_m=sigma_m,
+        x_norm=x_norm,
+        raw_amp=raw_amp,
+        window_sum=window_sum,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class PairedHomogeneity:
+    """Per-date L2 vs ``rv_W`` control. No B0 — E04 reads these series only."""
+
+    ranks: tuple[int, ...]
+    sessions: tuple[date, ...]
+    h_raw_geo: np.ndarray
+    h_vol_geo: np.ndarray
+    h_raw_ctrl: np.ndarray
+    h_vol_ctrl: np.ndarray
+    rv_w: np.ndarray
+    x_norm: np.ndarray
+    window_sum: np.ndarray
+
+
+def collect_paired_homogeneity(
+    series: ObservationSeries,
+    params: I01Params | None = None,
+    *,
+    progress: Callable[[int, int], None] | None = None,
+) -> PairedHomogeneity:
+    """Same ``L_t`` / L2 / ``rv_W`` neighbors as E03. Does not draw B0."""
+
+    params = params or DEFAULT_PARAMS
+    returns = log_returns(series)
+    states = all_state_vectors(returns, params)
+    futures = all_future_vectors(returns, params)
+    features = past_window_features(returns, states, params)
+    eval_idx = evaluation_indices(len(series), params)
+    if eval_idx.size == 0:
+        raise ValueError("no evaluation dates: series is shorter than the I01 technical minimum")
+
+    ranks: list[int] = []
+    sessions: list[date] = []
+    h_raw_geo: list[float] = []
+    h_vol_geo: list[float] = []
+    h_raw_ctrl: list[float] = []
+    h_vol_ctrl: list[float] = []
+    rv_w: list[float] = []
+    x_norm: list[float] = []
+    window_sum: list[float] = []
+
+    for step, t in enumerate(eval_idx, start=1):
+        query = int(t)
+        library = admissible_candidates(query, len(series), params)
+        if library.shape[0] < params.L_min:
+            raise ValueError(f"|L_t|={library.shape[0]} < L_min at t={t}")
+        neighbors, _ = l2_neighbors(states[query], states, library, params.k)
+        ctrl, _ = scalar_neighbors(float(features.rv_w[query]), features.rv_w, library, params.k)
+        geo = homogeneity_bundle(futures[neighbors], params.epsilon)
+        ctrl_h = homogeneity_bundle(futures[ctrl], params.epsilon)
+        ranks.append(query)
+        sessions.append(series.sessions[query])
+        h_raw_geo.append(geo["H_raw"])
+        h_vol_geo.append(geo["H_vol"])
+        h_raw_ctrl.append(ctrl_h["H_raw"])
+        h_vol_ctrl.append(ctrl_h["H_vol"])
+        rv_w.append(float(features.rv_w[query]))
+        x_norm.append(float(features.x_norm[query]))
+        window_sum.append(float(features.window_sum[query]))
+        if progress is not None:
+            progress(step, int(eval_idx.size))
+
+    return PairedHomogeneity(
+        ranks=tuple(ranks),
+        sessions=tuple(sessions),
+        h_raw_geo=np.asarray(h_raw_geo, dtype=np.float64),
+        h_vol_geo=np.asarray(h_vol_geo, dtype=np.float64),
+        h_raw_ctrl=np.asarray(h_raw_ctrl, dtype=np.float64),
+        h_vol_ctrl=np.asarray(h_vol_ctrl, dtype=np.float64),
+        rv_w=np.asarray(rv_w, dtype=np.float64),
+        x_norm=np.asarray(x_norm, dtype=np.float64),
+        window_sum=np.asarray(window_sum, dtype=np.float64),
+    )
 
 
 def scalar_neighbors(
