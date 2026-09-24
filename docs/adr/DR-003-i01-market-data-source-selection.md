@@ -477,4 +477,8 @@ Règles v1.1 :
 - l'acquisition n'est autorisée que si **D-1 ACCEPTED ∧ DR-005 ACCEPTED**.
 
 Demandes : [DR-003-v1.1-vendor-inquiries.md](DR-003-v1.1-vendor-inquiries.md).
-Statut global **inchangé : INCONCLUSIVE**.
+Paquets d'envoi (canaux + texte exact) : [DR-003-v1.1-send-ready.md](DR-003-v1.1-send-ready.md).
+L'envoi est une action humaine ; au 2026-09-24 aucun message n'est marqué envoyé.
+**HOLD** depuis [DR-007](DR-007-exploratory-vs-confirmatory-data.md) (ACCEPTED) : ne
+pas envoyer ; le sandbox exploratoire précède la reprise des preuves fournisseurs.
+Statut global **inchangé : INCONCLUSIVE**. Scores v1.0 inchangés.

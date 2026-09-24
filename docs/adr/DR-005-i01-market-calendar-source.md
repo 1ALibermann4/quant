@@ -1,7 +1,8 @@
 # DR-005 — I01 : source du calendrier de marché (cadrage)
 
 > **Identifier :** DR-005
-> **Status :** OPEN — cadrage pré-enregistré ; aucun candidat sélectionné
+> **Status :** OPEN — cadrage figé ; comparaison documentaire vague 1 : aucun candidat PASS
+> **Comparaison :** [DR-005-documentary-comparison.md](DR-005-documentary-comparison.md)
 > **Authority class :** DECISION RECORD
 > **Protocol :** QDP v0.1
 > **Date :** 2026-09-24
@@ -10,8 +11,9 @@
 > `specs/contracts/C02/C02_v1.1.yaml` (`MarketCalendarSnapshot`, QCC-1)
 > **Relève :** DR-003 DEF-04 (non réécrit dans DR-003 v1.0)
 
-Cette pièce **cadre** l'investigation. Elle n'évalue pas encore les candidats contre la
-grille, n'en retient aucun, et n'autorise aucune acquisition.
+Cette pièce **cadre** l'investigation (critères figés). La notation vague 1 est dans
+[DR-005-documentary-comparison.md](DR-005-documentary-comparison.md). Aucun candidat
+n'est retenu. Aucune acquisition n'est autorisée.
 
 ## Context
 
@@ -170,7 +172,8 @@ doivent produire la même liste QCC-1 (C02-INV-06 / INV-14).
 
 ## Critères PASS / FAIL / INCONCLUSIVE
 
-Notés **par candidat**, après ce cadrage, dans une révision ultérieure.
+Notés **par candidat** dans [DR-005-documentary-comparison.md](DR-005-documentary-comparison.md)
+(vague 1, 2026-09-24). Les critères ci-dessous n'ont pas été assouplis.
 
 | Verdict | Condition |
 |---------|-----------|
@@ -195,10 +198,10 @@ Notés **par candidat**, après ce cadrage, dans une révision ultérieure.
 Un candidat qui échoue un REQUIRED est écarté. Un UNKNOWN sur un REQUIRED empêche
 l'ACCEPTED de DR-005.
 
-## Alternatives à examiner (non notées, non retenues)
+## Alternatives à examiner
 
-Longlist **indicative** pour la comparaison future. Y figurer n'est ni un PASS ni
-une présélection.
+Longlist du cadrage. **Notée** en vague 1 (aucun PASS). Y figurer n'est ni un PASS
+ni une présélection. Détail : [comparaison](DR-005-documentary-comparison.md).
 
 | # | Classe | Rôle possible | Risque déjà visible (non noté) |
 |---|--------|---------------|--------------------------------|
@@ -209,29 +212,34 @@ une présélection.
 | C-05 | Calendrier livré par un fournisseur de prix | Contrôle croisé seulement | DR-003 F-05 ; interdit comme définition (CAL-S-09) |
 | C-06 | « Lun–ven moins une liste de fériés fédéraux » maison | — | Omet fermetures exceptionnelles → FAIL CAL-S-03 |
 
-Aucun de ces items n'est choisi. La notation commencera dans une révision ultérieure,
-contre la grille ci-dessus, preuves à l'appui.
+Aucun de ces items n'est choisi. Vague 1 : C-02 / C-05 / C-06 FAIL ; C-01 FAIL comme
+produit unique ; C-03 et toute politique composite restent INCONCLUSIVE.
 
 ## Consequences
 
 - DR-005 est **OPEN**. Aucune source de calendrier n'est ACCEPTED.
 - Aucune acquisition de prix ni de calendrier n'est autorisée par cette pièce.
 - C02 et I01 inchangés.
-- La prochaine étape de **cette** branche : rassembler les preuves documentaires
-  (sans télécharger de séances de marché via une API de prix) et noter C-01… contre
-  la grille.
+- Vague 1 documentaire : [DR-005-documentary-comparison.md](DR-005-documentary-comparison.md).
+  Aucun candidat isolé ne passe la grille. La prochaine étape de **cette** branche :
+  dossier de notices pour les fermetures exceptionnelles 1993–présent (Sandy en
+  priorité), sans API de prix et sans implémenter `MarketCalendarSnapshot`.
 - L'acquisition I01 attend `DR-003 D-1 ACCEPTED ∧ DR-005 ACCEPTED`.
 
 ## Deferred items
 
 | ID | Objet | Déclencheur |
 |----|-------|-------------|
-| DEF-C-01 | Notation des classes C-01… | Preuves documentaires collectées |
+| DEF-C-01 | Notation des classes C-01… | **Partiel (2026-09-24)** : [comparaison](DR-005-documentary-comparison.md). C-02, C-05, C-06 FAIL ; C-01 FAIL comme produit unique ; C-03 / politique composite INCONCLUSIVE |
 | DEF-C-02 | Décision de source + version | Un candidat PASS sur tous les REQUIRED |
 | DEF-C-03 | Procédure de build du `MarketCalendarSnapshot` | Après DEF-C-02 |
 | DEF-C-04 | Articulation early closes ↔ Q-10 | Si CAL-S-04 INCONCLUSIVE |
 
 ## Status
 
-**OPEN** (cadrage). Pas ACCEPTED. Pas INCONCLUSIVE : l'investigation n'a pas encore
-comparé. Aucun candidat retenu.
+**OPEN.** Cadrage inchangé. Comparaison vague 1 faite : **sélection INCONCLUSIVE**
+(aucun PASS, plusieurs FAIL). Aucun candidat retenu. Pas ACCEPTED.
+
+[DR-007](DR-007-exploratory-vs-confirmatory-data.md) (ACCEPTED) n'assouplit pas
+cette grille. Un calendrier exploratoire futur, s'il existe, ne pourra pas servir
+de source confirmatoire.

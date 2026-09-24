@@ -22,8 +22,9 @@ Lire ce fichier avant de modifier le dépôt.
 - Toute décision technique figée → **Decision Record** dans `docs/adr/`.
 - P0 est **clos** (HAT PASS, commit `a4c55b9`).
 - **P1 / I01** est ouvert — protocole SCI voisinage géométrique.
-- **Ne pas implémenter** I01 avant revue protocole + DATA-REQ-I01 + ADR data.
-- **Ne pas choisir d'API** avant que les besoins data soient dérivés du protocole.
+- **DR-007 ACCEPTED** — deux classes exclusives : `EXPLORATORY` (`UNQUALIFIED`, amont de C02 ; aucun DATA-PASS / SCI-PASS / SCI-FAIL / PRED / ECON / promotion) et `CONFIRMATORY` (C02 + DR-003 D-1 ACCEPTED + DR-005 ACCEPTED). `intended_use: technical` reste sur la voie qualifiée. Un résultat exploratoire, positif ou négatif, n'est pas un verdict SCI.
+- **Ne pas implémenter** I01 confirmatoire avant DATA-REQ-I01 + `DR-003 D-1 ACCEPTED ∧ DR-005 ACCEPTED`. I01 exploratoire : source sandbox **non choisie** (DEF-E-01) ; pas d'acquisition payante ; pas de qualification C02 du sandbox.
+- **Ne pas choisir d'API confirmatoire** avant que les besoins data soient dérivés du protocole.
 
 ## Protocol
 
