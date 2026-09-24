@@ -17,6 +17,7 @@
 > **Draft v0.7 metric robustness :** `2a92da7`
 > **Draft v0.8 accept §9.16 :** `ceb224c`
 > **Draft v0.9 Z_t review :** `5681916`
+> **Draft v0.10 A vs D / m :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -42,9 +43,10 @@ REPRESENTATION ACCEPTED / METRIC ROBUSTNESS SETS ACCEPTED
 **Doctrine §9.16 :** `ACCEPTED` (locale I02) — \(\mathcal{M}_{S3}\),
 \(\mathcal{M}_{S2}\) figés ; sujet métrique pré-cadrage **CLOSED**.
 
-**État / conditionnement :** pivot documentaire \(C_t\) binaire →
-\(Z_t\) (instabilité de régime de volatilité) — §14 ; **aucune**
-\(Z_t\) acceptée. I02 reste `NOT OPENED`.
+**État / conditionnement :** revue \(Z_t\) §14–§14A ; **aucune**
+\(Z_t\) acceptée. Prochaine décision humaine : cas 5
+(transition vs instabilité) pour trancher A vs \(E\).
+I02 reste `NOT OPENED`.
 
 ---
 
@@ -1683,6 +1685,277 @@ choisir sémantiquement/mathématiquement **sans** valeur SPY.
 
 ---
 
+## 14A. A vs D mathematical review and temporal-scale problem
+
+**Nature :** documentaire / mathématique / adversariale. **Aucune
+donnée marché.** B et C **non rouverts.** Aucune \(Z_t\) acceptée.
+I02 reste `NOT OPENED`.
+
+**Baseline :** §14 @ `5681916` — A `PROMISING`, D `PROMISING`
+(forme `INCONCLUSIVE`), B `REJECT`, C `WEAK`.
+
+**Notation :** \(L_t=\log(RV_t)\) sur \(RV_t>0\) ;
+\(\Delta L_t=L_t-L_{t-1}\). Aucune valeur de \(W\), \(m\), Disp, ni
+\(\varepsilon\).
+
+### 14A.1 Famille A — increment instability
+
+**Forme générique (Disp non fixée) :**
+
+\[
+Z_A(t)
+=
+\operatorname{Disp}\bigl(\Delta L_{t-m+2},\ldots,\Delta L_t\bigr)
+\]
+
+(\(m\) niveaux \(L\) ⇒ \(m-1\) incréments.)
+
+| ID | Propriété | Statut |
+|----|-----------|--------|
+| **A1** | \(r\mapsto c r\) (\(c>0\)) | \(L\mapsto L+\log c\) ⇒ \(\Delta L\) inchangé ⇒ \(Z_A\) invariant |
+| **A2** | \(L\mapsto L+\mathrm{const}\) | idem ; invariant |
+| **A3** | \(L_i=a\) constant | tous \(\Delta L=0\) ⇒ Disp\(=0\) (toute Disp raisonnable nulle sur vecteur nul) |
+| **A4** | \(L_i=a+b i\) affine | \(\Delta L\equiv b\) ⇒ Disp autour de ce centre **= 0** si Disp mesure la **dispersion** (var, écart-type, MAD autour de la médiane/moyenne des \(\Delta L\)). Une « Disp » = moyenne de \(\lvert\Delta L\rvert\) **sans centrage** reste \(\lvert b\rvert\) — ce n'est plus une dispersion d'instabilité d'incréments, c'est une intensité de drift |
+| **A5** | accélération monotone (\(\Delta L\) même signe, non constant) | Disp **centrée** > 0 : A classe l'accélération comme instabilité d'incréments **sans** retournement |
+| **A6** | oscillation (signes alternants) | Disp typiquement élevée |
+| **A7** | outliers \(\Delta L\) | var / écart-type : sensibles ; MAD : plus résistant — **Disp non choisie** |
+| **A8** | lien avec \(D\) de \(S_2\) | \(D=\log(RV^{\mathrm{late}}/RV^{\mathrm{early}})\) = contraste **biparti** de niveaux, pas Disp\((\Delta L)\). Pas d'identité |
+| **A9** | A ≈ \(D\) complexe ? | seulement si Disp et \(m\) collapsent vers un contraste deux blocs (ex. moyenne des \(\Delta L\) sur early vs late ≈ \(D\)). Ce n'est **pas** la forme générique Disp |
+
+**Disp (statut) :** `UNFIXED`. Comparaison conceptuelle seulement :
+
+| Disp | Sous trend affine (A4) | Sous choc unique | Remarque |
+|------|------------------------|------------------|----------|
+| variance / σ | 0 | > 0 | classique ; outliers |
+| MAD (autour centre empirique) | 0 | > 0 | plus robuste |
+| mean \(\lvert\Delta L\rvert\) **non centré** | \(\lvert b\rvert\) | > 0 | **échoue** A4 comme « instabilité » — mesure l'intensité du drift |
+
+**Implication :** pour que A opérationnalise *increment instability* et non
+*drift intensity*, Disp doit être une **vraie dispersion** (centrée),
+pas une norme brute des incréments.
+
+### 14A.2 Famille D — excess path length \(E=\mathrm{TV}-\mathrm{NET}\)
+
+Sur \(m\) niveaux \(L_{t-m+1},\ldots,L_t\) :
+
+\[
+\mathrm{TV}_t=\sum_{j=0}^{m-2}\lvert\Delta L_{t-j}\rvert,
+\qquad
+\mathrm{NET}_t=\lvert L_t-L_{t-m+1}\rvert,
+\qquad
+E_t=\mathrm{TV}_t-\mathrm{NET}_t
+\]
+
+| ID | Affirmation | Statut |
+|----|-------------|--------|
+| **D1** | \(E_t\ge 0\) | **prouvé** : inégalité triangulaire \(\sum\lvert a_i\rvert\ge\lvert\sum a_i\rvert\) avec \(a_i=\Delta L\) |
+| **D2** | \(E_t=0\) sur toute trajectoire monotone | **prouvé** au sens faible : \(E=0\) **ssi** tous les \(\Delta L\) sont \(\ge 0\) ou tous \(\le 0\) (zéros admis). Toute trajectoire monotone (non-stricte) ⇒ \(E=0\) |
+| **D3** | \(E>0\) ⇒ retournement ? | **oui** : \(E>0\) **ssi** il existe au moins un \(\Delta L>0\) **et** un \(\Delta L<0\) dans la fenêtre. Les plateaux \(\Delta L=0\) n'empêchent ni n'imposent \(E>0\). Sens précis : **backtracking / changement de sens du chemin de \(L\)**, pas nécessairement deux incréments consécutifs non nuls de signes opposés si des zéros s'intercalent |
+| **D4** | invariant \(L\mapsto L+c\) / \(r\mapsto cr\) | **oui** (\(\Delta L\) et différences de \(L\) inchangés) |
+| **D5** | sens géométrique | **longueur de chemin en excès** par rapport au déplacement net : *excess path length* / *backtracking*. Termes **non** démontrés comme synonymes de « regime instability » — seulement le backtracking du chemin \(L\) |
+| **D6** | \(E/\mathrm{TV}\) | domaine : \(\mathrm{TV}>0\) ; si \(\mathrm{TV}=0\) (chemin plat) : **indéfini** (pas d'\(\varepsilon\)). Invariance d'échelle supplémentaire (homogène de degré 0). **Perd** l'amplitude absolue du détour. **Non accepté** |
+| **D7** | sign-flips | comptage de changements de signe de \(\Delta L\) (règle pour \(\Delta L=0\) : **OPEN** / indéfini ou ignore les zéros). Information **ordinale** grossière du même concept de retournement ; **pas** l'amplitude du backtracking. Discrétisation, pas un objet orthogonal à \(E\) |
+
+### 14A.3 Contre-exemples synthétiques (aucune donnée marché)
+
+Convention : \(m=5\) niveaux ; Disp = écart-type empirique des
+\(\Delta L\) (illustratif, **non choisi**) ; SF = nombre de passages
+d'un signe strict à l'autre en ignorant les zéros.
+
+| Cas | \(L\) | \(\Delta L\) | A (σ) | \(E=\mathrm{TV}-\mathrm{NET}\) | SF | Lecture |
+|-----|-------|--------------|-------|--------------------------------|-----|---------|
+| **1** constant | \([1,1,1,1,1]\) | \([0,0,0,0]\) | 0 | \(0-0=0\) | 0 | stable |
+| **2** trend linéaire | \([1,1.1,1.2,1.3,1.4]\) | \([0.1]{\times}4\) | 0 | \(0.4-0.4=0\) | 0 | A : pas d'instabilité d'incréments ; D : pas de backtracking |
+| **3** accélération monotone | \([1,1.1,1.3,1.6,2.0]\) | \([0.1,0.2,0.3,0.4]\) | > 0 | \(1.0-1.0=0\) | 0 | **A↑, E=0** : A voit instabilité d'incréments ; D : transition monotone |
+| **4** oscillation | \([1,1.2,1.0,1.2,1.0]\) | \([+0.2,-0.2,+0.2,-0.2]\) | > 0 | \(0.8-0=0.8\) | 3 | A↑ et E↑ |
+| **5** single jump then stable | \([1,1,1,2,2]\) | \([0,0,1,0]\) | > 0 | \(1-1=0\) | 0 | **discriminant** — voir §14A.4 |
+| **6** single reversal | \([1,1.2,1.4,1.2,1.0]\) | \([+0.2,+0.2,-0.2,-0.2]\) | > 0 | \(0.8-0=0.8\) | 1 | A↑ et E↑ |
+
+### 14A.4 Cas 5 — saut unique puis stable (question scientifique)
+
+\[
+L=[1,1,1,2,2]
+\quad\Rightarrow\quad
+\mathrm{TV}=1,\;\mathrm{NET}=1,\;E=0
+\]
+
+mais Disp\((\Delta L)>0\) dès que Disp voit le choc \(+1\) hors
+d'un centre proche de 0.
+
+**Ce que chaque mesure appelle « instabilité » :**
+
+| Mesure | Sur le cas 5 |
+|--------|----------------|
+| **A** | le **changement** du niveau multiplicatif (intensité / dispersion des incréments) — y compris une **transition unidirectionnelle** |
+| **\(E\)** | uniquement le **backtracking** — un changement brutal mais monotone n'en est **pas** |
+| **SF** | aucun retournement |
+
+**Question forcée :**
+
+> Un changement brutal mais unidirectionnel de régime est-il une
+> *instabilité*, ou seulement une *transition* ?
+
+Sous la sémantique déjà cadrée (*volatility-regime instability* :
+distinguer régime **établi** vs **erratique** ; high-\(L\) / low-\(Z\)
+admissible) :
+
+- traiter le cas 5 comme **instabilité** ⇒ favoriser **A**
+  (et accepter qu'accélération monotone = instabilité d'incréments) ;
+- le traiter comme **transition vers un nouveau régime établi**
+  (pas d'erratisme) ⇒ favoriser **\(E\)** / D-TV-NET.
+
+Ce n'est **pas** une question de sophistication : c'est le cœur
+sémantique A vs D. **Non tranché ici** (pas d'acceptation \(Z_t\)).
+
+### 14A.5 A vs D — concepts irréductibles ?
+
+\[
+\text{A : instability of volatility \emph{changes} (dispersion des incréments)}
+\]
+
+\[
+\text{D-\(E\) : reversal / backtracking of the volatility \emph{path}}
+\]
+
+**Affirmation :** « A high ⇏ D high » et « D high ⇏ A high ».
+
+| Direction | Statut | Contre-exemple |
+|-----------|--------|----------------|
+| A haut ⇏ E haut | **prouvé** (nuancé) | **Cas 3** et **cas 5** : A > 0, \(E=0\) |
+| E haut ⇏ A haut | **nuancé** | difficile avec Disp = σ : un retournement d'amplitude non nulle force souvent Disp > 0. Contre-exemple limite : deux incréments opposés égaux et le reste nul — A > 0 aussi. En pratique, \(E>0\) ⇒ Disp centrée **souvent** > 0 ; l'implication inverse est la faille claire |
+
+**Conclusion :** A et D sont **mathématiquement distincts**. La distinction
+irréductible se lit sur les trajectoires **monotones non-stationnaires
+en incréments** (accélération, saut unique). **Aucun** score combiné
+A+D.
+
+### 14A.6 Échelle \(m\) — trois statuts
+
+| Option | Contenu | Évaluation |
+|--------|---------|------------|
+| **M1** \(m\) indépendant | nouvel hyperparamètre de \(Z\) | liberté max ; snooping max ; justification lourde |
+| **M2** \(m:=W\) (ou lien déterministe) | dérivé de la fenêtre de représentation | parcimonieux ; couple horizon d'état et horizon de \(X\)/\(S\) ; **\(W\) non accepté** pour I02 |
+| **M3** minimal structurel | ex. \(\lvert\Delta L_t\rvert\) seul | élimine \(m\) mais détruit la sémantique « régime » (trop local, pas de chemin) |
+
+**\(m=W\) — arguments :**
+
+| Pour | Contre |
+|------|--------|
+| même cutoff informationnel | horizon d'état ≠ horizon de représentation |
+| même échelle locale | couplage artificiel |
+| pas d'hyperparamètre temporel **supplémentaire** | \(W\) lui-même OPEN pour I02 |
+| alignement conceptuel query/état | l'instabilité peut exiger une autre profondeur |
+
+**Verdict documentaire \(m=W\) :** `DEFENSIBLE BUT NOT FORCED`.
+
+**Statut de \(m\) :** `UNRESOLVED` — pas de valeur ; pas d'acceptation
+de M1/M2/M3. Recommandation documentaire : **ne pas** inventer un
+\(m\) libre avant d'avoir tranché A vs D sémantiquement ; si une
+échelle est nécessaire, **M2 est la seule option parcimonieuse
+non rejetée**, sans être forcée.
+
+### 14A.7 Double fenêtre
+
+Chaîne :
+
+\[
+(r_s)_{s\le t}
+\;\longrightarrow\;
+RV_t\ ({\sim}W)
+\;\longrightarrow\;
+(L_{t-m+1},\ldots,L_t)
+\;\longrightarrow\;
+Z_t
+\]
+
+| Effet | Conséquence |
+|-------|-------------|
+| Mémoire effective | empan historique \(\approx W+(m-1)\) pas (chevauchements de fenêtres \(RV\)) — **plus long** que \(m\) nominal |
+| Chevauchement | \(RV_t\) et \(RV_{t-1}\) partagent \(W-1\) rendements ⇒ \(\Delta L\) **sériellement dépendant** même si \(r\) est faible mémoire |
+| Lissage implicite | \(RV\) agrège déjà ; \(Z\) agrège des \(RV\) — double lissage |
+| \(W\) multi-rôles | même lettre pour représentation \(X/S\) et pour construction de \(L\) : risque de confusion de rôles si \(m=W\) |
+
+Pas de résolution empirique.
+
+### 14A.8 Singularités (aucun \(\varepsilon\))
+
+| Cas | Statut |
+|-----|--------|
+| \(RV=0\) | \(L\) **indéfini** |
+| \(\mathrm{TV}=0\) | \(E=0\) ; \(E/\mathrm{TV}\) **indéfini** |
+| \(\Delta L=0\) | neutre pour \(E\) ; pour SF : règle de signe **non fixée** |
+| Disp avec < 2 incréments non triviaux | Disp centrée mal définie / dégénérée selon Disp |
+| Plateaux | admissibles ; cas 5 |
+
+### 14A.9 Revue adversariale
+
+**Attaques sur A :**
+
+| Attaque | Évaluation |
+|---------|------------|
+| Version multi-point de \(D\) ? | **non** en généricité Disp ; oui seulement sous collapse biparti |
+| Bruit par différenciation | **oui** — coût réel |
+| Choc unique domine Disp | **oui** (cas 5) — peut être fidèle ou indésirable selon sémantique |
+| Accélération monotone = « instable » | **oui** (cas 3) — tension avec « régime établi en transition » |
+| Dépendance Disp et \(m\) | **oui** — tous deux UNFIXED |
+
+**Attaques sur D-\(E\) :**
+
+| Attaque | Évaluation |
+|---------|------------|
+| Ignore accélération / saut monotone | **oui** (cas 3, 5) — **feature ou bug** selon réponse §14A.4 |
+| SF trop sensibles au bruit | **oui** pour D-sign-flips |
+| \(E\) dominé par amplitude | \(E\) croît avec l'ampleur des allers-retours ; \(E/\mathrm{TV}\) y remédie au prix de \(\mathrm{TV}=0\) |
+| Backtracking ≠ regime instability | objection sémantique restante — le terme démontré est backtracking, pas « instabilité » au sens large |
+| Dépendance à \(m\) | **oui** |
+
+### 14A.10 Verdicts (aucune acceptation)
+
+| Objet | Verdict |
+|-------|---------|
+| **A** | `PROMISING` (confirmé ; tensions cas 3 et 5) |
+| **D-TV-NET** (\(E\)) | `PROMISING` (objet mathématique le plus propre de D) |
+| **D-sign-flips** | `WEAK` — discrétisation grossière du même concept que \(E\) ; règle \(\mathrm{sign}(0)\) OPEN ; bruyant |
+| **\(m=W\)** | `DEFENSIBLE BUT NOT FORCED` |
+
+**Réponses imposées :**
+
+1. **A et D distincts ?** **Oui** (cas 3, 5).
+2. **Plus direct pour « volatility-regime instability » ?**
+   Dépend de la réponse au cas 5. Si instabilité = **erratisme /
+   non-établissement du chemin** ⇒ **D-\(E\)** plus direct. Si
+   instabilité = **non-constance des variations du niveau
+   multiplicatif** ⇒ **A** plus direct. **Non tranché** —
+   décision humaine sémantique suivante.
+3. **Statut de l'autre :** l'objet non retenu comme primaire devrait
+   rester au minimum **robustness / alternative mechanism
+   préenregistrable** (esprit §9.16), **pas** rejeté sans la décision
+   cas 5 — sauf D-sign-flips, déjà `WEAK` comme membre secondaire.
+
+\[
+\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\]
+
+**Recommandation documentaire (étape suivante) :** trancher
+**humainement** la question du cas 5 (transition vs instabilité),
+**puis** seulement figer A vs \(E\) ; traiter \(m\) ensuite, avec
+préférence documentaire pour éviter un \(m\) libre (M1) tant que
+possible. Pas de Disp choisie ; pas de combinaison A+D ; pas de
+donnée.
+
+### 14A.11 Cohérence
+
+| Contrôle | OK |
+|----------|-----|
+| B/C non rouverts | oui |
+| Pas de nouveau candidat diluant | oui |
+| Pas de Disp / \(m\) / \(W\) / \(\varepsilon\) choisis | oui |
+| Pas de données marché | oui |
+| Décisions ACCEPTED antérieures intactes | oui |
+| I02 NOT OPENED | oui |
+
+---
+
 ## 15. Market-State / Regime Engine
 
 **Aucun contrat empirique n'est dérivé d'I01.** Aucune architecture
@@ -1695,29 +1968,28 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 Ne pas résoudre dans ce draft :
 
-- **choix de \(Z_t\)** (familles A/D `PROMISING` ; aucune acceptée) ;
-- forme exacte dans D (TV−\|net\| vs sign-flips vs autre) ;
-- fenêtre \(m\) / fonctionnelle de dispersion si A ou D ;
+- **choix A vs \(E\)** (dépend de la décision sémantique cas 5) ;
+- Disp (UNFIXED) ; \(m\) (UNRESOLVED ; \(m=W\) défendable non forcé) ;
+- forme \(E/\mathrm{TV}\) (non acceptée) ; règle sign(0) ;
 - définition protocolaire du « désaccord matériel » sous §9.16 ;
 - détail d'agrégation \(L\)+forme dans l'opérateur kNN ;
 - Spearman / CRPS / inférence dépendance temporelle ;
 - temporal redundancy control du pool ;
 - z-score / rangs / CDF / Mahalanobis / poids appris ;
-- singularités (\(RV=0\), …) — pas d'\(\varepsilon\) ;
+- singularités (\(RV=0\), \(\mathrm{TV}=0\) pour ratios) — pas d'\(\varepsilon\) ;
 - \(W\), \(h\), \(k\), partage 10+10 ; holdout ; Market-State Engine.
 
 **CLOSED :**
 
 - doctrine §9.16 ; \(\mathcal{M}_{S3}\), \(\mathcal{M}_{S2}\) ;
-- chemin « chart suivant » pour \(S_3\) ;
-- framing primaire \(C_t\) binaire « stress » (abandonné au profit
-  de la revue \(Z_t\), sans acceptation de \(Z\)).
+- B `REJECT`, C `WEAK` (non rouverts) ;
+- D-sign-flips comme candidat primaire (`WEAK`) ;
+- framing \(C_t\) binaire stress.
 
 **Accepté :** \(S_1/S_2/S_3\) ; invariant multiplicatif ; §9.16 locale
 I02.
 
-**Documentés :** H1-v0.2 ; \(V_{t,h}\) ; CRPS ; M1–M9 ; §9.15 ;
-revue \(Z_t\) §14 (`NO Z ACCEPTED`).
+**Documentés :** §14 ; §14A (A vs D, \(m\)) ; `NO Z ACCEPTED`.
 
 ---
 
@@ -1729,8 +2001,11 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 
 - [ ] Hypothèse finale approuvée (H1-v0.2 reste une candidate)
 - [x] Doctrine §9.16 **acceptée** ; métriques pré-cadrage **CLOSED**
-- [x] Revue documentaire \(Z_t\) (§14) — **aucune** \(Z\) acceptée
-- [ ] Variable d'état \(Z_t\) **choisie** (sans calibration E04)
+- [x] Revue documentaire \(Z_t\) (§14) + A vs D / \(m\) (§14A) —
+      **aucune** \(Z\) acceptée
+- [ ] Décision sémantique **cas 5** (transition vs instabilité) ;
+      puis choix A vs \(E\)
+- [ ] Statut de \(m\) tranché (éviter M1 si possible)
 - [x] Représentations \(S_1/S_2/S_3\) **acceptées**
 - [x] Invariant multiplicatif **accepté**
 - [ ] Observable futur **approuvé** (\(V_{t,h}\) candidat)
@@ -1750,8 +2025,8 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 |----------|--------|
 | Aucun chiffre / donnée / CRPS | oui |
 | \(S_1/S_2/S_3\) / §9.16 inchangés | oui |
-| Revue A/B/C/D documentée | oui |
-| B `REJECT` (trend) ; A/D `PROMISING` | oui |
+| Revue A/B/C/D + §14A A vs D / \(m\) | oui |
+| B `REJECT` ; D-SF `WEAK` ; A et \(E\) `PROMISING` | oui |
 | `NO Z_t ACCEPTED` | oui |
 | I01 CLOSED ; I02 NOT OPENED | oui |
 
