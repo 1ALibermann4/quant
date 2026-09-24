@@ -16,6 +16,7 @@
 > **Draft v0.6 Q vs φ review :** `8b652f7`
 > **Draft v0.7 metric robustness :** `2a92da7`
 > **Draft v0.8 accept §9.16 :** `ceb224c`
+> **Draft v0.9 Z_t review :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -38,11 +39,12 @@ REPRESENTATION ACCEPTED / METRIC ROBUSTNESS SETS ACCEPTED
 **acceptée** (`c85476c`).
 
 **Invariant de niveau :** proximité multiplicative (§9.14) — accepté.
-**Doctrine §9.16 :** `ACCEPTED` (locale I02) —
-\(\mathcal{M}_{S3}=\{d_Q,d_\phi\}\) (aucune primaire) ;
-\(\mathcal{M}_{S2}=\{d_2,d_1\}\) (\(d_2\) PRIMARY, \(d_1\) ROBUSTNESS
-VARIANT). **Sujet métrique pré-cadrage : CLOSED.** Prochaine
-décision conceptuelle : \(C_t\). I02 reste `NOT OPENED`.
+**Doctrine §9.16 :** `ACCEPTED` (locale I02) — \(\mathcal{M}_{S3}\),
+\(\mathcal{M}_{S2}\) figés ; sujet métrique pré-cadrage **CLOSED**.
+
+**État / conditionnement :** pivot documentaire \(C_t\) binaire →
+\(Z_t\) (instabilité de régime de volatilité) — §14 ; **aucune**
+\(Z_t\) acceptée. I02 reste `NOT OPENED`.
 
 ---
 
@@ -1390,19 +1392,294 @@ Un kill n'est pas un SCI-FAIL d'I01.
 
 ---
 
-## 14. Stress / market condition — définition non résolue
+## 14. Candidate causal state variable \(Z_t\) — volatility-regime instability review
 
-**OPEN QUESTION.** Inchangé dans l'esprit du draft v0.1.
+**Nature :** documentaire / adversariale. **Aucune donnée.** Aucune
+\(Z_t\) acceptée. I02 reste `NOT OPENED`.
 
-Interdit comme définition : années 2008 / 2009 / 2020 ; seuil `rv_W`
-ou tertile relu en règle après E04.
+**Décisions antérieures non rouvertes :** \(S_1/S_2/S_3\), invariant
+multiplicatif, §9.16 / \(\mathcal{M}_{S2}\), \(\mathcal{M}_{S3}\).
 
-Principes toujours exigés : causalité ; disponibilité à \(t\) ; gel
-avant expérimentation ; indépendance maximale vis-à-vis du générateur ;
-simplicité ; interprétabilité ; **pas** d'optimisation sur \(D_{vol}\)
-ni sur \(D^{\mathrm{CRPS}}\).
+### 14.0 Pivot conceptuel — abandonner \(C_t\) binaire comme framing principal
 
-**Aucune définition n'est choisie.**
+E04 a généré une observation exploratoire : l'intérêt relatif de la
+géométrie \(X\) **semblait** dépendre de l'état du marché et se
+concentrer dans certaines périodes de forte turbulence.
+
+E04 **n'a pas** identifié :
+
+- qu'un régime « stress » binaire existe ;
+- un seuil de stress ;
+- que 2008 / 2009 / 2020 définissent ce régime ;
+- que le tertile supérieur observé soit une frontière ;
+- la cause du phénomène.
+
+\[
+\text{E04 generated « state dependence ».}
+\quad
+\text{E04 did NOT identify the nature of the state.}
+\]
+
+Tout choix visant à **reproduire** les épisodes favorables d'E04 =
+**conceptual snooping**.
+
+**Framing abandonné comme primaire :** \(C_t=\) condition binaire de
+stress.
+
+**Problème candidat :**
+
+\[
+Z_t=\text{causal market-state variable}
+\]
+
+**Sémantique primaire candidate :**
+
+\[
+\text{VOLATILITY-REGIME INSTABILITY STATE}
+\]
+
+\(Z_t\) doit représenter à quel point le **niveau local de volatilité
+est stable ou instable dans le temps** — pas le niveau lui-même, pas
+« stress » général, pas drawdown, panique, crise, direction baissière,
+ni mémoire sérielle générale.
+
+Exemples **sémantiques uniquement** (non calculés) :
+
+| \(L\) | \(Z\) | Lecture candidate |
+|-------|-------|-------------------|
+| bas | bas | faible volatilité stable |
+| haut | bas | volatilité élevée, régime **établi** |
+| bas / modéré | haut | transition / instabilité |
+| haut | haut | volatilité élevée **et** instable |
+
+### 14.1 Ce que capturent déjà les adversaires (rappel)
+
+| Objet | Rôle | N'est pas |
+|-------|------|-----------|
+| \(RV\) / \(L=\log RV\) | niveau d'amplitude | instabilité du régime |
+| \(D=\log(RV^{\mathrm{late}}/RV^{\mathrm{early}})\) | dynamique relative **grossière** (deux blocs) | roughness fine du chemin de \(L\) |
+| \(Q=MA/RV=\cos\phi\) | hétérogénéité du profil d'amplitudes \(\lvert r\rvert\) | **entropie** (interdit) ; pas \(\phi\)-métrique seule |
+
+Information partagée avec \(Z\) : acceptable. Identité triviale
+avec \(L\), \(D\) ou \(Q\) : **non**.
+
+### 14.2 Exigences Z1–Z8 (grille d'examen)
+
+| ID | Exigence |
+|----|----------|
+| **Z1** | Causalité : \(Z_t\) \(\mathcal{F}_t\)-mesurable |
+| **Z2** | Invariance d'échelle sous \(r\mapsto c r\) (\(c>0\)), alignée sur l'invariant multiplicatif |
+| **Z3** | Non-identité monotone / quasi-identique avec \(L\), \(D\), \(Q\) |
+| **Z4** | Fidélité : instabilité de régime, pas niveau / stress directionnel / drawdown / mémoire / crise |
+| **Z5** | Faible paramétrisation |
+| **Z6** | Aucune calibration E04 / 2008–2020 / tertile / \(D_{vol}\) / CRPS |
+| **Z7** | Interprétabilité mathématique explicite |
+| **Z8** | Domaines et singularités **identifiés** ; **aucun** \(\varepsilon\) choisi |
+
+### 14.3 Point central — trend vs instability
+
+Séquences conceptuelles de \(L\) (pas de données marché) :
+
+\[
+\text{A (tendance régulière) :}\quad
+1.0,\;1.1,\;1.2,\;1.3,\;1.4
+\]
+
+\[
+\text{B (erratique) :}\quad
+1.0,\;1.4,\;0.9,\;1.5,\;1.1
+\]
+
+Une bonne \(Z\) d'instabilité de régime doit expliquer **pourquoi**
+elle traite (ou non) A et B différemment. Une \(Z\) élevée pour A
+**et** B n'opérationnalise probablement **pas** la sémantique
+retenue.
+
+### 14.4 Famille A — variation de la log-volatilité
+
+**Objets types (non figés) :** \(\Delta L_t=L_t-L_{t-1}\) ;
+puis mesure causale de variabilité récente de \(\{\Delta L\}\)
+(RMS, MAD, écart-type empirique, moyenne de \(\lvert\Delta L\rvert\), …)
+sur une fenêtre \(m\).
+
+| Q | Réponse |
+|---|---------|
+| A. Mesure | Amplitude des **changements** du niveau multiplicatif |
+| B. \(r\mapsto cr\) | \(L\mapsto L+\log c\) ⇒ \(\Delta L\) invariant ⇒ variabilité de \(\Delta L\) invariante |
+| C. ≠ \(L\) | oui (niveau vs dynamique locale) |
+| D. ≠ \(D\) | oui en général : \(D\) = contraste **deux blocs** ; A = roughness du chemin. Risque de redondance partielle si \(m\) et la construction collapsent vers un contraste biparti |
+| E. ≠ \(Q\) | oui : \(Q\) porte sur le profil \(\lvert r\rvert\), pas sur la trajectoire de \(L\) |
+| F. high-\(L\) stable vs instable | un régime élevé **plat** : \(\Delta L\approx 0\) ⇒ \(Z\) bas ; erratique ⇒ \(Z\) haut |
+| G. Trend A | \(\Delta L\) **constant** ⇒ dispersion de \(\Delta L\) **basse** ⇒ A **non** « instable ». Souhaitable pour Z4 |
+| H. Params | au moins \(m\) ; choix de la fonctionnelle de dispersion |
+| I. Singularités | \(RV=0\) ⇒ \(L\) indéfini ; fenêtre trop courte ; demi-vols nulles si \(RV\) hérite de singularités amont |
+| J. Causal | oui si indices \(\le t\) |
+| K. Fenêtre | oui — \(m\) libre (Z5) |
+| L. ≈ \(D\) ? | pas identité ; cousin possible si on ne retient que des agrégats grossiers |
+
+**Trend vs instability :** A faible, B élevé (si dispersion de
+\(\Delta L\)). Aligné.
+
+**Verdict A :** `PROMISING` — **≠** `ACCEPTED`.
+
+### 14.5 Famille B — dispersion des niveaux de log-volatilité
+
+**Objets types :** \(\operatorname{disp}(L_{t-m+1},\ldots,L_t)\)
+(écart-type, range, IQR, …).
+
+| Q | Réponse |
+|---|---------|
+| A. Mesure | Étendue / dispersion des **niveaux** \(L\) dans la fenêtre |
+| B. Invariance | oui (translation de \(L\) sous \(r\mapsto cr\)) |
+| C–E. ≠ \(L,D,Q\) | ≠ \(L\) (dispersion) ; cousin de \(D\)/range pour trends ; ≠ \(Q\) |
+| F–G. Trend | **échec sémantique central** : la séquence A a un **range** de \(L\) élevé (0,4) alors que le régime « change » de façon parfaitement régulière. Confond **drift / trend** avec **instabilité erratique** |
+| H–K. | \(m\) + choix de disp ; causal OK ; forte dépendance à \(m\) |
+| L. ≈ \(D\) | range / contraste biparti voisins de \(D\) sous trend monotone |
+
+**Verdict B :** `REJECT` comme opérationnalisation de *volatility-regime
+instability* (échoue le test trend vs instability). Utile seulement
+comme **contre-exemple** documentaire.
+
+### 14.6 Famille C — vol-of-vol relatif (échelle RV)
+
+**Objets types :** \(\operatorname{variability}(RV)/\operatorname{level}(RV)\)
+sans formule figée (CV, std/mean, …).
+
+| Q | Réponse |
+|---|---------|
+| A. Mesure | Variabilité relative du niveau **additif** de \(RV\) |
+| B. Invariance | oui si numérateur et dénominateur homogènes de degré 1 en \(RV\) |
+| C–E. | distincts de \(L,D,Q\) en général |
+| F–G. Trend | drift régulier de \(RV\) gonfle encore la variabilité des niveaux — même confusion drift/instabilité que B, souvent pire hors espace log |
+| H. | \(m\) + choix var/level |
+| I. | \(RV=0\) au dénominateur ; non choisi \(\varepsilon\) |
+| L. | risque de faux vol-of-vol porté par le niveau si forme mal homogène ; moins aligné que A sur l'invariant multiplicatif |
+
+**Verdict C :** `WEAK` — invariance possible, mais sémantique et
+alignement multiplicatif **inférieurs** à une formulation dans
+l'espace \(\Delta L\) (famille A).
+
+### 14.7 Famille D — alternatives à faible paramétrisation
+
+Revue **mathématique** uniquement (pas SPY). Candidats conceptuels :
+
+1. **\(\lvert\Delta L_t\rvert\) instantané** — 0 paramètre de fenêtre
+   extra (au-delà de la définition de \(RV\)/\(W\) déjà héritée).
+   Causal, invariant. Très local ; bruyant ; ne résume pas une
+   « instabilité de régime » sur plusieurs pas.
+
+2. **Variation totale vs déplacement net** sur \(m\) pas :
+   \[
+   \mathrm{TV}_m(L)=\sum_{j=0}^{m-2}\lvert\Delta L_{t-j}\rvert,
+   \qquad
+   \lvert L_t-L_{t-m+1}\rvert
+   \]
+   L'écart \(\mathrm{TV}_m-\lvert\mathrm{net}\rvert\) (ou le ratio
+   quand le net \(\neq 0\)) isole le **détour** au-delà de la tendance
+   monotone. Sépare A (TV≈|net|) de B (TV≫|net|). Un paramètre \(m\).
+   Singularité du ratio si net\(=0\) (régime plat oscillant) — le
+   résidu \(\mathrm{TV}-\lvert\mathrm{net}\rvert\) évite une division.
+
+3. **Comptage de changements de signe de \(\Delta L\)** (réversions)
+   dans une fenêtre — invariant d'échelle, discrete, distingue tendance
+   monotone (0 réversion) d'un chemin erratique. Paramètre \(m\) ;
+   sensible à la quantification / bruits de signe.
+
+| Q | Réponse synthétique |
+|---|---------------------|
+| Trend vs instability | (2) et (3) **conçus** pour le test A vs B |
+| ≠ \(L,D,Q\) | oui en général ; (2) n'est pas \(D\) |
+| Params | souvent 1 (\(m\)), parfois 0 pour \(\lvert\Delta L\rvert\) |
+| Risque | sophistication inutile si on empile trop ; \(m\) reste libre |
+
+**Verdict D :** `PROMISING` pour les formes (2)–(3) ; `INCONCLUSIVE`
+sur **quelle** forme exacte — **aucune** formule acceptée.
+
+### 14.8 Tableau comparatif
+
+| Famille | Sémantique | Inv. échelle | Causal | vs \(L/D/Q\) | Params | Singularités | Trend vs instab. | Avantage | Objection |
+|---------|------------|--------------|--------|--------------|--------|--------------|------------------|----------|-----------|
+| **A** \(\operatorname{disp}(\Delta L)\) | roughness du niveau multiplicatif | oui | oui | ≠ ; cousin partiel de \(D\) | \(m\), fonctionnelle | \(RV=0\) | A bas / B haut | aligné Z2–Z4 | \(m\) libre ; bruit |
+| **B** \(\operatorname{disp}(L)\) | étendue des niveaux | oui | oui | cousin \(D\) sous trend | \(m\) | \(RV=0\) | **échoue** (A haut) | simple | confond drift et instabilité |
+| **C** var\((RV)\)/level\((RV)\) | vol-of-vol relatif additif | si homogène | oui | distinct | \(m\) | div. par 0 | faible / confus | classique | inférieur au log ; faux voV |
+| **D** TV−\|net\| / sign flips | détour / réversions | oui | oui | distinct | \(0\)–\(1\) | net\(=0\) si ratio | **conçu** pour A≠B | faible param ; test clair | forme exacte non unique |
+
+### 14.9 Revue adversariale (tentative de réfutation)
+
+| Attaque | Cible | Évaluation |
+|---------|-------|------------|
+| Redondance cachée avec \(D\) | A, B | B : fort sous trend. A/D : faible si on mesure la roughness / les réversions, pas un contraste biparti |
+| Fenêtre obligatoire | A, B, C, D(2–3) | vrai — Z5 non trivial ; seul \(\lvert\Delta L_t\rvert\) échappe en partie |
+| Non-stationnarité | tous | \(Z\) décrit un état local ; ne « résout » pas la non-stationnarité globale |
+| Amplification du bruit | A, D | \(\Delta L\) différencie — bruit haute fréquence ↑ \(Z\) ; peut être fidèle ou indésirable selon sémantique |
+| Singularités | tous | \(L=\log RV\) hérite de \(RV=0\) ; pas d'\(\varepsilon\) |
+| Faux vol-of-vol par niveau élevé | C surtout ; B | A/D en \(\Delta L\) résistent mieux (Z2) |
+| Confusion trend / instabilité | **B**, souvent **C** | éliminatoire pour B |
+| Sophistication inutile | D empilé | préférer une forme minimale si D retenu |
+| Paramètre caché | tout « lissage » non déclaré | interdit |
+| Incohérence invariant multiplicatif | objets en \(RV\) brut mal normalisés | préférer espace \(L\) / \(\Delta L\) |
+
+**Mécanismes alternatifs — documentés, non promus comme \(Z\) principal :**
+
+| Mécanisme | Raison de ne pas fusionner avec I02 maintenant |
+|-----------|--------------------------------------------------|
+| Asymétrie downside / directionnelle | ajoute le signe absent des adversaires magnitude-only ; risque de favoriser structurellement \(X\) |
+| État de mémoire sérielle / ordre temporel | intéressant, trop proche de l'avantage structurel potentiel d'un \(X\) ordonné |
+
+Pistes **disponibles** pour de futures investigations — **pas** fusionnées
+ici.
+
+### 14.10 Rappels structurels (non acceptés ici)
+
+Structure statistique **candidate** seulement :
+
+\[
+Z_t \;\longrightarrow\;
+\Delta_t^{(S)}=\operatorname{Score}_S(t)-\operatorname{Score}_X(t)
+\;\longrightarrow\;
+\operatorname{Spearman}(Z,\Delta^{(S)})
+\]
+
+(si score « lower is better » : \(\Delta>0\) ⇒ \(X\) meilleur que \(S\) ;
+\(\rho>0\) ⇒ avantage relatif de \(X\) tend à croître avec \(Z\)).
+
+Spearman, CRPS, inférence sous dépendance temporelle : **OPEN** —
+pas de protocole statistique dans ce mandat.
+
+**Pool de voisins (doctrine candidate) :** \(Z_t\) décrit l'état de la
+**query** ; \(Z_t\) **ne filtre pas** les voisins. Pool commun
+\(P_t^X=P_t^{S_1}=P_t^{S_2}=P_t^{S_3}\) avec au minimum
+\(s+h\le t\). Contrôle de redondance temporelle : **OPEN**.
+
+### 14.11 Verdicts documentaires (aucune acceptation)
+
+| Famille | Verdict | Note |
+|---------|---------|------|
+| **A** | `PROMISING` | meilleure alignement sémantique + invariant multiplicatif parmi les familles « classiques » |
+| **B** | `REJECT` | échoue trend vs instability |
+| **C** | `WEAK` | possible mais dominé par A en espace log |
+| **D** | `PROMISING` / forme exacte `INCONCLUSIVE` | TV−\|net\| et sign-flips : candidats mathématiques forts |
+
+\[
+\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\]
+
+**Meilleur(s) candidat(s) purement mathématiques (non acceptés) :**
+dispersion causale de \(\Delta L\) (A) ; résidu de variation totale
+ou comptage de réversions (D). **Prochaine décision humaine :**
+choisir sémantiquement/mathématiquement **sans** valeur SPY.
+
+### 14.12 Cohérence
+
+| Contrôle | OK |
+|----------|-----|
+| Pas de donnée / SPY / run | oui |
+| Pas de seuil / quantile / 2008–2020 | oui |
+| Pas d'\(\varepsilon\) | oui |
+| \(S_1/S_2/S_3\) / §9.16 inchangés | oui |
+| \(C_t\) binaire non choisi | oui |
+| Aucune \(Z_t\) acceptée | oui |
+| I02 NOT OPENED | oui |
 
 ---
 
@@ -1410,7 +1687,7 @@ ni sur \(D^{\mathrm{CRPS}}\).
 
 **Aucun contrat empirique n'est dérivé d'I01.** Aucune architecture
 modifiée. I02, s'il est autorisé plus tard, pourra ou non informer
-ce contrat.
+ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 ---
 
@@ -1418,29 +1695,29 @@ ce contrat.
 
 Ne pas résoudre dans ce draft :
 
-- définition de \(C_t\) (**prochaine** décision conceptuelle) ;
+- **choix de \(Z_t\)** (familles A/D `PROMISING` ; aucune acceptée) ;
+- forme exacte dans D (TV−\|net\| vs sign-flips vs autre) ;
+- fenêtre \(m\) / fonctionnelle de dispersion si A ou D ;
 - définition protocolaire du « désaccord matériel » sous §9.16 ;
-- détail d'agrégation \(L\)+forme dans l'opérateur kNN (protocole ;
-  **pas** de nouvelle métrique / chart) ;
+- détail d'agrégation \(L\)+forme dans l'opérateur kNN ;
+- Spearman / CRPS / inférence dépendance temporelle ;
+- temporal redundancy control du pool ;
 - z-score / rangs / CDF / Mahalanobis / poids appris ;
-- convention aux singularités (\(RV=0\), demi-vol nulle) — pas d'\(\varepsilon\) ;
-- \(W\), \(h\), \(k\), partage 10+10 ; holdout ; CRPS final ; Market-State Engine.
+- singularités (\(RV=0\), …) — pas d'\(\varepsilon\) ;
+- \(W\), \(h\), \(k\), partage 10+10 ; holdout ; Market-State Engine.
 
-**CLOSED (pré-cadrage métrique) :**
+**CLOSED :**
 
-- doctrine §9.16 ;
-- \(\mathcal{M}_{S3}=\{d_Q,d_\phi\}\) ;
-- \(\mathcal{M}_{S2}=\{d_2,d_1\}\) ;
-- chemin « chart suivant » pour \(S_3\).
+- doctrine §9.16 ; \(\mathcal{M}_{S3}\), \(\mathcal{M}_{S2}\) ;
+- chemin « chart suivant » pour \(S_3\) ;
+- framing primaire \(C_t\) binaire « stress » (abandonné au profit
+  de la revue \(Z_t\), sans acceptation de \(Z\)).
 
-**Accepté :**
+**Accepté :** \(S_1/S_2/S_3\) ; invariant multiplicatif ; §9.16 locale
+I02.
 
-- \(S_1=[RV]\), \(S_2=[RV,D]\), \(S_3=[RV,Q]\) ;
-- invariant multiplicatif \(\delta_{\mathrm{level}}=\lvert\Delta L\rvert\) ;
-- charts \(S^\star\) (≠ représentations) ;
-- §9.16 locale I02 ; \(\mathcal{M}_{S3}\), \(\mathcal{M}_{S2}\).
-
-**Documentés :** H1-v0.2 ; \(V_{t,h}\) ; CRPS ; M1–M9 ; §9.15.
+**Documentés :** H1-v0.2 ; \(V_{t,h}\) ; CRPS ; M1–M9 ; §9.15 ;
+revue \(Z_t\) §14 (`NO Z ACCEPTED`).
 
 ---
 
@@ -1451,12 +1728,11 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 **I02 = NOT OPENED.**
 
 - [ ] Hypothèse finale approuvée (H1-v0.2 reste une candidate)
-- [x] Doctrine §9.16 **acceptée** (locale I02) ; \(\mathcal{M}_{S3}\),
-      \(\mathcal{M}_{S2}\) figés — sujet métrique pré-cadrage **CLOSED**
-- [ ] Condition de marché \(C_t\) définie ex ante (§14)
-- [x] Représentations adversaires \(S_1/S_2/S_3\) **acceptées**
-- [x] Invariant multiplicatif du niveau **accepté** ; charts \(S^\star\)
-- [x] Chemin « chart suivant pour \(S_3\) » **fermé**
+- [x] Doctrine §9.16 **acceptée** ; métriques pré-cadrage **CLOSED**
+- [x] Revue documentaire \(Z_t\) (§14) — **aucune** \(Z\) acceptée
+- [ ] Variable d'état \(Z_t\) **choisie** (sans calibration E04)
+- [x] Représentations \(S_1/S_2/S_3\) **acceptées**
+- [x] Invariant multiplicatif **accepté**
 - [ ] Observable futur **approuvé** (\(V_{t,h}\) candidat)
 - [ ] Score probabiliste **approuvé** (CRPS = acceptable candidate)
 - [ ] Rôle de `H_shape` défini
@@ -1473,11 +1749,10 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 | Contrôle | Statut |
 |----------|--------|
 | Aucun chiffre / donnée / CRPS | oui |
-| \(S_1/S_2/S_3\) inchangés | oui |
-| §9.16 `ACCEPTED` ; \(\mathcal{M}\) figés | oui |
-| Locale I02 ; pas de règle QDP globale | oui |
-| Sujet métrique pré-cadrage CLOSED | oui |
-| \(C_t\) encore OPEN | oui |
+| \(S_1/S_2/S_3\) / §9.16 inchangés | oui |
+| Revue A/B/C/D documentée | oui |
+| B `REJECT` (trend) ; A/D `PROMISING` | oui |
+| `NO Z_t ACCEPTED` | oui |
 | I01 CLOSED ; I02 NOT OPENED | oui |
 
 ---
