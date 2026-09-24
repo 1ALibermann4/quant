@@ -39,13 +39,15 @@ P0 (contrats, invariants) ──► I01 (SCI voisinage) ──► I02+ / PRED (s
 
 ```text
 I01/
-├── README.md              ← ce document
-├── hypothesis.md          H₀, H₁, définitions mathématiques
-├── protocol.md            Protocole expérimental complet
-├── configuration.yaml     Paramètres figés (sans source data)
-├── evaluation_closure.md  (à créer post-exécution)
-└── experiments/           (vide — interdit avant revue protocole)
+├── README.md
+├── hypothesis.md
+├── protocol.md
+├── configuration.yaml
+├── experiments/E01/       I01-E01 exploratoire UNQUALIFIED (pas un SCI)
 ```
+
+I01 confirmatoire reste bloqué par DR-003 ∧ DR-005. I01-E01 (DR-007 / DR-008)
+n'est pas une validation scientifique.
 
 ## Documents normatifs I01
 

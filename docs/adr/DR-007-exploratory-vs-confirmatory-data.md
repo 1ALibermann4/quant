@@ -200,9 +200,9 @@ de DR-007, et n'effacerait pas L-13.
 
 | ID | Objet | Déclencheur |
 |----|-------|-------------|
-| DEF-E-01 | Sélection d'une source exploratoire (éventuellement une bibliothèque gratuite déjà FAIL en confirmatoire) | DR-007 ACCEPTED |
-| DEF-E-02 | Marquage concret des artefacts `UNQUALIFIED` (chemin, en-tête, type C01) | DR-007 ACCEPTED + DEF-E-01 |
-| DEF-E-03 | Première exécution exploratoire d'I01 | DEF-E-01 + DEF-E-02 |
+| DEF-E-01 | Sélection d'une source exploratoire (éventuellement une bibliothèque gratuite déjà FAIL en confirmatoire) | **Déchargé** I01-E01 : [DR-008](DR-008-i01-e01-exploratory-source.md) (`yfinance` 1.6.0, UNQUALIFIED) |
+| DEF-E-02 | Marquage concret des artefacts `UNQUALIFIED` (chemin, en-tête, type C01) | **Déchargé** I01-E01 : `quant.exploratory.status` + `data/exploratory/` |
+| DEF-E-03 | Première exécution exploratoire d'I01 | **Déchargé** I01-E01 : [rapport](../../research/I01/experiments/E01/I01-E01-run-report.md) |
 | DEF-E-04 | Mise à jour d'une ligne `AGENTS.md` | **Déchargé** à l'acceptation (2026-09-24) |
 | DEF-E-05 | Reprise de l'envoi DR-003 et du dossier notices DR-005 | Décision humaine distincte ; pas un effet de DR-007 |
 
