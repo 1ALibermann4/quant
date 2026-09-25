@@ -428,5 +428,6 @@ READINESS = P2
 | Preregistration ID | I02-PREREG-v0.1 |
 | Design freeze commit | `260988b` |
 | Design freeze pin | `32b60c4` |
+| Preregistration commit | `344b128` |
 | Supersedes | *(none — first preregistration)* |
 | Draft history | [I02-hypothesis-draft.md](I02-hypothesis-draft.md) |
