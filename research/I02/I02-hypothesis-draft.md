@@ -1,10 +1,11 @@
-# I02 — Brouillon d'hypothèse (pré-investigation)
+# I02 — Brouillon d'hypothèse (historique de design)
 
-> **STATUS :** DRAFT / PRE-INVESTIGATION
-> **I02 :** NOT OPENED
-> **NO EXPERIMENT AUTHORIZED**
->
-> **Authority class :** RESEARCH (brouillon, non normatif)
+> **STATUS :** DESIGN HISTORY — core **FROZEN** (R2)
+> **I02 :** **OPEN**
+> **Scientific run :** NOT AUTHORIZED until HAT PASS
+> **Authority class :** RESEARCH (historique / rationale ; non normatif
+> pour l'exécution — le contrat normatif est
+> [I02-preregistration.md](I02-preregistration.md))
 > **Protocol :** QDP v0.1
 > **Parent :** I01 exploratoire CLOSE @ `116374b`
 > **Draft v0.1 :** `0e893c2`
@@ -36,14 +37,18 @@
 > **Draft v0.26 gated design closure :** `7781a6a`
 > **Draft v0.27 close k and bootstrap policy :** `260988b`
 > **Preregistration contract :** [I02-preregistration.md](I02-preregistration.md) @ `344b128`
+> **OPEN I02 :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
-Ce fichier **ne signifie pas** que I02 est ouvert.
-Aucun protocole, aucun run, aucun code expérimental I02 n'est autorisé.
+Ce fichier est l'**historique de design** (rationale). Le contrat
+exécutable est [I02-preregistration.md](I02-preregistration.md).
+Les sections datées ci-dessous peuvent encore dire `NOT OPENED` :
+c'est le statut **au moment de leur rédaction**, pas le statut
+courant.
 
 $$
-\text{observations I01} \neq \text{preuve de cette hypothèse candidate}
+\text{observations I01} \neq \text{preuve de H1-I02}
 $$
 
 E01–E04 ont **généré** la piste. Ils ne peuvent pas la valider.
@@ -83,7 +88,7 @@ objet multi-échelle ; no-primary.
 sensibilité prédéclarée \(\{20,40,80\}\) (diagnostic, no best-\(p\)).
 **Readiness :** §14M — **`R2` DESIGN CLOSED**.
 **Preregistration :** [I02-preregistration.md](I02-preregistration.md)
-— **`P2`** (may be opened ; HAT not built ⇒ not P3).
+— **`P2`** at open.
 \[
 \boxed{k=50\ \texttt{ACCEPTED}}
 \quad
@@ -94,9 +99,10 @@ sensibilité prédéclarée \(\{20,40,80\}\) (diagnostic, no best-\(p\)).
 \boxed{\texttt{P2}}
 \]
 \[
-\boxed{\text{I02 = NOT OPENED}}
+\boxed{\text{I02 = OPEN}}
 \]
-I02 reste `NOT OPENED`. Core design **non rouvert**.
+Core design **non rouvert**. Pas d'implémentation dans ce commit.
+Pas de run scientifique avant HAT PASS.
 
 ---
 
@@ -5434,52 +5440,45 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 ## 16. OPEN QUESTION — liste exacte
 
-Ne pas résoudre dans le **draft** (hors design core) :
+**Courant (post-OPEN) :**
 
-- décision humaine explicite **OPEN I02** ;
-- construction / PASS du HAT d'implémentation
-  ([I02-preregistration.md](I02-preregistration.md) §7) ;
-- holdout confirmatoire exact (avant run confirmatoire seulement) ;
-- DR-003 D-1 / DR-005 ACCEPTED ; snapshot C02 confirmatoire ;
+- HAT d'implémentation (construire + PASS) ;
+- premier run exploratoire sous DR-007 ;
+- holdout confirmatoire / C02 / DR-003 / DR-005 (voie SCI seulement) ;
 - Market-State Engine ; désaccord matériel §9.16 ;
   agrégation \(L\)+forme.
 
 **CLOSED :**
 
-- design core **R2** (§14M) ;
-- contrat de préinscription **P2**
-  ([I02-preregistration.md](I02-preregistration.md)).
+- design core **R2** ;
+- préinscription **P2** ;
+- **I02 = OPEN** (lifecycle).
 
 \[
 \boxed{\texttt{R2 — DESIGN CLOSED}}
 \quad
-\boxed{\texttt{P2 — MAY BE OPENED}}
+\boxed{\texttt{P2}}
 \quad
-\boxed{\text{I02 = NOT OPENED}}
+\boxed{\text{I02 = OPEN}}
 \]
 
 ---
 
-## 17. Before I02 can open
+## 17. Before I02 can open / post-OPEN checklist
 
-Décisions **humaines**. Tant que la dernière case n'est pas cochée :
-
-**I02 = NOT OPENED.**
+**I02 = OPEN** (décision humaine enregistrée).
 
 - [x] Design core **R2** (§14M)
 - [x] Contrat de préinscription
-      ([I02-preregistration.md](I02-preregistration.md)) — readiness **P2**
-- [x] Hypothèse preregistrable exacte ; unité de preuve \(S\times m\) ;
-      PASS/FAIL/INCONCLUSIVE ; kill ; holdout ; C02 split OPEN vs
-      confirmatoire ; HAT checklist ; change control
-- [ ] **Décision explicite OPEN I02**
-- [ ] HAT d'implémentation construit et **PASS** (après OPEN,
-      avant premier run scientifique)
+      ([I02-preregistration.md](I02-preregistration.md)) — **P2**
+- [x] Hypothèse / unité de preuve / verdicts / kill / holdout /
+      C02 split / HAT checklist / change control
+- [x] **Décision explicite OPEN I02**
+- [ ] HAT d'implémentation construit et **PASS** (avant premier
+      run scientifique)
 - [ ] (Confirmatoire seulement) DR-003 D-1 + DR-005 ACCEPTED ;
       C02 ; holdout figé
-- [ ] Rôle de `H_shape` / kill opérationnels fins si besoin hors
-      contrat déjà écrit
-- [x] Readiness design **R2** ; prereg **P2**
+- [x] Readiness design **R2** ; prereg **P2** ; lifecycle **OPEN**
 
 ---
 
@@ -5487,11 +5486,10 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 
 | Contrôle | Statut |
 |----------|--------|
-| Core design inchangé dans cette passe | oui |
-| Aucune donnée / expérience | oui |
-| Préinscription séparée du journal de design | oui |
-| C02 non exigé pour OPEN (DR-007) | oui |
-| R2 + P2 ; I02 NOT OPENED | oui |
+| Core design inchangé à l'OPEN | oui |
+| Préinscription scientifique inchangée (statut seulement) | oui |
+| Aucune donnée / expérience / implémentation dans l'OPEN | oui |
+| R2 + P2 ; **I02 = OPEN** | oui |
 
 ---
 

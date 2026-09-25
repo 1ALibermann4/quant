@@ -1,12 +1,13 @@
 # I02 — Preregistration & readiness contract
 
-> **STATUS :** PREREGISTRATION COMPLETE (document) — **not** I02 OPEN
-> **Authority class :** RESEARCH / PROTOCOL (normative for I02 if opened)
+> **STATUS :** PREREGISTRATION IN FORCE — **I02 = OPEN**
+> **Authority class :** RESEARCH / PROTOCOL (normative for I02)
 > **Protocol :** QDP v0.1
 > **Design readiness :** R2 — DESIGN CLOSED @ `260988b` (pin `32b60c4`)
-> **Prereg readiness :** **P2** — may be opened by explicit human decision
-> **I02 :** NOT OPENED
-> **NO EXPERIMENT AUTHORIZED** until OPEN + implementation HAT PASS
+> **Prereg readiness :** **P2** at open ; next = implementation + HAT
+> **I02 :** **OPEN**
+> **Scientific run :** NOT AUTHORIZED until implementation HAT PASS
+> **Opened at :** *(this OPEN commit)* — **before any I02 implementation**
 >
 > **Parent design history :** [I02-hypothesis-draft.md](I02-hypothesis-draft.md)
 > **Governance :** DR-007, DR-008, C02 v1.1, closure gates, MS-1…MS-4
@@ -16,9 +17,12 @@ redesign I02. Rationale and adversarial history live in the draft.
 Cross-references only.
 
 ```text
+I02 = OPEN
 CORE DESIGN = FROZEN
+PREREGISTRATION = UNCHANGED (status transition only)
 NO PARAMETER SEARCH
 NO DATA ANALYSIS IN THIS DOCUMENT
+NO IMPLEMENTATION IN THIS COMMIT
 ```
 
 ---
@@ -318,7 +322,7 @@ before confirmatory (§8 class C/D).
 
 | Goal | Requirements |
 |------|----------------|
-| **A. OPEN I02** (investigation authorization) | Design R2 ; this preregistration in force ; **explicit human OPEN I02** ; **not** blocked on DR-003 / DR-005 / C02 qualification |
+| **A. OPEN I02** (investigation authorization) | Design R2 ; this preregistration in force ; **explicit human OPEN I02** ; **not** blocked on DR-003 / DR-005 / C02 qualification. **Status : DONE.** |
 | **B. Exploratory execution** | OPEN I02 ; implementation HAT PASS (§7) ; `UNQUALIFIED` dataset with DR-007 labeling ; no paid acquisition under DR-007 D-6 ; no SCI / DATA-PASS / promotion claims |
 | **C. Confirmatory execution / SCI promotion path** | OPEN I02 ; HAT PASS ; **C02** snapshot qualifying path ; **DR-003 D-1 ACCEPTED** ; **DR-005 ACCEPTED** ; holdout frozen (§5.2) ; confirmatory prereg version frozen ; then SCI verdicts (§3.3) |
 
@@ -376,48 +380,85 @@ Silent researcher degrees of freedom are class C/D violations.
 | **P2** | **Preregistration complete ; I02 MAY BE OPENED** (human decision) |
 | P3 | Implementation may begin |
 
-**Classification for this document :**
+**Classification at preregistration authorship :**
 
 \[
 \boxed{\texttt{P2}}
 \]
 
-**Rationale :** scientific contract is complete and does not redesign
-the frozen core ; C02 is correctly **not** required for OPEN ;
-implementation HAT is **specified but not built** ⇒ not P3.
-Remaining step to open : **explicit human decision OPEN I02**.
-After OPEN : implement protocol + HAT ⇒ then exploratory execution
-may begin (still NOT confirmatory).
+**Rationale (at authorship) :** scientific contract complete ; C02
+correctly **not** required for OPEN ; HAT specified but not built
+⇒ not P3.
 
-**Not P3 :** “documentation exists” ≠ authorization to run code
-before OPEN + HAT PASS.
+**Human decision (subsequent) :** **I02 = OPEN** — see §12.
+Lifecycle after OPEN :
+
+```text
+I02 OPEN
+  → IMPLEMENTATION
+  → TESTS / HAT
+  → EXPLORATORY EXECUTION
+  → evaluation under this contract
+```
+
+Confirmatory path remains separately gated (§6).
+
+**Not P3 at OPEN :** OPEN authorizes investigation lifecycle ;
+scientific runs still require HAT PASS. Implementation code belongs
+in **subsequent** commits after this OPEN record.
 
 ---
 
 ## 10. Blockers
 
-| Blocker | Blocks |
-|---------|--------|
-| Human decision **OPEN I02** | opening |
-| Implementation HAT not yet built / PASS | first scientific run |
-| DR-003 D-1 / DR-005 not ACCEPTED | confirmatory acquisition / SCI path only |
-| C02 confirmatory snapshot not qualified | confirmatory execution / SCI-PASS only |
-| Confirmatory holdout boundary not yet fixed | confirmatory execution only |
+| Blocker | Blocks | Status at OPEN |
+|---------|--------|----------------|
+| Human decision **OPEN I02** | opening | **CLEARED** |
+| Implementation HAT not yet built / PASS | first scientific run | **active** |
+| DR-003 D-1 / DR-005 not ACCEPTED | confirmatory path only | active |
+| C02 confirmatory snapshot not qualified | confirmatory path only | active |
+| Confirmatory holdout boundary not yet fixed | confirmatory path only | active |
 
-**No blocking contradiction** found in the closed core design during
-this review.
+**No blocking contradiction** in the closed core design.
 
 ---
 
-## 11. Confirmations
+## 11. Confirmations (at OPEN transition)
 
 ```text
+I02 = OPEN
 CORE DESIGN UNCHANGED
+PREREGISTRATION UNCHANGED (lifecycle status only)
+NO IMPLEMENTATION YET
 NO DATA USED
 NO EXPERIMENT RUN
-I02 = NOT OPENED
-READINESS = P2
 ```
+
+---
+
+## 12. OPEN record — human decision
+
+**Decision :** `I02 = OPEN`
+
+**Baseline at decision :** preregistration `344b128` / pin `58a3284` ;
+design freeze `260988b` / `32b60c4`.
+
+**Rationale accepted :**
+
+- Core design = R2 — DESIGN CLOSED
+- Preregistration readiness = P2
+- Core design frozen ; hypothesis, evidence unit, verdicts,
+  kill K1–K8, holdout, data/C02 split, HAT requirements,
+  change control defined
+- No data analysis ; no experiment performed
+
+**OPEN does not mean :** implementation validated ; exploratory or
+confirmatory evidence obtained ; SCI promotion ; C02 qualification
+complete.
+
+**Next authorized work :** implement the frozen contract ; unit /
+contractual tests ; then HAT ; then exploratory execution under
+DR-007. Confirmatoire remains blocked per §6.
 
 ---
 
@@ -429,5 +470,6 @@ READINESS = P2
 | Design freeze commit | `260988b` |
 | Design freeze pin | `32b60c4` |
 | Preregistration commit | `344b128` |
+| OPEN commit | *(this commit)* |
 | Supersedes | *(none — first preregistration)* |
 | Draft history | [I02-hypothesis-draft.md](I02-hypothesis-draft.md) |
