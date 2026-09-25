@@ -31,7 +31,7 @@
 > **Draft v0.21 freeze M_Z :** `3d3d877`
 > **Draft v0.22 future target review :** `38812f8`
 > **Draft v0.23 accept h=10 :** `cd16496`
-> **Draft v0.24 forecast object / scoring :** *(ce commit)*
+> **Draft v0.24 forecast object / scoring :** `c3a6909`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
