@@ -103,7 +103,7 @@ meta, survival, predicates, verdict, N4 preservation semantics.
 
 ## 10. L1 synthetic tests
 
-Suite: `tests/i03/` — **20 passed** (synthetic only; ~30s).
+Suite: `tests/i03/` — **20 passed** (synthetic only).
 
 Covers: causality, τ boundary, blocks, k-th oracle/ties, σ denom 19,
 N4 preserve/determinism, p=α, verdict PASS/FAIL/INCONCLUSIVE, N3 accounting,
@@ -113,7 +113,11 @@ pipeline determinism, config freeze.
 
 ## 11. Repository regression
 
-Recorded at L1 close in the return packet (I01/I02/I03 pytest).
+| Suite | Result |
+|-------|--------|
+| `tests/i03` + `tests/i01` | **58 passed** |
+| `tests/i02` (excl. HAT fixture hash) | **96 passed** |
+| `tests/i02::test_hat_fixture_deterministic_hash` | **FAIL** — pinned SHA drift (`196f9…` → `9dba0…`); **pre-existing / unrelated to I03** (no I02 code changed). Track as env/numpy fixture pin issue, not L1-I03 blocker. |
 
 ---
 
@@ -124,8 +128,7 @@ Recorded at L1 close in the return packet (I01/I02/I03 pytest).
 | — | None scientific (I3/I4/I5) | — |
 | L1-I1 | Initial E-MND Python loop too slow for T≈2400×surrogates | Fixed: vectorized distances |
 | L1-I6 | N4 “recomputed σ on r*” clarification | Documented in contract + artifact |
-
-No prereg change.
+| (ext) | I02 HAT fixture hash mismatch | Out of I03 scope; not introduced by this work |
 
 ---
 
