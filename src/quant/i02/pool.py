@@ -20,7 +20,7 @@ import numpy as np
 
 from quant.i02.features import first_valid_rv_index, realized_rms_volatility
 from quant.i02.params import I02Params
-from quant.i02.states_x import first_valid_x_index
+from quant.i02.states_x import first_valid_x_index, x_is_defined
 
 
 def first_constructible_index(params: I02Params) -> int:
@@ -40,12 +40,13 @@ def representation_constructible(
 ) -> bool:
     """Whether ``X_s`` and S-features at ``s`` are constructible without ε hacks.
 
-    Requires complete windows and ``RV_s > 0``, ``RV_early > 0``,
-    ``RV_late > 0`` so that ``L``, ``D``, ``Q`` are defined (S2/S3 charts
-    and level distances). Zero-RV dates are excluded from ``A_t``.
+    Requires complete windows, ``σ̂_s > 0`` for ``X``, and ``RV_s > 0``,
+    ``RV_early > 0``, ``RV_late > 0`` so that ``L``, ``D``, ``Q`` are defined.
     """
 
     if s < first_constructible_index(params):
+        return False
+    if not x_is_defined(returns, s, params):
         return False
     try:
         rv = realized_rms_volatility(returns, s, params.W_RV)
@@ -53,7 +54,6 @@ def representation_constructible(
         return False
     if rv == 0.0:
         return False
-    # Early/late must be positive for D (S2); Q needs RV > 0 (already).
     half = params.W_RV // 2
     start = s - params.W_RV + 1
     window = returns[start : s + 1]

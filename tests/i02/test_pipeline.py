@@ -20,15 +20,11 @@ def test_evaluate_query_common_pool_and_k(synthetic_returns):
         pytest.skip("synthetic draw produced small pool at t=500")
     assert res.pool_size >= p.k
     assert "X" in res.forecasts and "S1" in res.forecasts and "S2" in res.forecasts
-    for name in ("X", "S1", "S2"):
+    assert "S3_Q" in res.forecasts and "S3_phi" in res.forecasts
+    for name in ("X", "S1", "S2", "S3_Q", "S3_phi"):
         f = res.forecasts[name]
         assert f.neighbor_indices.shape == (p.k,)
         assert f.atoms.shape == (p.k,)
-        # atoms multiplicity preserved (length k even with duplicate V)
-        assert f.atoms.shape[0] == p.k
-    assert res.r["S3"] is None
-    assert SkipReason.S3_CONTRACT_GAP in res.skip_reasons
-    # Z does not change pool
     pool = admissible_pool(synthetic_returns, t, p)
     assert np.array_equal(pool, res.pool_indices)
 

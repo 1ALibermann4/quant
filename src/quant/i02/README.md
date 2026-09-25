@@ -1,33 +1,34 @@
-# I02 implementation (L1)
+# I02 implementation (L1 patch / PREREG-v0.3)
 
 Runtime package: `src/quant/i02/`
 
-Authoritative contract: [`research/I02/I02-preregistration.md`](../../research/I02/I02-preregistration.md)
+Authoritative contract: [`research/I02/I02-preregistration.md`](../../research/I02/I02-preregistration.md) — **I02-PREREG-v0.3**
 
 ## Status
 
 - **I02 = OPEN**
-- L1: computational pipeline (this package)
+- L1: computational pipeline aligned with v0.3 (this package)
 - HAT: not claimed
 - Exploratory run: not authorized until HAT PASS
+- Readiness: **C2** (contract + implementation aligned; ready for L2 contract-test closure)
 
 ## Entry points
 
 ```python
 from quant.i02 import evaluate_query, evaluate_series, DEFAULT_PARAMS
+from quant.i02 import mbb_spearman_ci, mbb_spearman_robustness
 ```
 
 Synthetic / caller-supplied log-return arrays only. No yfinance in this package.
 
-## Contract gaps (L1 → PREREG-v0.2)
+## Contract gaps (CLOSED)
 
 | Gap | Status |
 |-----|--------|
-| A — `M=252` / `ε_σ` | Contract closed (§13); **code still on I01 ε** — patch pending |
-| B — S3 L+form | **HUMAN DECISION REQUIRED** (§14) |
-| C — MBB inference | Contract closed (§15); **code not yet patched** |
+| A — `M=252` / `ε_σ` | **CLOSED** — M inherited; no ε; `σ̂=0` ⇒ X undefined |
+| B — S3 L+form | **CLOSED** — S3-A ACCEPTED; co-equal `S3_Q` / `S3_phi`; no primary |
+| C — MBB inference | **CLOSED** — non-circular MBB; B=9999; seed=42; CI-dual detectability |
 
-Readiness after gap review: **C0**. See `quant.i02.contract_gaps` and
-[`I02-preregistration.md`](../../research/I02/I02-preregistration.md) §13–§16.
+See `quant.i02.contract_gaps` and prereg §13–§16.
 
-Do not start L2/HAT until S3 is decided and implementation is patched.
+Do not start HAT until L2 contract-test closure. No market data / no experiment.

@@ -5,10 +5,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from quant.i02.bootstrap import frozen_block_lengths, moving_block_bootstrap
-from quant.i02.contract_gaps import ImplementationContractGap
+from quant.i02.bootstrap import frozen_block_lengths
 from quant.i02.crps import crps_empirical
-from quant.i02.distances import distance_s2_d2, distance_s3_blocked
+from quant.i02.distances import distance_s2_d2, distance_s3_phi, distance_s3_q
 from quant.i02.estimand import relative_incremental_value, score_difference
 from quant.i02.features import (
     dynamics_D,
@@ -122,16 +121,14 @@ def test_s2_d2_metric():
     assert distance_s2_d2(0.0, 0.0, 3.0, 4.0) == pytest.approx(5.0)
 
 
-def test_s3_distance_is_contract_gap():
-    with pytest.raises(ImplementationContractGap):
-        distance_s3_blocked()
+def test_s3_product_metrics():
+    assert distance_s3_q(0.0, 0.0, 3.0, 4.0) == pytest.approx(5.0)
+    assert distance_s3_phi(1.0, 1.0, 1.0, 0.5) == pytest.approx(float(np.arccos(0.5)))
 
 
-def test_bootstrap_is_contract_gap():
+def test_bootstrap_block_lengths_frozen():
     b_star, sens = frozen_block_lengths()
     assert b_star == 40 and sens == (20, 40, 80)
-    with pytest.raises(ImplementationContractGap):
-        moving_block_bootstrap()
 
 
 def test_spearman_monotone():

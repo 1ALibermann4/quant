@@ -4,12 +4,12 @@
 > **Authority class :** RESEARCH / PROTOCOL (normative for I02)
 > **Protocol :** QDP v0.1
 > **Design readiness :** R2 — DESIGN CLOSED @ `260988b` (pin `32b60c4`)
-> **Prereg ID :** **I02-PREREG-v0.2** (L1 contract-gap amendments)
-> **Prereg readiness :** **P2** at open ; L1 gaps review §13–§16
+> **Prereg ID :** **I02-PREREG-v0.3** (S3-A human decision + executable contract)
+> **Prereg readiness :** **P2** at open ; L1 gaps **closed** (§13–§15 / S3-A)
 > **I02 :** **OPEN**
-> **Scientific run :** NOT AUTHORIZED until gaps closed + HAT PASS
+> **Scientific run :** NOT AUTHORIZED until HAT PASS
 > **Opened at :** `4f6be2a` — **before any I02 implementation**
-> **L1 implementation :** `8d05905`
+> **L1 implementation :** `8d05905` ; **L1 patch :** *(this commit)*
 >
 > **Parent design history :** [I02-hypothesis-draft.md](I02-hypothesis-draft.md)
 > **Governance :** DR-007, DR-008, C02 v1.1, closure gates, MS-1…MS-4
@@ -48,7 +48,7 @@ NO MARKET DATA IN THIS DOCUMENT
 | Weights | uniform \(1/50\) |
 | Early history | skip if \(\lvert A_t\rvert<50\) |
 | Representations | \(X\), \(S_1\), \(S_2\), \(S_3\) (as accepted in draft) |
-| S3 kNN metric | **HUMAN DECISION REQUIRED** (§14) — not executable yet |
+| S3 kNN metric | **S3-A ACCEPTED** (§14) — co-equal ``S3_Q`` / ``S3_phi`` ; no primary |
 | Score | CRPS (lower better) |
 | Primary estimand | \(R_t^{(S)}=\dfrac{\operatorname{CRPS}_S(t)-\operatorname{CRPS}_X(t)}{\operatorname{CRPS}_S(t)}\) |
 | Secondary | \(D_t^{(S)}=\operatorname{CRPS}_S(t)-\operatorname{CRPS}_X(t)\) — diagnostic only |
@@ -558,60 +558,71 @@ L1 noted inheritance of both \(M\) and \(\varepsilon\). This section
 S_3=[RV,Q],\quad Q=MA/RV,\quad \phi=\arccos Q
 \]
 
+Shape charts (no primary) :
+
 \[
-\mathcal{M}_{S3}^{\mathrm{shape}}=\{d_Q,d_\phi\},
-\quad
 d_Q=\lvert\Delta Q\rvert,
 \quad
 d_\phi=\lvert\Delta\phi\rvert
 \]
 
-**No primary** between \(d_Q\) and \(d_\phi\). Material disagreement
-on the H2c / S3 conclusion ⇒ **`INCONCLUSIVE`** (draft §9.16).
+Level : \(\delta_{\mathrm{level}}=\lvert\Delta L\rvert\) on \(RV>0\).
 
-Level proximity (ACCEPTED) : \(\delta_{\mathrm{level}}=\lvert\Delta L\rvert\)
-on \(RV>0\).
+### 14.2 Human decision — S3-A `ACCEPTED` (pre-experimental)
 
-S2 precedent (ACCEPTED PRIMARY) :
+**When :** after L1 gap review (`4778842`), **before** market data,
+experiment, or HAT.
 
-\[
-d_2=\sqrt{(\Delta L)^{2}+(\Delta D)^{2}}
-\]
-
-### 14.2 Executable gap
-
-The shape family \(\{d_Q,d_\phi\}\) does **not** specify how
-\(\Delta L\) combines with \(\Delta Q\) or \(\Delta\phi\) into **one**
-neighbor distance for kNN on \(S_3^\star=[L,Q]\).
-
-Draft explicitly left **aggregation L+form** OPEN. No frozen
-normalization/scaling of \((L,Q)\) or \((L,\phi)\) exists. Inventing
-Euclidean concatenation solely for implementability would be
-post-hoc.
-
-### 14.3 Minimal defensible alternatives (not chosen here)
-
-| ID | Distance branches (both reported; no primary) | Notes |
-|----|-----------------------------------------------|-------|
-| **S3-A** | \(d_{S3,Q}=\sqrt{(\Delta L)^{2}+(\Delta Q)^{2}}\), \(d_{S3,\phi}=\sqrt{(\Delta L)^{2}+(\Delta\phi)^{2}}\) | Mirrors accepted \(d_2\) pattern ; **units** \(L\) vs \(Q\)/\(\phi\) not neutralized |
-| **S3-B** | \(d_{S3,Q}=\lvert\Delta L\rvert+\lvert\Delta Q\rvert\), \(d_{S3,\phi}=\lvert\Delta L\rvert+\lvert\Delta\phi\rvert\) | Mirrors \(d_1\) robustness style ; same unit caveat |
-| **S3-C** | Shape-only \(d_Q\), \(d_\phi\) (no \(\Delta L\) in kNN) | Ignores level channel of \(S_3\) — weak vs representation |
-
-Under **S3-A** or **S3-B**, the evidence unit expands to two S3
-branches (e.g. \(S3_Q\), \(S3_\phi\)) co-reported ; disagreement ⇒
-`INCONCLUSIVE` ; **no** best-metric selection.
-
-### 14.4 Status
+**Decision :**
 
 \[
-\boxed{\texttt{HUMAN DECISION REQUIRED — S3 AGGREGATION}}
+\boxed{\texttt{S3-A = ACCEPTED}}
 \]
 
-**Amendment class if/when chosen :** **B** or **C** depending on
-whether the choice is treated as completing OPEN aggregation (B) or
-changing the evidence unit (C if grid expansion).
+\[
+d_{S3,Q}(a,b)
+=
+\sqrt{(L_a-L_b)^{2}+(Q_a-Q_b)^{2}}
+\]
 
-**Not closed in v0.2.** Historical gap retained.
+\[
+d_{S3,\phi}(a,b)
+=
+\sqrt{(L_a-L_b)^{2}+(\phi_a-\phi_b)^{2}},
+\quad
+\phi=\arccos(Q)
+\]
+
+**Status labels :**
+
+```text
+S3 PRODUCT METRIC = L2
+NO PRIMARY SHAPE CHART
+```
+
+**Rejected :** S3-C (shape-only) ; S3-B (L1 aggregation) **not retained**.
+
+**Forbidden :** λ weights ; empirical rescaling ; z-scoring ; whitening ;
+adaptive coordinate normalization ; post-hoc metric selection.
+
+### 14.3 No-primary governance
+
+Both branches **`S3_Q`** and **`S3_phi`** must be executed and reported.
+They are two preregistered coordinate charts of the same S3 adversarial
+concept. Material disagreement ⇒ apply metric-disagreement doctrine
+⇒ **`INCONCLUSIVE`** where applicable. Never select the favorable branch.
+
+Evidence unit : expand S3 into co-equal charts inside the
+\(S\times m\) structure (report both ; no best-chart).
+
+### 14.4 Amendment class
+
+**B** (pre-experimental specification completing OPEN aggregation) with
+evidence-unit expansion to named charts (documented, not post-hoc).
+
+### 14.5 Historical gap
+
+v0.2 left S3 as HUMAN DECISION. Closed here by human S3-A.
 
 ---
 
@@ -682,41 +693,32 @@ explicitly.
 |-----|--------|-------|--------|
 | A | \(M=252\) | **A** | **CLOSED** |
 | A | \(\varepsilon_\sigma\) rejected ; \(\hat\sigma=0\) undefined | **B** | **CLOSED** |
-| B | S3 L+form aggregation | — | **OPEN — HUMAN** |
+| B | S3-A product metrics (human) | **B** | **CLOSED** (v0.3) |
 | C | MBB algorithm + CI-dual detectability | **B** | **CLOSED** |
 
 ### 16.2 HUMAN DECISIONS REQUIRED
 
-1. **S3 aggregation** among §14.3 alternatives (or a documented
-   refinement that does not invent undeclared normalizations).
+*(none remaining for L1 contract executability)*
 
 ### 16.3 Implementation impact
 
-After human S3 decision:
+L1 patch must implement §13–§15 and S3-A. Then L2 contract-test
+closure, then HAT.
 
-- patch `quant.i02` : remove \(\varepsilon_\sigma\) ; implement
-  \(\hat\sigma=0\) skip ; implement chosen S3 distances ; implement
-  §15 MBB ;
-- then L2 contract-test closure ;
-- then HAT.
-
-Until S3 is decided: **do not** claim full contract executability.
-
-### 16.4 Readiness
+### 16.4 Readiness (after human S3-A + successful L1 patch)
 
 \[
-\boxed{\texttt{C0 — GAPS REMAIN}}
+\boxed{\texttt{C2 — CONTRACT + IMPLEMENTATION ALIGNED}}
 \]
 
-Reason : S3 aggregation still **HUMAN DECISION REQUIRED**.
-Gaps A and C closed in contract text ; implementation not yet
-patched to §13/§15.
+when tests for X / S3-A / MBB pass. HAT still **not** claimed.
 
 ```text
 NO MARKET DATA USED
 NO EXPERIMENT RUN
 HAT NOT STARTED
 NO POST-HOC CHOICE
+S3-A BEFORE DATA / BEFORE EXPERIMENT / BEFORE HAT
 ```
 
 ---
@@ -725,11 +727,12 @@ NO POST-HOC CHOICE
 
 | Field | Value |
 |-------|-------|
-| Preregistration ID | **I02-PREREG-v0.2** |
-| Previous | I02-PREREG-v0.1 @ `344b128` |
+| Preregistration ID | **I02-PREREG-v0.3** |
+| Previous | I02-PREREG-v0.2 @ `4778842` |
 | Design freeze commit | `260988b` |
 | Design freeze pin | `32b60c4` |
 | OPEN commit | `4f6be2a` |
 | L1 implementation | `8d05905` |
-| Gap-closure commit | `4778842` |
+| Gap-closure (v0.2) | `4778842` |
+| S3-A + L1 patch (v0.3) | *(this commit)* |
 | Draft history | [I02-hypothesis-draft.md](I02-hypothesis-draft.md) |

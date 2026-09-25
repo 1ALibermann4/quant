@@ -1,9 +1,4 @@
-"""Query-level and series-level I02 evaluation pipeline (L1).
-
-Implements X / S1 / S2 paths fully. S3 neighbor path is blocked by
-:data:`S3_KNN_AGGREGATION_GAP`. Bootstrap inference is blocked by
-:data:`BOOTSTRAP_ALGORITHM_GAP`.
-"""
+"""Query-level and series-level I02 evaluation pipeline (aligned PREREG-v0.3)."""
 
 from __future__ import annotations
 
@@ -11,26 +6,34 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from quant.i02.contract_gaps import (
-    ImplementationContractGap,
-    S3_KNN_AGGREGATION_GAP,
-)
 from quant.i02.crps import crps_empirical
-from quant.i02.distances import build_L_D_series, pairwise_s1, pairwise_s2, pairwise_x
+from quant.i02.distances import (
+    build_L_D_Q_series,
+    pairwise_s1,
+    pairwise_s2,
+    pairwise_s3_phi,
+    pairwise_s3_q,
+    pairwise_x,
+)
 from quant.i02.estimand import relative_incremental_value, score_difference
 from quant.i02.features import realized_rms_volatility
 from quant.i02.neighbors import select_neighbors
 from quant.i02.params import DEFAULT_PARAMS, I02Params
 from quant.i02.pool import admissible_pool, representation_constructible
 from quant.i02.regime import z_vector
-from quant.i02.states_x import all_state_vectors_x, first_valid_x_index
+from quant.i02.states_x import (
+    XUndefinedError,
+    all_state_vectors_x,
+    first_valid_x_index,
+    state_vector_x,
+)
 from quant.i02.target import future_realized_rms
 from quant.i02.types import SkipReason
 
 
 @dataclass(slots=True)
 class RepresentationForecast:
-    """Empirical predictive atoms and scores for one representation."""
+    """Empirical predictive atoms and scores for one representation / chart."""
 
     name: str
     neighbor_indices: np.ndarray
@@ -41,7 +44,7 @@ class RepresentationForecast:
 
 @dataclass(slots=True)
 class QueryResult:
-    """Typed deterministic result for one query ``t`` (prereg L1 §10)."""
+    """Typed deterministic result for one query ``t``."""
 
     t: int
     skipped: bool
@@ -60,9 +63,36 @@ def _atoms_from_neighbors(
     neighbor_idx: np.ndarray,
     v_series: np.ndarray,
 ) -> np.ndarray:
-    """Preserve multiplicity: one atom per neighbor (no dedup)."""
-
     return np.asarray([v_series[int(s)] for s in neighbor_idx], dtype=np.float64)
+
+
+def _attach_comparator(
+    result: QueryResult,
+    *,
+    name: str,
+    pool: np.ndarray,
+    distances: np.ndarray,
+    v_series: np.ndarray,
+    v_obs: float,
+    crps_x: float,
+    params: I02Params,
+) -> None:
+    nbrs, dists = select_neighbors(pool, distances, params.k)
+    atoms = _atoms_from_neighbors(nbrs, v_series)
+    crps_s = crps_empirical(atoms, v_obs)
+    result.forecasts[name] = RepresentationForecast(
+        name=name,
+        neighbor_indices=nbrs,
+        neighbor_distances=dists,
+        atoms=atoms,
+        crps=crps_s,
+    )
+    result.d[name] = score_difference(crps_s, crps_x)
+    r_val, reason = relative_incremental_value(crps_s, crps_x)
+    result.r[name] = r_val
+    if reason is not None:
+        result.skip_reasons.append(reason)
+        result.notes.append(f"R^({name}) undefined: CRPS_S == 0")
 
 
 def evaluate_query(
@@ -73,13 +103,13 @@ def evaluate_query(
     states_x: np.ndarray | None = None,
     L: np.ndarray | None = None,
     D: np.ndarray | None = None,
+    Q: np.ndarray | None = None,
     v_series: np.ndarray | None = None,
 ) -> QueryResult:
-    """Evaluate one query date under the frozen contract.
+    """Evaluate one query under the frozen v0.3 contract.
 
-    Scientific values are separated from skip provenance. S3 kNN is not
-    invented: the result records ``S3_CONTRACT_GAP`` instead of a fake
-    ``R^(S3)``.
+    Comparators: ``S1``, ``S2``, ``S3_Q``, ``S3_phi`` (no primary; both S3
+    charts always reported when the query is evaluable).
     """
 
     returns = np.asarray(returns, dtype=np.float64)
@@ -101,8 +131,14 @@ def evaluate_query(
         result.skip_reasons.append(SkipReason.INSUFFICIENT_X_HISTORY)
         return result
 
+    try:
+        state_vector_x(returns, t, params)
+    except XUndefinedError as exc:
+        result.skipped = True
+        result.skip_reasons.append(exc.reason)
+        return result
+
     if not representation_constructible(returns, t, params):
-        # Query itself must support L/D for S1/S2 distances.
         try:
             rv = realized_rms_volatility(returns, t, params.W_RV)
             if rv == 0.0:
@@ -124,8 +160,8 @@ def evaluate_query(
 
     if states_x is None:
         states_x = all_state_vectors_x(returns, params)
-    if L is None or D is None:
-        L, D = build_L_D_series(returns, params)
+    if L is None or D is None or Q is None:
+        L, D, Q = build_L_D_Q_series(returns, params)
     if v_series is None:
         from quant.i02.target import all_future_realized_rms
 
@@ -139,7 +175,7 @@ def evaluate_query(
         return result
     result.v_obs = v_obs
 
-    # --- X ---
+    # X
     dx = pairwise_x(states_x, pool, t)
     nx, dist_x = select_neighbors(pool, dx, params.k)
     atoms_x = _atoms_from_neighbors(nx, v_series)
@@ -152,55 +188,51 @@ def evaluate_query(
         crps=crps_x,
     )
 
-    # --- S1 ---
-    d1 = pairwise_s1(L, pool, t)
-    n1, dist_1 = select_neighbors(pool, d1, params.k)
-    atoms_1 = _atoms_from_neighbors(n1, v_series)
-    crps_1 = crps_empirical(atoms_1, v_obs)
-    result.forecasts["S1"] = RepresentationForecast(
+    _attach_comparator(
+        result,
         name="S1",
-        neighbor_indices=n1,
-        neighbor_distances=dist_1,
-        atoms=atoms_1,
-        crps=crps_1,
+        pool=pool,
+        distances=pairwise_s1(L, pool, t),
+        v_series=v_series,
+        v_obs=v_obs,
+        crps_x=crps_x,
+        params=params,
     )
-    result.d["S1"] = score_difference(crps_1, crps_x)
-    r1, reason1 = relative_incremental_value(crps_1, crps_x)
-    result.r["S1"] = r1
-    if reason1 is not None:
-        result.skip_reasons.append(reason1)
-        result.notes.append("R^(S1) undefined: CRPS_S1 == 0")
-
-    # --- S2 (primary d_2) ---
-    d2 = pairwise_s2(L, D, pool, t)
-    n2, dist_2 = select_neighbors(pool, d2, params.k)
-    atoms_2 = _atoms_from_neighbors(n2, v_series)
-    crps_2 = crps_empirical(atoms_2, v_obs)
-    result.forecasts["S2"] = RepresentationForecast(
+    _attach_comparator(
+        result,
         name="S2",
-        neighbor_indices=n2,
-        neighbor_distances=dist_2,
-        atoms=atoms_2,
-        crps=crps_2,
+        pool=pool,
+        distances=pairwise_s2(L, D, pool, t),
+        v_series=v_series,
+        v_obs=v_obs,
+        crps_x=crps_x,
+        params=params,
     )
-    result.d["S2"] = score_difference(crps_2, crps_x)
-    r2, reason2 = relative_incremental_value(crps_2, crps_x)
-    result.r["S2"] = r2
-    if reason2 is not None:
-        result.skip_reasons.append(reason2)
-        result.notes.append("R^(S2) undefined: CRPS_S2 == 0")
+    # S3-A: both charts, no selection
+    _attach_comparator(
+        result,
+        name="S3_Q",
+        pool=pool,
+        distances=pairwise_s3_q(L, Q, pool, t),
+        v_series=v_series,
+        v_obs=v_obs,
+        crps_x=crps_x,
+        params=params,
+    )
+    _attach_comparator(
+        result,
+        name="S3_phi",
+        pool=pool,
+        distances=pairwise_s3_phi(L, Q, pool, t),
+        v_series=v_series,
+        v_obs=v_obs,
+        crps_x=crps_x,
+        params=params,
+    )
 
-    # --- S3 blocked ---
-    result.d["S3"] = None
-    result.r["S3"] = None
-    result.skip_reasons.append(SkipReason.S3_CONTRACT_GAP)
-    result.notes.append(S3_KNN_AGGREGATION_GAP.strip().splitlines()[0])
-
-    # --- Z (does not affect forecasts) ---
     zmap, zreasons = z_vector(returns, t, params)
     result.z = zmap
     result.skip_reasons.extend(zreasons)
-
     return result
 
 
@@ -210,11 +242,7 @@ def evaluate_series(
     params: I02Params = DEFAULT_PARAMS,
     query_indices: np.ndarray | None = None,
 ) -> list[QueryResult]:
-    """Evaluate a stride-1 (or provided) query schedule.
-
-    Precomputes shared series for determinism and speed. Does not load
-    market data. Does not run bootstrap inference.
-    """
+    """Evaluate a stride-1 (or provided) query schedule. No market data."""
 
     from quant.i02.pool import query_schedule
     from quant.i02.target import all_future_realized_rms
@@ -223,31 +251,18 @@ def evaluate_series(
     if query_indices is None:
         query_indices = query_schedule(len(returns), params)
     states_x = all_state_vectors_x(returns, params)
-    L, D = build_L_D_series(returns, params)
+    L, D, Q = build_L_D_Q_series(returns, params)
     v_series = all_future_realized_rms(returns, params)
-    out: list[QueryResult] = []
-    for t in query_indices:
-        out.append(
-            evaluate_query(
-                returns,
-                int(t),
-                params=params,
-                states_x=states_x,
-                L=L,
-                D=D,
-                v_series=v_series,
-            )
+    return [
+        evaluate_query(
+            returns,
+            int(t),
+            params=params,
+            states_x=states_x,
+            L=L,
+            D=D,
+            Q=Q,
+            v_series=v_series,
         )
-    return out
-
-
-def assert_s3_gap() -> None:
-    """Helper for tests: S3 distance must raise the contract gap."""
-
-    from quant.i02.distances import distance_s3_blocked
-
-    try:
-        distance_s3_blocked()
-    except ImplementationContractGap:
-        return
-    raise AssertionError("expected ImplementationContractGap for S3")
+        for t in query_indices
+    ]
