@@ -167,7 +167,7 @@ I03 is **not opened**. No conditions, metrics, or runs are defined here.
 | Ops (pre-obs.) | speedups | `8d70e97` |
 | E01 evidence | `e01/run1/` | `33d063d` |
 | Postmortem | [I02-E01-POSTMORTEM.md](I02-E01-POSTMORTEM.md) | `f581416` |
-| **Closure** | **this document** | *(this commit)* |
+| **Closure** | **this document** | `68f7f56` |
 
 Immutability: scientific I02 artifacts are historical evidence. Material
 scientific change ⇒ new investigation ID, not “I02-E02 tuning.”
