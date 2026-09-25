@@ -1,0 +1,3 @@
+Prepared fixture I03-HAT-FIXTURE-v1 hash=sha256:0ed3625a7ed4a19e2fb75e04c8b906a92cc01be54446f61eb53c6cde1cf142dc
+I03 HAT complete: verdict=INCONCLUSIVE elapsed=1372.0s out=research/I03/hat/run1
+EXIT:True

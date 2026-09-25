@@ -1,0 +1,74 @@
+{
+  "gates": {
+    "H1": true,
+    "H2": true,
+    "H3": true,
+    "H4": true,
+    "H5": true,
+    "H6": true,
+    "H7": true,
+    "H8": true,
+    "H9": true,
+    "H10": true,
+    "H11": true,
+    "H12": true,
+    "H13": true,
+    "H14": true,
+    "H15": true,
+    "H16": true,
+    "H17": true,
+    "H18": true,
+    "H19": true,
+    "H20": true
+  },
+  "all_pass": true,
+  "recon": {
+    "label": "INCONCLUSIVE",
+    "nd_code": null
+  },
+  "semantic_compare": {
+    "status": "SEMANTIC_IDENTICAL",
+    "n_diffs": 0,
+    "diffs": []
+  },
+  "n_inference_cells": 18,
+  "synthetic_verdict": {
+    "label": "INCONCLUSIVE",
+    "nd_code": null,
+    "reason": "NEG_V"
+  },
+  "block_queries": [
+    548,
+    800,
+    800
+  ],
+  "n4": {
+    "valid": true,
+    "invalid_reason": null,
+    "Z_frac": 0.9916666666666667,
+    "B_used": 999,
+    "W_sigma": 20,
+    "seed_doctrine": "42 + b",
+    "preserves": "sigma_hat_path_by_construction_on_observed_returns",
+    "does_not_claim": "rolling_stdev_recomputed_on_r_star_equals_sigma_hat"
+  },
+  "n3": {
+    "valid": false,
+    "invalid_reason": "N3_IAAFT_NONCONV_FRAC",
+    "B_requested": 999,
+    "n_converged": 0,
+    "n_nonconverged": 999,
+    "method": "IAAFT",
+    "I_max": 100,
+    "epsilon": 1e-08,
+    "seed_doctrine": "10000 + b"
+  },
+  "timing_run1": {
+    "total_seconds": 1372.031,
+    "note": "engineering observation only; no scientific performance gate"
+  },
+  "timing_run2": {
+    "total_seconds": 1331.737,
+    "note": "engineering observation only; no scientific performance gate"
+  }
+}

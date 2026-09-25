@@ -1,0 +1,21 @@
+{
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "executable": "/mnt/c/Users/Jean Marie/dev0/quant/.venv/bin/python",
+  "elapsed_seconds": 1372.03148588,
+  "fixture": {
+    "fixture_id": "I03-HAT-FIXTURE-v1",
+    "generator_version": "1.0.0",
+    "seed": 20260926,
+    "length": 2400,
+    "sha256": "sha256:0ed3625a7ed4a19e2fb75e04c8b906a92cc01be54446f61eb53c6cde1cf142dc",
+    "npy": "fixture_v1.npy",
+    "note": "SYNTHETIC HAT FIXTURE \u2014 NOT MARKET DATA \u2014 NOT TUNED FOR VERDICT",
+    "components": [
+      "seeded_gaussian_innovations",
+      "tiny_sinusoidal_mean",
+      "deterministic_heteroskedastic_envelope"
+    ]
+  },
+  "exit": 0
+}

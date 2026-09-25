@@ -1,0 +1,2 @@
+I03 HAT complete: verdict=INCONCLUSIVE elapsed=1331.7s out=research/I03/hat/run2
+EXIT:True

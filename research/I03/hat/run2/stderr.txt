@@ -1,0 +1,100 @@
+N4 surrogate 50/999
+N4 surrogate 100/999
+N4 surrogate 150/999
+N4 surrogate 200/999
+N4 surrogate 250/999
+N4 surrogate 300/999
+N4 surrogate 350/999
+N4 surrogate 400/999
+N4 surrogate 450/999
+N4 surrogate 500/999
+N4 surrogate 550/999
+N4 surrogate 600/999
+N4 surrogate 650/999
+N4 surrogate 700/999
+N4 surrogate 750/999
+N4 surrogate 800/999
+N4 surrogate 850/999
+N4 surrogate 900/999
+N4 surrogate 950/999
+N4 surrogate 999/999
+N3 IAAFT surrogate 50/999
+N3 IAAFT surrogate 100/999
+N3 IAAFT surrogate 150/999
+N3 IAAFT surrogate 200/999
+N3 IAAFT surrogate 250/999
+N3 IAAFT surrogate 300/999
+N3 IAAFT surrogate 350/999
+N3 IAAFT surrogate 400/999
+N3 IAAFT surrogate 450/999
+N3 IAAFT surrogate 500/999
+N3 IAAFT surrogate 550/999
+N3 IAAFT surrogate 600/999
+N3 IAAFT surrogate 650/999
+N3 IAAFT surrogate 700/999
+N3 IAAFT surrogate 750/999
+N3 IAAFT surrogate 800/999
+N3 IAAFT surrogate 850/999
+N3 IAAFT surrogate 900/999
+N3 IAAFT surrogate 950/999
+N3 IAAFT surrogate 999/999
+N4 E-MND 50/999
+N4 E-MND 100/999
+N4 E-MND 150/999
+N4 E-MND 200/999
+N4 E-MND 250/999
+N4 E-MND 300/999
+N4 E-MND 350/999
+N4 E-MND 400/999
+N4 E-MND 450/999
+N4 E-MND 500/999
+N4 E-MND 550/999
+N4 E-MND 600/999
+N4 E-MND 650/999
+N4 E-MND 700/999
+N4 E-MND 750/999
+N4 E-MND 800/999
+N4 E-MND 850/999
+N4 E-MND 900/999
+N4 E-MND 950/999
+N4 E-MND 999/999
+N3 E-MND 50/999
+N3 E-MND 100/999
+N3 E-MND 150/999
+N3 E-MND 200/999
+N3 E-MND 250/999
+N3 E-MND 300/999
+N3 E-MND 350/999
+N3 E-MND 400/999
+N3 E-MND 450/999
+N3 E-MND 500/999
+N3 E-MND 550/999
+N3 E-MND 600/999
+N3 E-MND 650/999
+N3 E-MND 700/999
+N3 E-MND 750/999
+N3 E-MND 800/999
+N3 E-MND 850/999
+N3 E-MND 900/999
+N3 E-MND 950/999
+N3 E-MND 999/999
+N4 locality 50/999
+N4 locality 100/999
+N4 locality 150/999
+N4 locality 200/999
+N4 locality 250/999
+N4 locality 300/999
+N4 locality 350/999
+N4 locality 400/999
+N4 locality 450/999
+N4 locality 500/999
+N4 locality 550/999
+N4 locality 600/999
+N4 locality 650/999
+N4 locality 700/999
+N4 locality 750/999
+N4 locality 800/999
+N4 locality 850/999
+N4 locality 900/999
+N4 locality 950/999
+N4 locality 999/999

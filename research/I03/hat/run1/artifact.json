@@ -1,0 +1,254 @@
+{
+  "schema": "I03-ARTIFACT-v1",
+  "prereg_id": "I03-PREREG-v0.1",
+  "input_hash": "sha256:0ed3625a7ed4a19e2fb75e04c8b906a92cc01be54446f61eb53c6cde1cf142dc",
+  "implementation_id": "f6684edeb8cbeda040e5ad3b611b63f11af4cd31",
+  "mode": "SYNTHETIC_HAT",
+  "fixture_id": "I03-HAT-FIXTURE-v1",
+  "config": {
+    "W_X": 20,
+    "M": 252,
+    "W_sigma": 20,
+    "tau": 20,
+    "K": [
+      10,
+      25,
+      50
+    ],
+    "k_max": 50,
+    "P": 3,
+    "B_N4": 999,
+    "B_N3": 999,
+    "alpha": 0.05,
+    "master_seed": 42,
+    "n_min": 250,
+    "m_rand": 50,
+    "iaaft_I_max": 100,
+    "iaaft_eps": 1e-08,
+    "iaaft_nonconv_frac": 0.05,
+    "n4_z_frac_min": 0.95,
+    "prereg_id": "I03-PREREG-v0.1"
+  },
+  "contract_surface": {
+    "W_X": 20,
+    "M": 252,
+    "W_sigma": 20,
+    "tau": 20,
+    "K": [
+      10,
+      25,
+      50
+    ],
+    "P": 3,
+    "B_N4": 999,
+    "B_N3": 999,
+    "alpha": 0.05,
+    "n_min": 250,
+    "iaaft_I_max": 100,
+    "iaaft_eps": 1e-08,
+    "n4_seed_doctrine": "42 + b (b=1..B_N4)",
+    "n3_seed_doctrine": "10000 + b (b=1..B_N3)",
+    "validity_seed_doctrine": "20000 + p (+ 1000*b for N4 surrogates)"
+  },
+  "blocks": [
+    {
+      "period": 1,
+      "start": 0,
+      "end": 799,
+      "n": 800
+    },
+    {
+      "period": 2,
+      "start": 800,
+      "end": 1599,
+      "n": 800
+    },
+    {
+      "period": 3,
+      "start": 1600,
+      "end": 2399,
+      "n": 800
+    }
+  ],
+  "emnd": [
+    {
+      "period": 1,
+      "n_queries": 548,
+      "n_skipped_undefined_x": 252,
+      "n_skipped_insufficient_pool": 0,
+      "theta_by_k": {
+        "10": 4.454472207833898,
+        "25": 4.789826591665865,
+        "50": 5.091833752373569
+      }
+    },
+    {
+      "period": 2,
+      "n_queries": 800,
+      "n_skipped_undefined_x": 0,
+      "n_skipped_insufficient_pool": 0,
+      "theta_by_k": {
+        "10": 4.235810954484789,
+        "25": 4.541733749770569,
+        "50": 4.80704591299855
+      }
+    },
+    {
+      "period": 3,
+      "n_queries": 800,
+      "n_skipped_undefined_x": 0,
+      "n_skipped_insufficient_pool": 0,
+      "theta_by_k": {
+        "10": 4.24559516682604,
+        "25": 4.551048703702043,
+        "50": 4.809975519030576
+      }
+    }
+  ],
+  "locality": [
+    {
+      "period": 1,
+      "Lambda": 0.5957087790477299,
+      "Gamma": 0.3628073418036484,
+      "hard_degenerate": false,
+      "DIAGNOSTIC": "NON-PROMOTIONAL"
+    },
+    {
+      "period": 2,
+      "Lambda": 0.5879055887418743,
+      "Gamma": 0.33553976968052074,
+      "hard_degenerate": false,
+      "DIAGNOSTIC": "NON-PROMOTIONAL"
+    },
+    {
+      "period": 3,
+      "Lambda": 0.5755344509631465,
+      "Gamma": 0.3417829897757426,
+      "hard_degenerate": false,
+      "DIAGNOSTIC": "NON-PROMOTIONAL"
+    }
+  ],
+  "n4": {
+    "valid": true,
+    "invalid_reason": null,
+    "Z_frac": 0.9916666666666667,
+    "B_used": 999,
+    "W_sigma": 20,
+    "seed_doctrine": "42 + b",
+    "preserves": "sigma_hat_path_by_construction_on_observed_returns",
+    "does_not_claim": "rolling_stdev_recomputed_on_r_star_equals_sigma_hat"
+  },
+  "n3": {
+    "valid": false,
+    "invalid_reason": "N3_IAAFT_NONCONV_FRAC",
+    "B_requested": 999,
+    "n_converged": 0,
+    "n_nonconverged": 999,
+    "method": "IAAFT",
+    "I_max": 100,
+    "epsilon": 1e-08,
+    "seed_doctrine": "10000 + b"
+  },
+  "survival": {
+    "C4": false,
+    "C3": false,
+    "F4": true,
+    "pvalues": {
+      "N4": {
+        "1": {
+          "10": 0.762,
+          "25": 0.781,
+          "50": 0.797
+        },
+        "2": {
+          "10": 0.862,
+          "25": 0.888,
+          "50": 0.891
+        },
+        "3": {
+          "10": 0.758,
+          "25": 0.814,
+          "50": 0.793
+        }
+      },
+      "N3": {
+        "1": {
+          "10": 1.0,
+          "25": 1.0,
+          "50": 1.0
+        },
+        "2": {
+          "10": 1.0,
+          "25": 1.0,
+          "50": 1.0
+        },
+        "3": {
+          "10": 1.0,
+          "25": 1.0,
+          "50": 1.0
+        }
+      }
+    },
+    "S": {
+      "N4": {
+        "1": {
+          "10": false,
+          "25": false,
+          "50": false
+        },
+        "2": {
+          "10": false,
+          "25": false,
+          "50": false
+        },
+        "3": {
+          "10": false,
+          "25": false,
+          "50": false
+        }
+      },
+      "N3": {
+        "1": {
+          "10": false,
+          "25": false,
+          "50": false
+        },
+        "2": {
+          "10": false,
+          "25": false,
+          "50": false
+        },
+        "3": {
+          "10": false,
+          "25": false,
+          "50": false
+        }
+      }
+    }
+  },
+  "predicates": {
+    "V": false,
+    "E": false
+  },
+  "verdict": {
+    "label": "INCONCLUSIVE",
+    "nd_code": null,
+    "reason": "NEG_V"
+  },
+  "timing": {
+    "total_seconds": 1372.031,
+    "note": "engineering observation only; no scientific performance gate"
+  },
+  "environment": {
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "executable": "/mnt/c/Users/Jean Marie/dev0/quant/.venv/bin/python"
+  },
+  "operator": {
+    "command": "python -m quant.i03 --mode hat ...",
+    "prereg_id": "I03-PREREG-v0.1",
+    "B_N4": 999,
+    "B_N3": 999,
+    "test_overrides_enabled": false
+  }
+}
