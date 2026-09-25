@@ -1,6 +1,6 @@
 # I03 — Intrinsic recurrence of G0
 
-> **STATUS :** **IMPLEMENTED / NOT VALIDATED** (L1 complete; L2 not started)  
+> **STATUS :** **L2-PASS** / SYNTHETIC HAT NOT YET RUN  
 > **Authority class :** RESEARCH  
 > **Protocol :** QDP v0.1 · DR-007  
 > **Frame :** Geometry review A @ `547fc57`  
@@ -11,16 +11,17 @@
 > **Prereg :** [I03-PREREG-v0.1.md](I03-PREREG-v0.1.md)  
 > **Implementation contract :** [I03-IMPLEMENTATION-CONTRACT-v0.1.md](I03-IMPLEMENTATION-CONTRACT-v0.1.md)  
 > **L1 report :** [I03-L1-IMPLEMENTATION.md](I03-L1-IMPLEMENTATION.md)  
+> **L2 report :** [I03-L2-CONTRACT-TEST.md](I03-L2-CONTRACT-TEST.md)  
 > **Code :** `src/quant/i03/`
 
 ```text
-I03 STATUS = IMPLEMENTED / NOT VALIDATED
+I03 STATUS = L2-PASS / SYNTHETIC HAT NOT YET RUN
 PREREG v0.1 = DRAFT COMPLETE
-L1 = PASS (synthetic)
-L2 = NOT STARTED
+L1 = PASS
+L2 = PASS
+HAT = NOT STARTED
 E01 = NOT AUTHORIZED
 W_sigma = 20 (SCALE-W)
-PRIMARY ESTIMAND = E-MND
 NO MARKET DATA
 NO EXPERIMENT
 NO SCI / PRED / ECON CLAIM
@@ -30,9 +31,9 @@ NO SCI / PRED / ECON CLAIM
 
 ```text
 I03-PRE → D1–D8 → DESIGN → C1–C10 → PREREG
-    → Implementation Contract → L1 (here)
-    → L2 adversarial (next)
-    → HAT → human E01 authorization
+    → Implementation Contract → L1 → L2 (here)
+    → HAT synthetic (next)
+    → human E01 authorization
 ```
 
 ## Object
