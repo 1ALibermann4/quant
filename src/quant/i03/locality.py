@@ -60,12 +60,12 @@ def locality_for_block(
     for t in queries:  # increasing order already
         pool = admissible_pool(t, block, x_defined, cfg)
         qx = states[t]
-        pairs: list[tuple[float, int]] = []
-        for s in pool:
-            pairs.append((euclidean_distance(qx, states[s]), int(s)))
-        pairs.sort(key=lambda x: (x[0], x[1]))
-        d1 = pairs[0][0]
-        d_kmax = pairs[cfg.k_max - 1][0]
+        diff = states[pool] - qx
+        dists = np.sqrt(np.sum(diff * diff, axis=1))
+        order = np.lexsort((pool, dists))
+        sorted_d = dists[order]
+        d1 = float(sorted_d[0])
+        d_kmax = float(sorted_d[cfg.k_max - 1])
         if d1 <= 0.0:
             hard = True
             lambdas.append(float("inf"))
@@ -76,9 +76,8 @@ def locality_for_block(
             sample = pool
         else:
             sample = rng.choice(pool, size=m, replace=False)
-        d_rand = float(
-            np.mean([euclidean_distance(qx, states[int(s)]) for s in sample])
-        )
+        sdiff = states[sample] - qx
+        d_rand = float(np.mean(np.sqrt(np.sum(sdiff * sdiff, axis=1))))
         if d_rand <= 0.0:
             hard = True
             lambdas.append(float("inf"))

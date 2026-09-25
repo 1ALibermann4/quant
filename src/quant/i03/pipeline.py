@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import asdict, dataclass
 from typing import Any
 
@@ -98,14 +99,18 @@ def run_structural_analysis(
     Bn3 = len(n3_sur)
 
     theta_n4: list[dict[int, dict[int, float]]] = []
-    for rs in n4_sur:
+    for i, rs in enumerate(n4_sur, start=1):
         _s, _d, em = _emnd_on_returns(rs, blocks, cfg)
         theta_n4.append(_theta_map(em))
+        if i == Bn4 or i % 50 == 0:
+            print(f"N4 E-MND {i}/{Bn4}", file=sys.stderr, flush=True)
 
     theta_n3: list[dict[int, dict[int, float]]] = []
-    for rs in n3_sur:
+    for i, rs in enumerate(n3_sur, start=1):
         _s, _d, em = _emnd_on_returns(rs, blocks, cfg)
         theta_n3.append(_theta_map(em))
+        if i == Bn3 or i % 50 == 0:
+            print(f"N3 E-MND {i}/{Bn3}", file=sys.stderr, flush=True)
 
     survival = build_survival_grid(_theta_map(emnd_obs), theta_n4, theta_n3, cfg)
 
@@ -127,6 +132,8 @@ def run_structural_analysis(
                     for b in blocks
                 )
             )
+            if bi == Bn4 or bi % 50 == 0:
+                print(f"N4 locality {bi}/{Bn4}", file=sys.stderr, flush=True)
 
     V = bool(n4_scale.valid) and locality_validity_ok(loc_obs, loc_n4) if loc_n4 else False
     if not n4_scale.valid:
@@ -162,14 +169,43 @@ def run_structural_analysis(
     )
 
 
-def artifact_dict(result: I03RunResult, *, input_hash: str = "") -> dict[str, Any]:
+def artifact_dict(
+    result: I03RunResult,
+    *,
+    input_hash: str = "",
+    implementation_id: str = "",
+    mode: str = "STRUCTURAL",
+    timing: dict[str, Any] | None = None,
+    fixture_id: str = "",
+) -> dict[str, Any]:
     """Canonical machine-readable artifact (prereg §16)."""
 
-    return {
+    cfg = result.cfg
+    art: dict[str, Any] = {
         "schema": "I03-ARTIFACT-v1",
-        "prereg_id": result.cfg.prereg_id,
+        "prereg_id": cfg.prereg_id,
         "input_hash": input_hash,
-        "config": asdict(result.cfg),
+        "implementation_id": implementation_id,
+        "mode": mode,
+        "fixture_id": fixture_id,
+        "config": {**asdict(cfg), "K": list(cfg.K)},
+        "contract_surface": {
+            "W_X": cfg.W_X,
+            "M": cfg.M,
+            "W_sigma": cfg.W_sigma,
+            "tau": cfg.tau,
+            "K": list(cfg.K),
+            "P": cfg.P,
+            "B_N4": cfg.B_N4,
+            "B_N3": cfg.B_N3,
+            "alpha": cfg.alpha,
+            "n_min": cfg.n_min,
+            "iaaft_I_max": cfg.iaaft_I_max,
+            "iaaft_eps": cfg.iaaft_eps,
+            "n4_seed_doctrine": "42 + b (b=1..B_N4)",
+            "n3_seed_doctrine": "10000 + b (b=1..B_N3)",
+            "validity_seed_doctrine": "20000 + p (+ 1000*b for N4 surrogates)",
+        },
         "blocks": [
             {"period": b.period, "start": b.start, "end": b.end, "n": int(b.indices.size)}
             for b in result.blocks
@@ -199,6 +235,8 @@ def artifact_dict(result: I03RunResult, *, input_hash: str = "") -> dict[str, An
             "invalid_reason": result.n4_scale.invalid_reason,
             "Z_frac": float(result.n4_scale.Z_indices.size / max(result.n4_scale.T, 1)),
             "B_used": result.B_n4_used,
+            "W_sigma": cfg.W_sigma,
+            "seed_doctrine": "42 + b",
             "preserves": "sigma_hat_path_by_construction_on_observed_returns",
             "does_not_claim": "rolling_stdev_recomputed_on_r_star_equals_sigma_hat",
         },
@@ -208,6 +246,10 @@ def artifact_dict(result: I03RunResult, *, input_hash: str = "") -> dict[str, An
             "B_requested": result.n3_meta.B_requested,
             "n_converged": result.n3_meta.n_converged,
             "n_nonconverged": result.n3_meta.n_nonconverged,
+            "method": "IAAFT",
+            "I_max": cfg.iaaft_I_max,
+            "epsilon": cfg.iaaft_eps,
+            "seed_doctrine": "10000 + b",
         },
         "survival": {
             "C4": result.survival.C4,
@@ -229,3 +271,6 @@ def artifact_dict(result: I03RunResult, *, input_hash: str = "") -> dict[str, An
             "reason": result.verdict.reason,
         },
     }
+    if timing is not None:
+        art["timing"] = timing
+    return art

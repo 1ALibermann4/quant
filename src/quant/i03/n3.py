@@ -43,6 +43,8 @@ def generate_n3_battery(
     n = cfg.B_N3 if B is None else int(B)
     if n < 1:
         raise ValueError("B must be positive")
+    import sys
+
     series_list: list[np.ndarray] = []
     flags: list[bool] = []
     for b in range(1, n + 1):
@@ -54,6 +56,8 @@ def generate_n3_battery(
         )
         series_list.append(res.series)
         flags.append(res.converged)
+        if n >= 50 and (b % 50 == 0 or b == n):
+            print(f"N3 IAAFT surrogate {b}/{n}", file=sys.stderr, flush=True)
     n_non = sum(1 for f in flags if not f)
     invalid = n3_nonconv_frac_invalid(n_non, n, cfg.iaaft_nonconv_frac)
     reason = "N3_IAAFT_NONCONV_FRAC" if invalid else None

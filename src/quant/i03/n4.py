@@ -128,9 +128,15 @@ def generate_n4_battery(
     entrypoints must omit ``B`` so the frozen size is used.
     """
 
+    import sys
+
     scale = build_n4_scale_path(returns, cfg)
     n = cfg.B_N4 if B is None else int(B)
     if n < 1:
         raise ValueError("B must be positive")
-    surrogates = [n4_surrogate_returns(returns, scale, b, cfg) for b in range(1, n + 1)]
+    surrogates: list[np.ndarray] = []
+    for b in range(1, n + 1):
+        surrogates.append(n4_surrogate_returns(returns, scale, b, cfg))
+        if n >= 50 and (b % 50 == 0 or b == n):
+            print(f"N4 surrogate {b}/{n}", file=sys.stderr, flush=True)
     return scale, surrogates
