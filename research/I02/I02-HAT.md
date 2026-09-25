@@ -6,7 +6,7 @@
 > **L2 baseline :** `16cfee2` (pin `653ffbd`) — L2-PASS
 > **HAT_BASELINE :** `cd6dfb0` (`test(I02): prepare preregistered HAT`)
 > **Runtime fix (HAT-I1) :** `2ef8f55` (ASCII success message — Windows cp1252)
-> **Evidence commit :** *(this commit)*
+> **Evidence commit :** `dedf3ff` (`test(I02): record successful HAT`)
 >
 > ```text
 > PREREG v0.3 UNCHANGED
