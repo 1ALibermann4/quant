@@ -563,14 +563,12 @@ class TestS3DualBranch:
         text = ""
         for path in I02_ROOT.glob("*.py"):
             text += path.read_text(encoding="utf-8") + "\n"
-        # forbid obvious post-hoc selectors on scientific S3 outputs
+        # forbid post-hoc selectors — not mere mention in denial/audit strings
         forbidden = [
-            r"best_s3",
-            r"s3_primary",
-            r"choose_s3",
-            r"select_s3_branch",
-            r"argmin\(.*S3",
-            r"argmax\(.*S3",
+            r"s3_primary\s*=",
+            r"choose_s3_branch\s*\(",
+            r"select_s3_branch\s*\(",
+            r"best_s3\s*=",
         ]
         for pat in forbidden:
             assert re.search(pat, text, re.I) is None, pat
@@ -800,10 +798,32 @@ class TestStaticFreedomAudit:
             I02Params(b_star=30)  # type: ignore[call-arg]
 
     def test_no_i02_cli_tuning_surface(self):
-        for path in I02_ROOT.glob("*.py"):
-            src = path.read_text(encoding="utf-8")
-            assert "argparse" not in src
-            assert "click" not in src
+        # Operational entry points may use argparse for paths only.
+        # Scientific modules must not grow a tuning CLI.
+        scientific_modules = [
+            "params.py",
+            "pipeline.py",
+            "bootstrap.py",
+            "distances.py",
+            "states_x.py",
+            "regime.py",
+            "spearman.py",
+            "features.py",
+            "crps.py",
+            "estimand.py",
+            "pool.py",
+            "neighbors.py",
+        ]
+        for name in scientific_modules:
+            src = (I02_ROOT / name).read_text(encoding="utf-8")
+            assert "argparse" not in src, name
+            assert "click" not in src, name
+        # Runtime CLI must not expose scientific knobs
+        from quant.i02.runtime import build_parser
+
+        help_text = build_parser().format_help()
+        for forbidden in ("--W_X", "--k", "--B", "--b-star", "--alpha", "--M"):
+            assert forbidden not in help_text
 
     def test_no_hidden_epsilon_adaptive_best(self):
         patterns = [

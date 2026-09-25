@@ -1,10 +1,12 @@
 # I02 — Human Acceptance Test (HAT)
 
-> **STATUS :** `PRE-RUN`
+> **STATUS :** `HAT-PASS`
 > **Authority class :** OPERATIONAL ACCEPTANCE (not scientific evidence)
 > **Preregistration :** [I02-PREREG-v0.3](I02-preregistration.md) — **unchanged**
 > **L2 baseline :** `16cfee2` (pin `653ffbd`) — L2-PASS
-> **HAT_BASELINE :** *(this commit — filled at PRE-RUN commit)*
+> **HAT_BASELINE :** `cd6dfb0` (`test(I02): prepare preregistered HAT`)
+> **Runtime fix (HAT-I1) :** `2ef8f55` (ASCII success message — Windows cp1252)
+> **Evidence commit :** *(this commit)*
 >
 > ```text
 > PREREG v0.3 UNCHANGED
@@ -32,7 +34,8 @@ parameter validation.
 ## 1. Real entry point
 
 ```text
-py -3.12 -m quant.i02 --input <fixture.npz> --output-dir <dir> --fixture-id I02-HAT-FIXTURE-v1
+$env:PYTHONPATH = "src"
+py -3.12 -m quant.i02 --input research/I02/hat/fixture_v1.npz --output-dir <dir> --fixture-id I02-HAT-FIXTURE-v1
 ```
 
 Console script (when installed): `i02-runtime`.
@@ -76,8 +79,8 @@ operator command
 
 ## 3. PRE-RUN structural expectations
 
-Recorded **before** first execution. Scientific ρ / CI signs are
-**not** expected.
+Recorded **before** first execution (`cd6dfb0`). Scientific ρ / CI signs
+are **not** expected.
 
 | ID | Expectation |
 |----|-------------|
@@ -103,51 +106,129 @@ CI excluding 0, “good performance”.
 
 ## 4. Acceptance criteria (H1–H18)
 
-| ID | Criterion | PRE-RUN status |
-|----|-----------|----------------|
-| H1 | Runtime entry point exits successfully | PENDING |
-| H2 | Fixture identity/hash recorded | PENDING |
-| H3 | ≥1 complete evaluable query | PENDING |
-| H4 | Common \(A_t\) | PENDING |
-| H5 | Hard availability | PENDING |
-| H6 | \(k=50\) | PENDING |
-| H7 | Representations X/S1/S2/S3_Q/S3_phi | PENDING |
-| H8 | S3 dual-branch governance | PENDING |
-| H9 | 50 atoms / multiplicity | PENDING |
-| H10 | CRPS / D / R emitted | PENDING |
-| H11 | Z scales {3,12,21} | PENDING |
-| H12 | Complete Spearman grid | PENDING |
-| H13 | MBB B=9999 seed=42 b={20,40,80} | PENDING |
-| H14 | No best-S / best-m / best-b / best-S3 | PENDING |
-| H15 | Canonical artifact | PENDING |
-| H16 | Human report from artifact | PENDING |
-| H17 | Reproducibility (2 runs) | PENDING |
-| H18 | Post-HAT regression green | PENDING |
+| ID | Criterion | Result |
+|----|-----------|--------|
+| H1 | Runtime entry point exits successfully | **PASS** |
+| H2 | Fixture identity/hash recorded | **PASS** |
+| H3 | ≥1 complete evaluable query | **PASS** (579) |
+| H4 | Common \(A_t\) | **PASS** |
+| H5 | Hard availability | **PASS** |
+| H6 | \(k=50\) | **PASS** |
+| H7 | Representations X/S1/S2/S3_Q/S3_phi | **PASS** |
+| H8 | S3 dual-branch governance | **PASS** |
+| H9 | 50 atoms / multiplicity | **PASS** |
+| H10 | CRPS / D / R emitted | **PASS** |
+| H11 | Z scales {3,12,21} | **PASS** |
+| H12 | Complete Spearman grid | **PASS** (12 cells) |
+| H13 | MBB B=9999 seed=42 b={20,40,80} | **PASS** (36 cells) |
+| H14 | No best-S / best-m / best-b / best-S3 | **PASS** |
+| H15 | Canonical artifact | **PASS** |
+| H16 | Human report from artifact | **PASS** |
+| H17 | Reproducibility (2 runs) | **PASS** (`SEMANTIC_IDENTICAL`) |
+| H18 | Post-HAT regression green | **PASS** (97/97 I02; 697/697 repo) |
 
 ---
 
-## 5. Commands (to execute after HAT_BASELINE)
+## 5. Commands executed
 
 ```text
+# HAT_BASELINE
+cd6dfb0  test(I02): prepare preregistered HAT
+
+# HAT-I1 fix (Unicode print on Windows cp1252)
+2ef8f55  fix(I02): use ASCII success message in HAT runtime
+
 # Run #1
+$env:PYTHONPATH = "src"
 py -3.12 -m quant.i02 --input research/I02/hat/fixture_v1.npz --output-dir research/I02/hat/run1 --fixture-id I02-HAT-FIXTURE-v1
 
-# Run #2 (identical; no code changes)
+# Run #2 (identical; no code changes between runs)
 py -3.12 -m quant.i02 --input research/I02/hat/fixture_v1.npz --output-dir research/I02/hat/run2 --fixture-id I02-HAT-FIXTURE-v1
 
+# Reproducibility
+py -3.12 -m quant.i02.compare_hat research/I02/hat/run1/artifact.json research/I02/hat/run2/artifact.json
+# → SEMANTIC_IDENTICAL
+
 # Regression
-py -3.12 -m pytest tests/i02 -q
-py -3.12 -m pytest -q
+py -3.12 -m pytest tests/i02 -q   # 97 passed
+py -3.12 -m pytest -q             # 697 passed
 ```
 
 ---
 
 ## 6. POST-RUN evidence
 
-*(append after execution — do not fill before HAT_BASELINE)*
+### 6.1 Query counts
+
+| Metric | Value |
+|--------|-------|
+| Scheduled | **638** |
+| Evaluable | **579** |
+| Skipped | **59** |
+| Skip reasons | `INSUFFICIENT_ADMISSIBLE_POOL`: 59 |
+
+### 6.2 Branches observed
+
+`X`, `S1`, `S2`, `S3_Q`, `S3_phi` — no singular `S3` winner.
+
+### 6.3 Association / MBB
+
+| Item | Value |
+|------|-------|
+| Spearman grid | **12** cells (4×3) |
+| MBB cells | **36** (12×3 b) |
+| B | **9999** |
+| seed | **42** |
+| b executed | **{20, 40, 80}** |
+| n_valid (all cells) | **579** |
+| n_finite_replicates | **9999** (no cell inconclusive on this fixture) |
+
+### 6.4 Reproducibility
+
+| Run | Path | Wall-clock (s) |
+|-----|------|----------------|
+| #1 | `research/I02/hat/run1/` | ≈ 684 |
+| #2 | `research/I02/hat/run2/` | ≈ 730 |
+
+Semantic compare: **SEMANTIC_IDENTICAL**
+(`sha256:fd2ac01e1dba59178063a5c857add206fe7958a4a63ded1f0c21bb7b049ec2ea`
+on payloads with non-scientific metadata excluded).
+
+Stored artifact semantic_fingerprint field (run1/run2 identical):
+`sha256:24b33236ef72e1a4aaf3e548f4d09e430ada6f7111b8c0c71744f0b86215a10f`
+
+### 6.5 Issues
+
+| ID | Class | Description | Resolution |
+|----|-------|-------------|------------|
+| HAT-I1 | runtime | Success `print` used Unicode arrow → Windows cp1252 crash **after** artifact write | Fixed `2ef8f55`; both acceptance runs re-executed with clean exit |
+| HAT-I2 | tests | L2 static audits false-positive on denial string `best_s3` and operational `argparse` | Narrowed L2 patterns (post-HAT regression) |
+
+No HAT-I3…I5. No I4/I5 contract blockers.
+
+### 6.6 Artifact paths
+
+- `research/I02/hat/run1/artifact.json` + `report.md`
+- `research/I02/hat/run2/artifact.json` + `report.md`
+- Fixture: `research/I02/hat/fixture_v1.npz`
+
+### 6.7 Runtime diagnostic
+
+- Fixture size: N=900
+- Evaluable queries: 579
+- Wall-clock ≈ 11–12 minutes / run (dominated by B=9999 × 36 MBB cells)
+- No performance gate applied
 
 ---
 
 ## 7. Verdict
 
-**CURRENT:** `PRE-RUN` — not executed.
+\[
+\boxed{\texttt{HAT-PASS}}
+\]
+
+H1–H18 satisfied. Synthetic operational acceptance only.
+**HAT-PASS ≠ scientific evidence. HAT-PASS ≠ exploratory run. HAT-PASS ≠ SCI-PASS.**
+
+Next authorized boundary (human decision): exploratory E01-style run on
+declared data class under DR-007 **UNQUALIFIED** — separate from this HAT.

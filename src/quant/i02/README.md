@@ -8,10 +8,10 @@ Authoritative contract: [`research/I02/I02-preregistration.md`](../../research/I
 
 - **I02 = OPEN**
 - L1: computational pipeline aligned with v0.3 (this package) — **C2**
-- L2: contract-test closure — see [`I02-L2-CONTRACT-TEST.md`](../../research/I02/I02-L2-CONTRACT-TEST.md)
-- HAT: not claimed
-- Exploratory run: not authorized until HAT PASS
-- Readiness: **L2-PASS** (ready for HAT protocol construction only)
+- L2: contract-test closure — [`I02-L2-CONTRACT-TEST.md`](../../research/I02/I02-L2-CONTRACT-TEST.md)
+- HAT: **PASS** — [`I02-HAT.md`](../../research/I02/I02-HAT.md) (synthetic operational; not scientific evidence)
+- Exploratory run: not started (distinct from HAT)
+- Readiness: **HAT-PASS** (authorized to prepare exploratory run under DR-007; not SCI)
 
 ## Entry points
 

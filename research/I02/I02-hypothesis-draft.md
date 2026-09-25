@@ -90,8 +90,8 @@ objet multi-échelle ; no-primary.
 sensibilité prédéclarée \(\{20,40,80\}\) (diagnostic, no best-\(p\)).
 **Readiness :** §14M — **`R2` DESIGN CLOSED**.
 **Preregistration :** [I02-preregistration.md](I02-preregistration.md)
-— **v0.3** ; S3-A ACCEPTED ; readiness **`C2`** then **`L2-PASS`**
-  ([I02-L2-CONTRACT-TEST.md](I02-L2-CONTRACT-TEST.md)).
+— **v0.3** ; S3-A ACCEPTED ; readiness **`C2`** / **`L2-PASS`** /
+  **`HAT-PASS`** ([I02-HAT.md](I02-HAT.md) — operational only).
 \[
 \boxed{k=50\ \texttt{ACCEPTED}}
 \quad
@@ -104,12 +104,15 @@ sensibilité prédéclarée \(\{20,40,80\}\) (diagnostic, no best-\(p\)).
 \boxed{\texttt{C2}}
 \quad
 \boxed{\texttt{L2-PASS}}
+\quad
+\boxed{\texttt{HAT-PASS}}
 \]
 \[
 \boxed{\text{I02 = OPEN}}
 \]
-Core design **non rouvert**. Gaps A/B/C **CLOSED** (v0.3). L2 contract
-tests closed. Pas de HAT / run / market data. Next: HAT protocol only.
+Core design **non rouvert**. Gaps A/B/C **CLOSED** (v0.3). L2 + HAT
+closed on synthetic operational path. Pas de run exploratoire / market
+data / SCI. Next: exploratory run (UNQUALIFIED) only if human-authorized.
 
 ---
 
