@@ -1,20 +1,11 @@
-"""I02 mathematical core — vendor-agnostic preregistered pipeline.
+"""I02 mathematical core — historical (investigation CLOSED — EXPL-ABSENT).
 
-Authority: ``research/I02/I02-preregistration.md`` (I02-PREREG-v0.3).
+Authority: ``research/I02/I02-preregistration.md`` (I02-PREREG-v0.3, historical).
+Closure: ``research/I02/I02-CLOSURE.md``.
 Design history: ``research/I02/I02-hypothesis-draft.md``.
 
-This package must not import market-data vendors or ``quant.exploratory``.
-L1 implements the computational contract; HAT / exploratory runs are
-separate milestones.
-
-Contract gaps A/B/C closed (v0.3): M=252 no-ε X; S3-A dual charts;
-non-circular MBB. See :mod:`quant.i02.contract_gaps`.
-
-Operational entry point (HAT / future exploratory):
-
-```text
-python -m quant.i02 --input fixture.npz --output-dir out/
-```
+This package must not import market-data vendors into the mathematical core.
+Replay / maintenance only — does not reopen I02. I03 is not opened.
 """
 
 from quant.i02.bootstrap import MBBResult, mbb_spearman_ci, mbb_spearman_robustness

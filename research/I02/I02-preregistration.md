@@ -1,29 +1,29 @@
 # I02 — Preregistration & readiness contract
 
-> **STATUS :** PREREGISTRATION IN FORCE — **I02 = OPEN**
-> **Authority class :** RESEARCH / PROTOCOL (normative for I02)
+> **STATUS :** PREREGISTRATION — **HISTORICAL** (investigation **CLOSED**)
+> **Authority class :** RESEARCH / PROTOCOL (normative for the executed I02 path)
 > **Protocol :** QDP v0.1
 > **Design readiness :** R2 — DESIGN CLOSED @ `260988b` (pin `32b60c4`)
 > **Prereg ID :** **I02-PREREG-v0.3** (S3-A human decision + executable contract)
 > **Prereg readiness :** **P2** at open ; L1 gaps **closed** (§13–§15 / S3-A)
-> **I02 :** **OPEN**
-> **Scientific run :** NOT AUTHORIZED until HAT PASS
+> **I02 :** **CLOSED — EXPL-ABSENT** — see [I02-CLOSURE.md](I02-CLOSURE.md)
+> **Scientific run :** E01 executed (UNQUALIFIED) → EXPL-ABSENT ; no SCI claim
 > **Opened at :** `4f6be2a` — **before any I02 implementation**
-> **L1 implementation :** `8d05905` ; **L1 patch :** *(this commit)*
+> **L1 implementation :** `8d05905` ; **L1 patch :** `b5465b0`
 >
 > **Parent design history :** [I02-hypothesis-draft.md](I02-hypothesis-draft.md)
 > **Governance :** DR-007, DR-008, C02 v1.1, closure gates, MS-1…MS-4
 
-This file is the **executable scientific contract**. It does **not**
-redesign I02. Rationale and adversarial history live in the draft.
-Cross-references only.
+This file remains the **executable scientific contract as frozen for I02**.
+Closure does **not** amend the clauses below; see
+[I02-CLOSURE.md](I02-CLOSURE.md) for disposition. Rationale lives in the draft.
 
 ```text
-I02 = OPEN
-CORE DESIGN = FROZEN (R2)
+I02 = CLOSED — EXPL-ABSENT
+CORE DESIGN = FROZEN (R2) — HISTORICAL
 L1 CONTRACT-GAP AMENDMENTS = §13–§16 (pre-experimental)
 NO PARAMETER SEARCH FROM DATA
-NO MARKET DATA IN THIS DOCUMENT
+NO SCI-PASS / NO SCI-FAIL FROM THIS PATH
 ```
 
 ---

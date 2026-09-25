@@ -1,8 +1,8 @@
 # I02 — Brouillon d'hypothèse (historique de design)
 
-> **STATUS :** DESIGN HISTORY — core **FROZEN** (R2)
-> **I02 :** **OPEN**
-> **Scientific run :** NOT AUTHORIZED until HAT PASS
+> **STATUS :** DESIGN HISTORY — core **FROZEN** (R2) ; investigation **CLOSED**
+> **I02 :** **CLOSED — EXPL-ABSENT** — [I02-CLOSURE.md](I02-CLOSURE.md)
+> **Scientific status :** EXPL-ABSENT (not SCI-PASS / not SCI-FAIL)
 > **Authority class :** RESEARCH (historique / rationale ; non normatif
 > pour l'exécution — le contrat normatif est
 > [I02-preregistration.md](I02-preregistration.md))
@@ -90,8 +90,8 @@ objet multi-échelle ; no-primary.
 sensibilité prédéclarée \(\{20,40,80\}\) (diagnostic, no best-\(p\)).
 **Readiness :** §14M — **`R2` DESIGN CLOSED**.
 **Preregistration :** [I02-preregistration.md](I02-preregistration.md)
-— **v0.3** ; S3-A ACCEPTED ; readiness **`C2`** / **`L2-PASS`** /
-  **`HAT-PASS`** ([I02-HAT.md](I02-HAT.md) — operational only).
+— **v0.3** ; S3-A ACCEPTED ; lifecycle **CLOSED — EXPL-ABSENT**
+  ([I02-CLOSURE.md](I02-CLOSURE.md)).
 \[
 \boxed{k=50\ \texttt{ACCEPTED}}
 \quad
@@ -106,13 +106,14 @@ sensibilité prédéclarée \(\{20,40,80\}\) (diagnostic, no best-\(p\)).
 \boxed{\texttt{L2-PASS}}
 \quad
 \boxed{\texttt{HAT-PASS}}
+\quad
+\boxed{\texttt{EXPL-ABSENT}}
+\quad
+\boxed{\texttt{I02 = CLOSED}}
 \]
-\[
-\boxed{\text{I02 = OPEN}}
-\]
-Core design **non rouvert**. Gaps A/B/C **CLOSED** (v0.3). L2 + HAT
-closed on synthetic operational path. Pas de run exploratoire / market
-data / SCI. Next: exploratory run (UNQUALIFIED) only if human-authorized.
+Core design **non rouvert**. Investigation **CLOSE** (Disposition A).
+Pas de retuning I02. I03 **non ouvert**. Artefacts scientifiques =
+évidence historique.
 
 ---
 
