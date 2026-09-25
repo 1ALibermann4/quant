@@ -32,7 +32,7 @@
 > **Draft v0.22 future target review :** `38812f8`
 > **Draft v0.23 accept h=10 :** `cd16496`
 > **Draft v0.24 forecast object / scoring :** `c3a6909`
-> **Draft v0.25 scale estimand review :** *(ce commit)*
+> **Draft v0.25 scale estimand review :** `f3c54cc`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
