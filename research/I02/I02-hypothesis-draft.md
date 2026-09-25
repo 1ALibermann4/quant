@@ -31,6 +31,7 @@
 > **Draft v0.21 freeze M_Z :** `3d3d877`
 > **Draft v0.22 future target review :** `38812f8`
 > **Draft v0.23 accept h=10 :** `cd16496`
+> **Draft v0.24 forecast object / scoring :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -65,7 +66,9 @@ V_{t,10}
 \quad\texttt{ACCEPTED}
 \]
 \(h=10\) — `INHERITED FIXED FORECAST HORIZON` (§14I.14).
-CRPS / \(Z_t\) **non** acceptés.
+**Forecast object / CRPS :** §14J — CRPS `ACCEPTED` comme score ;
+\(\Delta_t^{(S)}\) **non figé** (dépendance d'échelle = **C**).
+\(Z_t\) **non** acceptée. \(k\), stride **OPEN**.
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
@@ -81,8 +84,8 @@ I02 reste `NOT OPENED`.
 - pas E05 ;
 - pas un contrat empirique pour un Market-State / Regime Engine ;
 - pas un choix de seuil, de source, ni d'instrument ;
-- pas une acceptation de CRPS, de \(h\), d'une **distance complète**,
-  de **poids**, ni de \(C_t\) ;
+- pas une acceptation de \(Z_t\), d'une **distance complète**,
+  ni de \(C_t\) ; CRPS / \(h\) : voir §14J / §14I (statuts explicites) ;
 - pas une ouverture d'I02 ;
 - pas un remplacement des représentations \(S\) par les charts \(S^\star\).
 
@@ -250,43 +253,47 @@ Cette écriture **n'est pas** encore un protocole.
 
 ## 5. Distributions empiriques par voisinage (mécanisme candidat)
 
-**Aucun \(k\) nouveau. Aucun calcul. Aucune implémentation.**
+**Revue complète :** §14J. Aucun \(k\) choisi. Aucun calcul.
+
 Distance et scaling de \(S\) : ensembles de robustesse §9.16
 `ACCEPTED` ; détail d'opérateur kNN / agrégation \(L\)+forme :
 protocole futur. Composition informationnelle : **acceptée** (§9).
 
-Pour une requête \(t\), candidat :
+**Pool commun \(A_t\)** (blocking, §14J.2) : \(X\) et chaque \(S\)
+sélectionnent dans le **même** ensemble admissible — pas de pool
+spécifique à une représentation ; pas de filtrage par \(Z_t\).
 
-$$
-N_X(t)=\operatorname{kNN}(X_t),\qquad
-\widehat F_X(v\mid t)
+Pour une requête \(t\) et une représentation \(R\in\{X,S_1,S_2,S_3\}\),
+objet canonique (§14J) :
+
+\[
+\widehat{\mathbb{P}}_t^{R}
 =
-\frac{1}{k}\sum_{s\in N_X(t)}\mathbf{1}\{V_{s,h}\le v\}
-$$
+\frac1k\sum_{i=1}^{k}\delta_{V_{s_i,10}},
+\qquad
+s_i\in N_k^{R}(t)\subset A_t
+\]
 
-$$
-N_S(t)=\operatorname{kNN}(S_t),\qquad
-\widehat F_S(v\mid t)
-=
-\frac{1}{k}\sum_{s\in N_S(t)}\mathbf{1}\{V_{s,h}\le v\}
-$$
+ECDF dérivée : \(\widehat F_t^{R}(v)=(1/k)\sum_i\mathbf{1}\{V_{s_i,10}\le v\}\).
 
-Ce sont des **prévisions probabilistes** candidates de \(V_{t,h}\),
-construites uniquement à partir de \(V_{s,h}\) **historiques** des
-voisins (sélection = fonction de \(X\) ou de \(S\), pas de \(V_{t,h}\)
-— même discipline AF-08 qu'I01).
+Ce sont des **prévisions probabilistes empiriques** de \(V_{t,10}\),
+**pas** la loi conditionnelle vraie. Sélection = fonction de \(R\)
+seulement (discipline AF-08).
 
 Le voisinage reste l'**opérateur expérimental**. On n'ouvre pas une
 course XGBoost(\(X\)) vs forêt(\(rv\)).
 
-B0 (tirage dans \(\mathcal{L}_t\)) peut fournir une troisième \(\widehat F\)
+B0 (tirage dans \(\mathcal{L}_t\)) peut fournir une troisième mesure
 de référence. Il n'est pas l'adversaire suffisant de H1.
 
 ---
 
-## 6. CRPS — métrique principale **candidate**
+## 6. CRPS — métrique principale **`ACCEPTED`**
 
-**Pas calculé. Pas un gate.**
+**Statut :** `ACCEPTED` comme proper scoring rule primaire pour
+évaluer \(\widehat{\mathbb{P}}_t^{R}\) (§14J.8–§14J.10). **Pas
+calculé. Pas un gate numérique.** \(\Delta_t^{(S)}\) définitif :
+**OPEN** — dépendance d'échelle classée **C** (§14J.13).
 
 $$
 \operatorname{CRPS}(F,y)
@@ -297,43 +304,51 @@ $$
 
 Convention : **plus faible = meilleure** prévision probabiliste.
 
-Candidats opérationnels :
+Pour mesure empirique uniforme (§14J.8) :
+
+\[
+\operatorname{CRPS}(\widehat{\mathbb{P}},y)
+=
+\frac1k\sum_i|V_i-y|
+-
+\frac1{2k^2}\sum_i\sum_j|V_i-V_j|
+\]
+
+Opérationnel :
 
 $$
-\operatorname{CRPS}_X(t)=\operatorname{CRPS}(\widehat F_X(\cdot\mid t),V_{t,h})
+\operatorname{CRPS}_R(t)=\operatorname{CRPS}(\widehat{\mathbb{P}}_t^{R},V_{t,10})
 $$
 
-$$
-\operatorname{CRPS}_S(t)=\operatorname{CRPS}(\widehat F_S(\cdot\mid t),V_{t,h})
-$$
+Différence **candidate** (orientation OK ; estimand \(Z\)-lié **non
+figé**) :
 
 $$
-D^{\mathrm{CRPS}}_t
+\Delta_t^{(S)}
 =
 \operatorname{CRPS}_S(t)-\operatorname{CRPS}_X(t)
 $$
 
-\(D^{\mathrm{CRPS}}_t>0\) signifierait : ce jour-là, \(\widehat F_X\) a
-mieux décrit \(V_{t,h}\) observé que \(\widehat F_S\).
+\(\Delta_t^{(S)}>0\) : \(X\) mieux scorée que \(S\) en \(t\) (CRPS
+lower-is-better). Ce n'est **pas** un information gain Shannon.
 
-Quantité centrale **candidate** (si CRPS et \(C_t\) étaient un jour
-retenus) :
+Quantité conditionnelle **candidate** (si \(C_t\)/\(Z\) et échelle
+étaient résolus) :
 
 $$
-\mathbb{E}\bigl[D^{\mathrm{CRPS}}_t \bigm| C_t=1\bigr]
+\mathbb{E}\bigl[\Delta_t^{(S)} \bigm| \cdot\bigr]
 $$
 
 sur information indépendante. **Aucun seuil. Aucun calcul.**
 
-Pour un ensemble fini de \(k\) atomes, le CRPS a une forme close
-classique (moyenne des écarts à \(y\) moins la demi-dispersion interne
-de l'ensemble). Le mentionner n'autorise pas à l'implémenter ici.
+Revue adversariale antérieure (§6.1) : conservée comme historique ;
+verdicts figés : §14J.
 
-### 6.1 CRPS adversarial review
+### 6.1 CRPS adversarial review (historique pré-§14J)
 
 Objectif : CRPS peut-il devenir métrique confirmatoire principale
 **sans** ouvrir une sélection post hoc ? Aucune alternative n'est
-testée sur les données.
+testée sur les données. **Supersédé / complété par §14J.**
 
 | Point | Lecture |
 |-------|---------|
@@ -342,16 +357,13 @@ testée sur les données.
 | Sharpness / dispersion | Pénalise à la fois le biais et l'excès de largeur. Une loi trop plate (contrôle « 0.8 … 6.1 ») est battue par une loi concentrée autour de \(y\), *si* \(y\) tombe dedans. |
 | Ensemble de \(k\) points | Avec \(k\) petit, \(\widehat F\) est en escalier. Le CRPS reste bien défini ; la variance du score est plus grande. Hériter \(k=50\) (OPEN) n'est pas anodin : trop peu d'atomes ⇒ loi rugueuse. Ce n'est pas une raison de changer \(k\) après un chiffre. |
 | Queues | Moins dominé par les queues que le log-score (qui explose si \(y\) sort d'une densité paramétrique). Inversement, un miss extrême est moins punitif qu'en vraisemblance. Compatible avec H3 : il faudra regarder si \(\mathbb{E}[D\mid C=1]\) est une moyenne de queue. |
-| Échelle de \(V\) | Le CRPS est **dans les unités de \(V\)**. Les jours à \(V\) élevé pèsent plus sur la moyenne. Si \(C_t=1\) sélectionne des états déjà volatils, \(\mathbb{E}[D\mid C=1]\) peut être dominé par quelques \(V\) grands — cousin d'H3. Une normalisation (CRPS / \(V\), rang, …) **n'est pas choisie** ici : la choisir après un run serait du snooping. Risque **documenté**, pas un motif de tester une autre métrique maintenant. |
+| Échelle de \(V\) | Le CRPS est **dans les unités de \(V\)**. Les jours à \(V\) élevé pèsent plus sur la moyenne. Si \(C_t=1\) sélectionne des états déjà volatils, \(\mathbb{E}[D\mid C=1]\) peut être dominé par quelques \(V\) grands — cousin d'H3. Une normalisation (CRPS / \(V\), rang, …) **n'est pas choisie** ici : la choisir après un run serait du snooping. Risque **documenté**, pas un motif de tester une autre métrique maintenant. **§14J.13 :** classé **C** pour l'estimand \(Z\)-lié. |
 | vs erreur absolue ponctuelle | MAE de la moyenne ou de la médiane d'ensemble = cas dégénéré (prévision d'un point). Plus faible philosophiquement : on perd calibration/sharpness. Utile comme **diagnostic**, pas comme remplaçant silencieux. |
-| vs log-score | Exige une densité. Imposer une loi paramétrique sur \(k\) voisins ajoute un modèle. Contredit « pas de ML / pas de loi inventée ». Écarté comme primaire. |
+| vs log-score | Exige une densité. Imposer une loi paramétrique sur \(k\) voisins ajoute un modèle. Contredit « pas de ML / pas de loi inventée ». Écarté comme primaire (§14J.10). |
 | vs calibration + sharpness séparées | Plus riches, plus de degrés de liberté ⇒ plus de tentation post hoc. Le CRPS les **combine** en une proper rule. Les séparer reste un diagnostic possible, pas une batterie de gates. |
 
-**Verdict documentaire sur le CRPS :** `ACCEPTABLE CANDIDATE`.
-
-Pas `ACCEPTÉ`. Pas `REJECT`. Les réserves d'échelle et de queue
-doivent rester visibles si une décision humaine le retient. Aucun
-gate numérique.
+**Verdict historique (§6.1) :** `ACCEPTABLE CANDIDATE`.
+**Verdict figé (§14J) :** CRPS `ACCEPTED` ; \(\Delta\) définitif OPEN (échelle **C**).
 
 ---
 
@@ -3855,8 +3867,7 @@ investigation / réplication.
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
 
-**Prochaine étape :** forecast object / CRPS (ECDF des \(V_{s,10}\)
-voisins, \(\Delta_t^{(S)}\)) — sans données.
+**Prochaine étape :** forecast object / CRPS — §14J.
 
 ### 14I.15 Cohérence (post-acceptation)
 
@@ -3865,8 +3876,461 @@ voisins, \(\Delta_t^{(S)}\)) — sans données.
 | \(h=10\) ACCEPTED as inherited forecast horizon | oui |
 | \(V_{t,10}\) fully specified | oui |
 | Multi-\(h\) non rouvert | oui |
-| Pas de CRPS / \(Z_t\) acceptés | oui |
+| Pas de CRPS / \(Z_t\) acceptés | oui *(à la date de §14I ; CRPS mis à jour §14J)* |
 | I02 NOT OPENED | oui |
+
+---
+
+## 14J. Forecast object probabiliste et scoring
+
+> **Nature :** mathématique / méthodologique / documentaire.
+> **NO DATA. NO EXPERIMENT. NO CODE.**
+> \(k=\texttt{OPEN}\). stride=\texttt{OPEN}. \(\texttt{NO }Z_t\texttt{ ACCEPTED}\).
+> I02 = `NOT OPENED`.
+
+Chaîne à **ne pas mélanger** :
+
+\[
+\text{voisins historiques}
+\;\rightarrow\;
+\text{distribution prédictive}
+\;\rightarrow\;
+\text{proper scoring}
+\;\rightarrow\;
+\text{comparaison }X\text{ vs }S.
+\]
+
+Baseline figée en amont : \(W_X=W_{RV}=20\),
+\(\mathcal{M}_Z=\{3,12,21\}\), \(h=10\), \(V_{t,10}\) défini,
+\(s+10\le t\).
+
+### 14J.1 Objectif
+
+Pour une représentation \(R\in\{X,S_1,S_2,S_3\}\) à la query \(t\) :
+
+1. voisins historiques admissibles \(N_k^{R}(t)=\{s_1,\ldots,s_k\}\) ;
+2. targets déjà observables \(V_{s_i,10}\) ;
+3. mesure prédictive empirique \(\widehat{\mathbb{P}}_t^{R}\) ;
+4. proper score contre \(y=V_{t,10}\) ;
+5. comparaison \(X\) vs chaque \(S\).
+
+Question : cette architecture est-elle mathématiquement et
+méthodologiquement propre pour I02 ?
+
+### 14J.2 Ensemble admissible commun \(A_t\) — BLOCKING
+
+Pour chaque query \(t\), un **seul** pool :
+
+\[
+A_t
+=
+\bigl\{
+s :
+\;
+s < t,\;
+s+10\le t,\;
+R_s\text{ constructible pour tout }
+R\in\{X,S_1,S_2,S_3\}
+\bigr\}.
+\]
+
+« Constructible » inclut au minimum l'historique passé requis par
+\(W_X=20\) (et les features \(S\) dérivées du même passé). Autres
+contraintes éventuelles (calendrier, gaps) : protocole futur, mais
+**communes** à toutes les \(R\).
+
+\[
+\boxed{N_k^{R}(t)\subset A_t
+\quad\text{pour toute }R}
+\]
+
+**Interdit :** pool spécifique à \(X\) ou à un \(S\) ; filtrage
+historique par \(Z_t\).
+
+Sans \(A_t\) commun, \(\operatorname{Score}_S-\operatorname{Score}_X\)
+n'est **pas** une comparaison paired propre.
+
+### 14J.3 Forecast empirique
+
+\[
+\boxed{
+\widehat{\mathbb{P}}_t^{R}
+=
+\frac1k\sum_{i=1}^{k}\delta_{V_{s_i,10}}
+}
+\quad
+s_i\in N_k^{R}(t)
+\]
+
+**Verdict :** mesure de probabilité **valide** sur \(\mathbb{R}\)
+(support effectif \(\subset[0,\infty)\)) — *empirical predictive
+distribution*.
+
+\[
+\widehat{\mathbb{P}}_t^{R}
+\;\neq\;
+\mathcal{L}(V_{t,10}\mid R_t,\mathcal{F}_t)
+\]
+
+C'est un **objet de forecast** construit par voisinage, **pas** une
+estime de la loi conditionnelle inconnue. Confondre les deux est une
+attaque (§14J.19).
+
+### 14J.4 Mesure vs ECDF
+
+\[
+\widehat F_t^{R}(v)
+=
+\widehat{\mathbb{P}}_t^{R}\bigl((-\infty,v]\bigr)
+=
+\frac1k\sum_{i=1}^{k}\mathbf{1}\{V_{s_i,10}\le v\}
+\]
+
+Même forecast sous deux formes.
+
+| Forme | Rôle |
+|-------|------|
+| \(\widehat{\mathbb{P}}_t^{R}\) (mesure empirique / atomes) | **canonique** dans la spécification |
+| \(\widehat F_t^{R}\) (ECDF) | représentation dérivée (intégrale CRPS, plots) |
+
+### 14J.5 Pondération
+
+**Baseline recommandée :** poids uniformes \(1/k\).
+
+Distance weighting ⇒ bandwidth implicite, transformation de distance,
+liberté méthodologique **non nécessaire** pour tester H1-I02, et
+risque de tuning silencieux.
+
+\[
+\boxed{\texttt{UNIFORM WEIGHTING = MINIMAL BASELINE}}
+\]
+
+Distance weighting : **non retenu** comme baseline. Aucune
+optimisation de poids.
+
+### 14J.6 Ties de distance
+
+Règle requise : déterministe ; indépendante de la représentation
+*au niveau de la règle* (même procédure pour toute \(R\)) ;
+indépendante de \(V\) futur et des scores.
+
+| Option | Taille fixe \(k\) | Repro | Risque |
+|--------|-------------------|-------|--------|
+| **A.** ordre secondaire par index de session historique | oui | oui | léger biais temporel de tie-break |
+| **B.** inclure tous les ties de frontière | non (\(\lvert N\rvert\ge k\)) | oui | CRPS/\(1/k\) non comparable |
+| **C.** ordre secondaire par identifiant déterministe | oui | oui | proche de A |
+
+**Verdict recommandé :** **A** — tri stable
+\((\mathrm{distance}\uparrow,\; s\uparrow)\) ; garder exactement \(k\)
+voisins. B rejeté (casse la taille fixe). C admissible équivalent si
+l'identifiant = index de session.
+
+Tie-break **par \(V_{s,10}\)** ou par score : **interdit**.
+
+### 14J.7 Valeurs \(V\) dupliquées
+
+Si \(V_{s_i,10}=V_{s_j,10}\) pour \(i\neq j\) : **deux atomes
+distincts** (masse \(2/k\) au même point). Ce sont des observations
+de forecast répétées, **pas** la fusion de voisins historiques.
+
+Duplicate forecast values ≠ duplicate neighbors.
+
+### 14J.8 CRPS — identité et propriétés
+
+\[
+\operatorname{CRPS}(F,y)
+=
+\int_{-\infty}^{+\infty}
+\bigl(F(v)-\mathbf{1}\{y\le v\}\bigr)^{2}\,dv
+\]
+
+Pour \(F=\frac1k\sum_i\delta_{V_i}\) (équipondéré), identité
+classique (ensemble / energy form) :
+
+\[
+\boxed{
+\operatorname{CRPS}(F,y)
+=
+\frac1k\sum_i|V_i-y|
+-
+\frac1{2k^2}\sum_i\sum_j|V_i-V_j|
+}
+\]
+
+**Vérification :** l'intégrale du CRPS pour une mesure empirique
+finie se réduit à cette forme close (littérature proper scoring /
+ensemble CRPS). Les termes diagonaux \(i=j\) du double somme sont
+nuls ; les paires \(V_i=V_j\) réduisent la pénalité de dispersion —
+comportement correct (sharpness).
+
+| Propriété | Lecture |
+|-----------|---------|
+| Propriety | oui — espérance minimisée si \(F=\) vraie loi |
+| Strict propriety | oui sur les lois à premier moment fini (cadre pertinent pour \(V\ge 0\)) |
+| Unités | celles de \(V\) (RMS) |
+| Orientation | **lower is better** |
+| Échelle | sensible — §14J.13 |
+| Queues | moins explosives que log-score ; miss extrême moins punitif |
+| Forecast discret / petit \(k\) | bien défini ; variance du score ↑ si \(k\) petit |
+| Doublons / outliers | gérés naturellement par la forme close |
+
+**Verdict CRPS :** `ACCEPTED` comme proper scoring rule **primaire**
+pour \(\widehat{\mathbb{P}}_t^{R}\) sous I02 pré-cadrage.
+
+### 14J.9 Pourquoi CRPS ? (alternatives minimales)
+
+| Score | Verdict pour I02 |
+|-------|------------------|
+| **CRPS** | évalue directement une loi empirique discrète **sans** densité |
+| **A. log-score** | mal défini sur atomes (§14J.10) |
+| **B. pinball / quantiles** | famille multi-niveaux ⇒ multiplicité ; utile en diagnostic, pas primaire |
+| **C. MAE/MSE ponctuels** | dégénèrent le forecast en un point ; perdent calibration/sharpness |
+
+Pas de zoo de benchmarks.
+
+### 14J.10 Log-score et ECDF discrète
+
+Une réalisation continue \(y\notin\{V_i\}\) a masse **nulle** sous
+\(\widehat{\mathbb{P}}\) ⇒ log-score \(+\infty\) sans KDE / loi
+paramétrique / lissage — **nouveaux** choix méthodologiques.
+
+\[
+\boxed{\texttt{LOG-SCORE REJECTED AS PRIMARY}}
+\]
+
+Argument **structurel** en faveur de CRPS pour I02.
+
+### 14J.11 Comparaison \(X\) vs \(S\)
+
+Pour \(S\in\{S_1,S_2,S_3\}\) :
+
+\[
+\Delta_t^{(S)}
+:=
+\operatorname{CRPS}_S(t)-\operatorname{CRPS}_X(t)
+\]
+
+| Signe | Lecture (CRPS lower-is-better) |
+|-------|--------------------------------|
+| \(\Delta>0\) | forecast \(X\) meilleur en \(t\) |
+| \(\Delta=0\) | égalité |
+| \(\Delta<0\) | forecast \(S\) meilleur en \(t\) |
+
+\(\Delta_t^{(S)}\) = **différence de proper score**. Ce n'est **pas** :
+information gain Shannon ; likelihood ratio ; effet causal ; valeur
+économique.
+
+**Orientation :** vérifiée. **Figé comme estimand I02 :** **non** —
+voir §14J.13.
+
+### 14J.12 « Extra information » — terminologie
+
+H1 demande conceptuellement : \(X\) contient-il de l'information
+prédictive **au-delà** de \(S\) ?
+
+Sous un proper score, l'amélioration espérée
+
+\[
+\mathbb{E}[\Delta_t^{(S)}\mid \cdot]
+\]
+
+opérationnalise une **valeur prédictive incrémentale**
+(*incremental predictive value under a proper score*), **pas** :
+
+- information de Shannon / mutuelle ;
+- « information causale ».
+
+**Terminologie recommandée :**
+
+```text
+proper-score incremental predictive value
+```
+
+(abrégé acceptable : *incremental predictive value*). Éviter
+« information gain » sans qualificatif.
+
+### 14J.13 Dépendance d'échelle du CRPS — verdict clé
+
+CRPS (et donc \(\Delta\)) a les **unités de \(V\)**.
+
+Conséquences :
+
+- régimes à \(V_{t,10}\) élevé → différences absolues mécaniquement
+  plus grandes ;
+- \(Z_t\) (instabilité / dynamique de volatilité) peut corréler avec
+  \(|\Delta|\) **via l'échelle**, pas seulement via l'avantage
+  prédictif ;
+- normaliser \(\Delta\) **change l'estimand**.
+
+**Aucune normalisation proposée ni acceptée ici.**
+
+| Classe | |
+|--------|--|
+| A — harmless | non |
+| B — diagnostic only | insuffisant pour I02 |
+| **C — blocking estimand issue** | **oui** pour figer \(\Delta\) comme objet lié à \(Z\) / agrégation cross-\(t\) |
+
+Nuance : à \(t\) fixé, même \(y\), \(\operatorname{CRPS}_S(t)-\operatorname{CRPS}_X(t)\)
+reste une comparaison proper-score **paired valide**. Le blocage
+porte sur l'**estimand scientifique** qui relie \(\Delta\) à la
+dynamique de volatilité / \(Z_t\) / moyennes conditionnelles sans
+traiter l'échelle.
+
+\[
+\boxed{
+\texttt{SCALE DEPENDENCE = C (BLOCKING ESTIMAND ISSUE)}
+}
+\]
+
+\[
+\boxed{
+\texttt{CRPS ACCEPTED};\quad
+\Delta_t^{(S)}\ \texttt{NOT FROZEN AS FINAL ESTIMAND}
+}
+\]
+
+**Prochaine étape logique (humaine) :** résoudre le statut d'échelle
+de \(\Delta\) **avant** de figer l'estimand — sans improvisation de
+normalisation post-hoc.
+
+### 14J.14 Common target / common query
+
+Conditions **nécessaires** pour un paired propre :
+
+| Condition | Statut |
+|-----------|--------|
+| Même \(y=V_{t,10}\) | requis |
+| Même \(A_t\) | requis (blocking) |
+| Même \(k\) pour \(X\) et \(S\) | **STRUCTURAL** (§14J.15) |
+| Même règle de ties | requis |
+| Même weighting (uniforme) | requis |
+| Même disponibilité / constructibilité | dans \(A_t\) |
+| \(Z_t\) hors construction du forecast | requis (§14J.17) |
+
+Same \(y\) + same \(A_t\) **ne suffisent pas** seuls.
+
+### 14J.15 \(k\) reste OPEN — contraintes imposées
+
+**Aucune valeur de \(k\) choisie.**
+
+| Contrainte | Classe |
+|------------|--------|
+| \(k_X=k_S=k\) (identique pour toutes les \(R\) comparées) | **STRUCTURAL** |
+| Règle de ties / weighting indépendantes de \(k\)'s choix numérique | STRUCTURAL (procédure) |
+| \(k\) assez petit pour localité kNN | METHODOLOGICAL |
+| \(k\) assez grand pour ECDF exploitable | METHODOLOGICAL |
+| Interaction \(k\) vs \(\lvert A_t\rvert\) / début d'historique | METHODOLOGICAL + §14J.16 |
+| Valeur numérique exacte ; héritage \(k=50\) | **OPEN** |
+
+### 14J.16 Early history — \(\lvert A_t\rvert < k\)
+
+| Politique | Comparabilité |
+|-----------|----------------|
+| **A. skip query \(t\)** | préserve taille \(k\) et CRPS comparable |
+| B. fewer than \(k\) neighbors | change la loi empirique / score |
+| C. adaptive \(k\) | liberté silencieuse ; casse le paired |
+
+**Verdict :** **A — skip** lorsque \(\lvert A_t\rvert < k\).
+B/C rejetés comme baseline. Ne sélectionne **pas** \(k\).
+
+### 14J.17 \(Z_t\) et forecast object
+
+Invariant :
+
+\[
+Z_t\text{ indexe / décrit l'état de la query ;\ ne construit pas le forecast.}
+\]
+
+\(Z_t\) **ne** filtre **pas** \(A_t\) ; **ne** sélectionne **pas**
+des voisins « même \(Z\) » ; **ne** modifie **pas** \(k\), poids, ni
+\(\widehat{\mathbb{P}}\). Relation \(Z\leftrightarrow\Delta\) : analyse
+**ultérieure**, après résolution d'échelle (§14J.13).
+
+### 14J.18 Dépendance temporelle
+
+Documenté, non résolu :
+
+- overlap des \(V_{\cdot,10}\) (jusqu'à 9 rendements) ;
+- voisinages à évolution lente ;
+- scores / \(\Delta\) successifs dépendants.
+
+Affecte l'**inférence** future. **OPEN :** stride, blocks, bootstrap,
+HAC, ESS — **non choisis**.
+
+### 14J.19 Attaques
+
+| Attaque | Rejet |
+|---------|--------|
+| ECDF = vraie loi conditionnelle | oui — §14J.3 |
+| Distance weighting / tuning des poids | non baseline — §14J.5 |
+| Ties résolus via target / score | interdit — §14J.6 |
+| Log-score naïf sur ECDF | rejeté — §14J.10 |
+| \(k\) différent \(X\) vs \(S\) | interdit — STRUCTURAL |
+| Adaptive \(k\) silencieux | rejeté — §14J.16 |
+| Pool différent selon \(R\) | interdit — §14J.2 |
+| Filtrage par \(Z\) | interdit — §14J.17 |
+| Normalisation post-hoc de \(\Delta\) | interdit sans décision d'estimand |
+| « Information gain » abusif | terminologie §14J.12 |
+| Score choisi pour le résultat souhaité | interdit (ordre objet→score) |
+
+### 14J.20 Verdicts
+
+| # | Item | Verdict |
+|---|------|---------|
+| 1 | Empirical predictive measure | **VALID forecast object** ; ≠ vraie loi cond. |
+| 2 | ECDF | dérivée ; mesure **canonique** |
+| 3 | Uniform weighting | **baseline minimale retenue** |
+| 4 | Distance weighting | **non retenu** (baseline) |
+| 5 | Tie policy | **A** — \((\mathrm{dist}\uparrow,s\uparrow)\), \(\lvert N\rvert=k\) |
+| 6 | Duplicate \(V\) | **atomes distincts** (multiplicité) |
+| 7 | CRPS | **`ACCEPTED`** (primary proper score) |
+| 8 | Log-score | **`REJECTED`** as primary |
+| 9 | Paired \(\mathrm{Score}_S-\mathrm{Score}_X\) | orientation OK ; conditions §14J.14 |
+| 10 | Terminologie | *proper-score incremental predictive value* |
+| 11 | Scale dependence | **`C` — BLOCKING ESTIMAND ISSUE** |
+| 12 | Common-\(k\) | **STRUCTURAL** |
+| 13 | Early history | **skip** si \(\lvert A_t\rvert < k\) |
+
+### 14J.21 Décisions de cette revue
+
+**Retenu / accepté :**
+
+- forecast object canonique \(\widehat{\mathbb{P}}_t^{R}\) ;
+- weighting uniforme ;
+- tie rule A ;
+- duplicate handling (atomes distincts) ;
+- CRPS `ACCEPTED` ;
+- orientation de \(\Delta_t^{(S)}\) ;
+- early-history = skip ;
+- \(A_t\) commun blocking ;
+- terminologie incremental predictive value.
+
+**Non décidé :**
+
+- valeur de \(k\) ; stride ; \(Z_t\) finale ; Spearman ;
+- procédure d'inférence ;
+- **forme définitive de \(\Delta\) comme estimand** (bloque sur **C**).
+
+### 14J.22 Cohérence
+
+| Contrôle | OK |
+|----------|-----|
+| \(k\) OPEN | oui |
+| stride OPEN | oui |
+| NO \(Z_t\) ACCEPTED | oui |
+| CRPS ACCEPTED ; \(\Delta\) not frozen | oui |
+| NO DATA / NO EXPERIMENT | oui |
+| I02 NOT OPENED | oui |
+
+\[
+\boxed{\texttt{CRPS ACCEPTED}}
+\quad
+\boxed{\texttt{SCALE DEPENDENCE = C}}
+\quad
+\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\quad
+\boxed{k=\texttt{OPEN}}
+\]
 
 ---
 
@@ -3882,19 +4346,24 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 Ne pas résoudre dans ce draft :
 
-- CRPS / Spearman / forecast object (ECDF, \(\Delta_t^{(S)}\)) ;
+- **échelle / estimand définitif de \(\Delta_t^{(S)}\)** (§14J.13 — **C**) ;
 - stride 1 ; formule \(Z_t\) complète ;
 - correction multiplicité ; pool redundancy ;
 - désaccord matériel §9.16 ; agrégation \(L\)+forme ;
 - singularités — pas d'\(\varepsilon\) ;
-- \(k\) ; holdout ; Market-State Engine.
+- \(k\) ; holdout ; Market-State Engine ;
+- Spearman ; procédure d'inférence (bootstrap / HAC).
 
 **CLOSED :**
 
 - horizons \(W_X/W_{RV}/\mathcal{M}_Z\) ;
 - **\(h=10\)** `INHERITED FIXED FORECAST HORIZON` ;
 - **\(V_{t,10}\)** fully specified ;
-- multi-\(h\) rejeté.
+- multi-\(h\) rejeté ;
+- forecast object \(\widehat{\mathbb{P}}_t^{R}\) ; uniform weights ;
+  tie rule A ; duplicate atoms ; **CRPS `ACCEPTED`** ;
+  log-score primary rejected ; early-history skip ;
+  common \(A_t\) ; common-\(k\) STRUCTURAL.
 
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
@@ -3932,11 +4401,14 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [x] \(\mathcal{M}_Z=\{3,12,21\}\) `ACCEPTED` (§14H) — no-primary
 - [x] **\(V_{t,10}\)** fully specified ; **\(h=10\)** `ACCEPTED`
       (§14I.14) — `INHERITED FIXED FORECAST HORIZON`
-- [ ] CRPS / forecast object ; stride 1 ; \(Z_t\) complète ; \(k\)
+- [x] Forecast object + **CRPS `ACCEPTED`** (§14J) ;
+      \(\Delta_t^{(S)}\) **not frozen** (scale = **C**)
+- [ ] Échelle / estimand définitif de \(\Delta_t^{(S)}\)
+- [ ] stride 1 ; \(Z_t\) complète ; \(k\)
 - [x] Représentations \(S_1/S_2/S_3\) **acceptées**
 - [x] Invariant multiplicatif **accepté**
 - [x] Observable futur **approuvé** — \(V_{t,10}\) + \(h=10\)
-- [ ] Score probabiliste **approuvé** (CRPS = acceptable candidate)
+- [x] Score probabiliste **approuvé** — CRPS (§14J)
 - [ ] Rôle de `H_shape` défini
 - [ ] Kill criteria approuvés
 - [ ] Stratégie de données / réplication définie
@@ -3950,15 +4422,16 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 
 | Contrôle | Statut |
 |----------|--------|
-| Aucun chiffre / donnée / CRPS | oui |
+| Aucun chiffre / donnée / calcul | oui |
 | \(S_1/S_2/S_3\) / §9.16 inchangés | oui |
 | Famille A = primary semantic candidate (§14A.12) | oui |
 | \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) `ACCEPTED` | oui |
 | \(W_{RV}:=W_X\) comparability coupling `ACCEPTED` | oui |
 | \(3\le m_Z\le W_{RV}+1\) `ACCEPTED` ; not identifiable ; class C | oui |
 | §14F multi-scale policy ; NUMERICAL after \(W_X\) | oui |
-| \(V_{t,10}\) + \(h=10\) ACCEPTED ; no CRPS ; no \(Z_t\) | oui |
-| I01 CLOSED ; I02 NOT OPENED | oui |
+| \(V_{t,10}\) + \(h=10\) ACCEPTED | oui |
+| CRPS ACCEPTED ; \(\Delta\) scale = C ; no \(Z_t\) | oui |
+| \(k\) / stride OPEN ; I02 NOT OPENED | oui |
 
 ---
 
@@ -3969,4 +4442,4 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [DR-007](../../docs/adr/DR-007-exploratory-vs-confirmatory-data.md)
 - [DR-008](../../docs/adr/DR-008-i01-e01-exploratory-source.md)
 - CRPS : proper scoring rule pour lois réelles (littérature ; pas un
-  calcul sur SPY)
+  calcul sur SPY) ; forme ensemble / energy score empirique
