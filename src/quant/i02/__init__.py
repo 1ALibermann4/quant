@@ -9,6 +9,12 @@ separate milestones.
 
 Contract gaps A/B/C closed (v0.3): M=252 no-ε X; S3-A dual charts;
 non-circular MBB. See :mod:`quant.i02.contract_gaps`.
+
+Operational entry point (HAT / future exploratory):
+
+```text
+python -m quant.i02 --input fixture.npz --output-dir out/
+```
 """
 
 from quant.i02.bootstrap import MBBResult, mbb_spearman_ci, mbb_spearman_robustness

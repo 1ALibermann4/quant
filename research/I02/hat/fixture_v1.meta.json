@@ -1,0 +1,9 @@
+{
+  "construction": "r[0]=NaN; r[t]=(0.012*sin(2*pi*t/17)+0.006*sin(2*pi*t/53)+0.003*cos(2*pi*t/7))*(1+0.35*sin(2*pi*t/251)) for t=1..n-1",
+  "filename": "fixture_v1.npz",
+  "fixture_id": "I02-HAT-FIXTURE-v1",
+  "market_data": false,
+  "n": 900,
+  "purpose": "I02 HAT software validation only \u2014 not scientific evidence",
+  "sha256": "sha256:196f9c82a878521edb5db02416a6874f526020b989904152157d202accdbd2b5"
+}

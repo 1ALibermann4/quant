@@ -29,6 +29,7 @@ exploratory = [
 
 [project.scripts]
 i01-e01 = "quant.exploratory.runner:main"
+i02-runtime = "quant.i02.runtime:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/quant"]
