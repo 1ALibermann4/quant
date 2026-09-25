@@ -32,6 +32,7 @@
 > **Draft v0.22 future target review :** `38812f8`
 > **Draft v0.23 accept h=10 :** `cd16496`
 > **Draft v0.24 forecast object / scoring :** `c3a6909`
+> **Draft v0.25 scale estimand review :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -66,9 +67,11 @@ V_{t,10}
 \quad\texttt{ACCEPTED}
 \]
 \(h=10\) — `INHERITED FIXED FORECAST HORIZON` (§14I.14).
-**Forecast object / CRPS :** §14J — CRPS `ACCEPTED` comme score ;
-\(\Delta_t^{(S)}\) **non figé** (dépendance d'échelle = **C**).
-\(Z_t\) **non** acceptée. \(k\), stride **OPEN**.
+**Forecast object / CRPS :** §14J — CRPS `ACCEPTED` ;
+\(D_t^{(S)}\) brute **non** estimand final.
+**Échelle / estimand :** §14K — class **B** (décision humaine
+entre constructions `PROMISING`) ; pas d'estimand figé.
+\(Z_t\) **non** acceptée. \(k\), stride, Spearman **OPEN**.
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
@@ -292,8 +295,9 @@ de référence. Il n'est pas l'adversaire suffisant de H1.
 
 **Statut :** `ACCEPTED` comme proper scoring rule primaire pour
 évaluer \(\widehat{\mathbb{P}}_t^{R}\) (§14J.8–§14J.10). **Pas
-calculé. Pas un gate numérique.** \(\Delta_t^{(S)}\) définitif :
-**OPEN** — dépendance d'échelle classée **C** (§14J.13).
+calculé. Pas un gate numérique.** Différence brute
+\(D_t^{(S)}=\operatorname{CRPS}_S-\operatorname{CRPS}_X\) :
+orientation OK ; **pas** estimand final (§14J.13, revue §14K).
 
 $$
 \operatorname{CRPS}(F,y)
@@ -320,29 +324,21 @@ $$
 \operatorname{CRPS}_R(t)=\operatorname{CRPS}(\widehat{\mathbb{P}}_t^{R},V_{t,10})
 $$
 
-Différence **candidate** (orientation OK ; estimand \(Z\)-lié **non
-figé**) :
+Différence brute **candidate descriptive** (synonyme historique
+\(\Delta_t^{(S)}\)) :
 
 $$
-\Delta_t^{(S)}
+D_t^{(S)}
 =
 \operatorname{CRPS}_S(t)-\operatorname{CRPS}_X(t)
 $$
 
-\(\Delta_t^{(S)}>0\) : \(X\) mieux scorée que \(S\) en \(t\) (CRPS
-lower-is-better). Ce n'est **pas** un information gain Shannon.
+\(D_t^{(S)}>0\) : \(X\) mieux scorée que \(S\) en \(t\).
+**Estimand scientifique principal :** **OPEN** — §14K
+(class **B** ; décision humaine).
 
-Quantité conditionnelle **candidate** (si \(C_t\)/\(Z\) et échelle
-étaient résolus) :
-
-$$
-\mathbb{E}\bigl[\Delta_t^{(S)} \bigm| \cdot\bigr]
-$$
-
-sur information indépendante. **Aucun seuil. Aucun calcul.**
-
-Revue adversariale antérieure (§6.1) : conservée comme historique ;
-verdicts figés : §14J.
+Revue adversariale antérieure (§6.1) : historique ;
+verdicts score : §14J ; estimand : §14K.
 
 ### 6.1 CRPS adversarial review (historique pré-§14J)
 
@@ -4332,6 +4328,404 @@ HAC, ESS — **non choisis**.
 \boxed{k=\texttt{OPEN}}
 \]
 
+**Suite :** revue d'estimand §14K (pas un nouveau score).
+
+---
+
+## 14K. Scale-adjusted score estimand
+
+> **Nature :** mathématique / méthodologique / documentaire.
+> **NO DATA. NO EXPERIMENT. NO CODE.**
+> CRPS reste `ACCEPTED`. \(k\), stride, Spearman = `OPEN`.
+> \(\texttt{NO }Z_t\texttt{ ACCEPTED}\). I02 = `NOT OPENED`.
+
+Cette revue porte sur l'**estimand**, pas sur le score.
+
+Notation : \(D_t^{(S)}=\operatorname{CRPS}_S(t)-\operatorname{CRPS}_X(t)\)
+(synonyme historique \(\Delta_t^{(S)}\)). \(D\) brute **n'est pas**
+acceptée comme estimand final (§14J.13).
+
+### 14K.1 Objectif
+
+Opérationnaliser
+
+```text
+proper-score incremental predictive value
+```
+
+de \(X\) relativement à \(S\), **sans** confondre :
+
+- amélioration prédictive relative **authentique** ;
+- agrandissement **mécanique** des différences CRPS quand l'échelle
+  de volatilité est plus grande.
+
+### 14K.2 Propriété d'échelle du CRPS
+
+Soit \(F=\frac1k\sum_i\delta_{V_i}\) et \(a>0\). La loi mise à
+l'échelle \(aF\) a des atomes en \(aV_i\). Forme ensemble :
+
+\[
+\operatorname{CRPS}(aF,ay)
+=
+\frac1k\sum_i|aV_i-ay|
+-
+\frac1{2k^2}\sum_i\sum_j|aV_i-aV_j|
+=
+a\,\operatorname{CRPS}(F,y).
+\]
+
+Donc \(D\) transforme comme
+
+\[
+D_t^{(S)}\;\longmapsto\; a\,D_t^{(S)}
+\]
+
+sous mise à l'échelle **commune** des forecasts et de \(y\).
+
+| Concept | |
+|---------|--|
+| *Scale equivariance* du CRPS | \(\operatorname{CRPS}(aF,ay)=a\operatorname{CRPS}(F,y)\) |
+| *Scale invariance* d'un estimand \(E\) | \(E\mapsto E\) sous \(r\mapsto a r\) (\(a>0\)) |
+
+Le CRPS est équivariant ; un estimand de **comparaison relative**
+peut (ou non) être invariant. Ce n'est **pas** automatique que
+invariant = meilleur — il faut savoir **quelle question** \(E\) pose.
+
+### 14K.3 Pourquoi blocking pour I02
+
+Analyse future candidate : relation entre \(Z_t(m_Z)\) et l'avantage
+prédictif de \(X\) sur \(S\). Or \(Z\) dérive de \(L=\log RV\) et de
+la dynamique de \(\Delta L\).
+
+Chemins de confounding d'échelle (sans données) :
+
+1. **Niveau** : \(V\) et CRPS plus grands en régime volatile ⇒
+   \(|D|\) mécaniquement plus grand même si le *rapport* de
+   performance est stable.
+2. **Chevauchement sémantique** : \(RV_t\) entre dans \(S_1/S_2/S_3\)
+   *et* dans \(L_t\) ; corréler \(Z\) (voisin de \(L\)) à \(D\) brut
+   mélange niveau, instabilité, et unités du score.
+3. **Agrégation cross-\(t\)** : \(\mathbb{E}[D]\) ou rangs de \(D\)
+   pondèrent implicitement les jours à haute volatilité.
+
+Le paired day-\(t\) reste valide ; le blocage est l'**estimand**
+scientifique \(Z\)-lié / agrégé.
+
+### 14K.4 Familles d'estimands
+
+#### A — Raw difference
+
+\[
+D_t^{(S)}=\operatorname{CRPS}_S(t)-\operatorname{CRPS}_X(t)
+\]
+
+**Question estimée :** gain absolu de proper score (unités de \(V\)).
+
+| | |
+|--|--|
+| Scale test \(r\mapsto a r\) | \(D\mapsto a D\) |
+| Orientation | \(D>0\) ⇒ \(X\) meilleur |
+| Bornes | non borné |
+| Singularité | aucune |
+| Verdict primaire | **`REJECT`** comme estimand final |
+| Statut secondaire | **retenir** (§14K.12) |
+
+#### B — Comparator-relative
+
+\[
+R_t^{(S)}
+=
+\frac{\operatorname{CRPS}_S(t)-\operatorname{CRPS}_X(t)}{\operatorname{CRPS}_S(t)}
+=
+1-\frac{\operatorname{CRPS}_X(t)}{\operatorname{CRPS}_S(t)}
+\]
+
+**Question estimée :** *quelle fraction de l'erreur probabiliste de
+\(S\) \(X\) élimine-t-il ?* — proche de « \(X\) beyond \(S\) »,
+asymétrique par construction.
+
+| | |
+|--|--|
+| Scale test | \(R\mapsto R\) (invariant) |
+| Orientation | même signe que \(D\) si \(\operatorname{CRPS}_S>0\) |
+| Bornes | \(R\le 1\) ; \(R\to-\infty\) possible si \(X\) bien pire |
+| Singularité | \(\operatorname{CRPS}_S=0\) |
+| Verdict | **`PROMISING`** |
+
+#### C — Symmetric relative
+
+\[
+Q_t^{(S)}
+=
+\frac{\operatorname{CRPS}_S(t)-\operatorname{CRPS}_X(t)}{\operatorname{CRPS}_S(t)+\operatorname{CRPS}_X(t)}
+\]
+
+(\(\operatorname{CRPS}_S+\operatorname{CRPS}_X\) comme échelle
+symétrique naturelle ; **pas** d'\(\varepsilon\).)
+
+**Question estimée :** avantage relatif **entre** les deux
+performances réalisées — le dénominateur dépend des **deux** scores.
+
+| | |
+|--|--|
+| Scale test | \(Q\mapsto Q\) |
+| Orientation | signe\((Q)=\)signe\((D)\) si dénominateur \(>0\) |
+| Bornes | \(Q\in(-1,1)\) si scores \(\ge 0\) non tous nuls |
+| Singularité | \(\operatorname{CRPS}_S=\operatorname{CRPS}_X=0\) |
+| Verdict | **`PROMISING`** |
+
+Élégant et bornable ; **change** légèrement la question (unité =
+somme des erreurs des deux modèles, pas l'erreur du comparator).
+
+#### D — Ex-ante volatility normalization
+
+\[
+N_t^{(S)}
+=
+\frac{\operatorname{CRPS}_S(t)-\operatorname{CRPS}_X(t)}{G_t},
+\qquad
+G_t=RV_t
+\quad\text{(candidat ; non accepté automatiquement)}
+\]
+
+\(G_t\) exigé : \(\mathcal{F}_t\)-mesurable ; commun \(X\)/\(S\) ;
+défini avant \(V_{t,10}\) ; lié à l'échelle courante.
+
+**Question estimée :** gain de proper score **par unité** de
+volatilité réalisée *passée* (\(W_{RV}=20\)).
+
+| | |
+|--|--|
+| Scale test \(r\mapsto a r\) | \(RV\mapsto a\,RV\), \(D\mapsto a D\) ⇒ \(N\mapsto N\) |
+| Orientation | signe\((N)=\)signe\((D)\) si \(RV_t>0\) |
+| Singularité | \(RV_t=0\) |
+| Verdict | **`PROMISING`** |
+
+### 14K.5 Future-realized normalization — REJECT
+
+Normaliser par \(V_{t,10}\) (ou tout fonctionnel de
+\(r_{t+1},\ldots,r_{t+10}\)) :
+
+- rend le dénominateur **outcome-dependent** ;
+- mélange l'échelle *ex ante* avec la réalisation *future* scorée ;
+- change l'estimand selon \(y\) lui-même (pas seulement selon
+  l'état courant).
+
+Même si \(V_{t,10}\) est connu *ex post* au scoring, ce n'est **pas**
+une normalisation d'unité d'état.
+
+\[
+\boxed{\texttt{FUTURE-}V\text{ NORMALIZATION = REJECT}}
+\]
+
+### 14K.6 Scale invariance test (résumé)
+
+Sous \(r_u\mapsto a r_u\) pour tout \(u\) (\(a>0\)) :
+\(V\mapsto a V\), atomes \(\mapsto a\cdot\), CRPS \(\mapsto a\cdot\),
+\(RV\mapsto a\cdot\).
+
+| Estimand | Transformation |
+|----------|----------------|
+| \(D\) | \(\times a\) |
+| \(R\) | invariant |
+| \(Q\) | invariant |
+| \(N=D/RV_t\) | invariant |
+| \(D/V_{t,10}\) | invariant **mais REJECT** (§14K.5) |
+
+### 14K.7 Orientation, bornes, extrêmes
+
+| | \(D\) | \(R\) | \(Q\) | \(N\) |
+|--|-------|-------|-------|-------|
+| Zéro | scores égaux | idem (si dén. OK) | idem | idem |
+| Deux forecasts parfaits | \(0\) | **singulier** / indéfini | **singulier** | \(0\) si \(RV>0\) |
+| Seul \(X\) parfait, \(S>0\) | \(>0\) | \(=1\) | \(\in(0,1)\) | \(>0\) |
+| Scores \(\approx 0^+\) | petit | **instable** | borné mais sensible | dépend de \(RV\) |
+| Interprétation | unités \(V\) | fraction d'erreur \(S\) | part relative bornée | unités « par \(RV\) » |
+
+### 14K.8 Symétrie vs question scientifique
+
+I02 est **directionnel** : \(X\) ajoute-t-il de la valeur au-delà de
+\(S\) ?
+
+- **Asymétrie \(R\)** : scientifiquement cohérente avec « beyond \(S\) »
+  — le comparator définit l'unité. Coût : singularité /
+  instabilité quand \(S\) est déjà excellent.
+- **Symétrie \(Q\)** : méthodologiquement propre, bornée ; l'unité
+  n'est plus « l'erreur de \(S\) » mais « la somme des erreurs ».
+  Moins alignée mot à mot avec « beyond \(S\) », plus stable.
+
+Les deux restent **défendables** ; ce n'est pas un tie-break
+automatique.
+
+### 14K.9 Normalisation par \(RV_t\) — examen
+
+1. **Causal / \(\mathcal{F}_t\)** : oui — \(RV_t\) sur
+   \(\{r_{t-W_{RV}+1},\ldots,r_t\}\), \(W_{RV}=20\).
+2. **Commun \(X\)/\(S\)** : oui.
+3. **Scale-invariant** sous \(r\mapsto a r\) : oui (§14K.6).
+4. **Singularité \(RV_t=0\)** : théorique si tous les \(r\) de la
+   fenêtre sont nuls ; rare empiriquement, **pas** impossible
+   mathématiquement.
+5. **Conditionnement sur une composante de \(S\)** : oui partiellement
+   — \(RV\) *est* \(S_1\) (et entre dans \(S_2/S_3\)). Normaliser par
+   \(RV_t\) ancre l'unité sur une feature déjà adversariale.
+6. **Retrait de phénomène** : risque de retirer l'effet *de niveau*
+   tout en gardant ce qui est relatif à ce niveau ; si une partie du
+   signal scientifique est « \(X\) aide surtout quand \(RV\) est
+   haut/bas *en niveau* », \(N\) le rescale. Ce n'est pas
+   automatiquement mauvais — c'est une **autre question**.
+7. **Unité vs question** : les deux — retire la dimension, **et**
+   reformule l'estimand en « par unité de \(RV\) courant ».
+
+Lien avec \(Z\) (§14K.10) : normaliser par le **niveau** \(RV\) peut
+permettre de demander si l'**instabilité** (\(\Delta L\)) s'associe à
+un avantage *à échelle comparable* — interprétation **plausible mais
+trop forte** pour être déclarée ici sans \(Z_t\) acceptée.
+
+### 14K.10 \(Z\) ≠ niveau \(RV\)
+
+\(L_t=\log RV_t\) ; \(Z_t\) vise l'instabilité locale de \(\Delta L\),
+pas \(L_t\) seul. \(N=D/RV_t\) traite l'échelle de **niveau**, pas
+l'instabilité. Utile comme *candidat* d'unité ; **ne valide pas** et
+**n'accepte pas** \(Z_t\).
+
+### 14K.11 Zero / near-zero — politique structurelle
+
+**Interdit :** \(\mathrm{denom}+10^{-8}\) sans axiome.
+
+| Dénominateur | Nul quand | Politique structurelle candidate |
+|--------------|-----------|----------------------------------|
+| \(\operatorname{CRPS}_S\) | forecast \(S\) parfait (masse exacte en \(y\)) | **skip** \(t\) pour \(R\) *ou* laisser indéfini — pas d'\(\varepsilon\) |
+| \(\operatorname{CRPS}_S+\operatorname{CRPS}_X\) | les deux parfaits | idem pour \(Q\) |
+| \(RV_t\) | fenêtre de rendements tous nuls | **skip** \(t\) pour \(N\) (cohérent avec skip \(\lvert A_t\rvert<k\)) |
+
+Impossibilité théorique vs rareté : CRPS exact zéro est possible pour
+mesure empirique (un atome = \(y\), ou tous égaux à \(y\)) ; \(RV=0\)
+possible sur données discrètes/arrondies. Politique = **skip** /
+undefined, figée *avant* données — détail protocolaire ouvert tant
+que l'estimand n'est pas choisi.
+
+### 14K.12 Raw \(D\) secondaire
+
+Même si un estimand scale-adjusted est retenu plus tard :
+
+\[
+\boxed{D_t^{(S)}\ \texttt{= DESCRIPTIVE SECONDARY ONLY}}
+\]
+
+Conserve unités naturelles, magnitude absolue, diagnostic de
+l'effet de normalisation. **Ne récupère pas** le statut d'estimand
+principal.
+
+### 14K.13 Spearman (OPEN) — dépendance conceptuelle
+
+\(\operatorname{Spearman}(Z,D)\) et
+\(\operatorname{Spearman}(Z,D/G)\) **ne coïncident pas** en général
+si \(G_t\) varie avec \(t\) (transformation observation-par-observation
+non monotone commune).
+
+⇒ la question d'échelle / d'estimand doit être **résolue avant**
+Spearman. Spearman reste `OPEN` ; **non accepté**.
+
+### 14K.14 \(k\) (OPEN)
+
+Les quatre constructions (et leurs invariances) sont valides pour
+tout \(k\) admissible sous le forecast object §14J. Aucune ne force
+structurellement une valeur de \(k\). Near-zero CRPS peut être un
+peu plus fréquent si \(k=1\) et atome = \(y\) — reste méthodologique,
+pas un choix de \(k\).
+
+### 14K.15 Terminologie
+
+Conserver le genre :
+
+```text
+proper-score incremental predictive value
+```
+
+Selon construction (si retenue plus tard) :
+
+| Estimand | Nom candidat |
+|----------|----------------|
+| \(D\) | absolute proper-score incremental value *(secondaire)* |
+| \(R\) | comparator-relative proper-score incremental value |
+| \(Q\) | symmetric relative proper-score incremental value |
+| \(N\) | ex-ante scale-adjusted proper-score incremental value |
+
+Éviter « information gain » information-théorique.
+
+### 14K.16 Attaques
+
+| Attaque | Rejet |
+|---------|--------|
+| \(D\) brut comme estimand \(Z\)-lié malgré confounding | oui — REJECT primaire |
+| Ratio seul parce que dimensionless | insuffisant — il faut la *question* |
+| Division par \(V_{t,10}\) | REJECT |
+| \(\varepsilon\) arbitraire | interdit |
+| Dénominateur \(\approx 0\) ignoré | politique skip requise |
+| Asymétrie / symétrie cachée | documentées §14K.8 |
+| \(RV_t\) qui retire le signal sans le dire | risque documenté §14K.9 |
+| Normalisation choisie pour corréler mieux avec \(Z\) | snooping — interdit |
+| Multi-normalisations testées puis meilleure | interdit |
+
+### 14K.17 Verdicts et classification
+
+| Construction | Verdict |
+|--------------|---------|
+| Raw \(D\) | **`REJECT`** (primaire) ; secondaire OK |
+| Comparator-relative \(R\) | **`PROMISING`** |
+| Symmetric-relative \(Q\) | **`PROMISING`** |
+| Ex-ante \(D/RV_t\) | **`PROMISING`** |
+| Future-\(V\) normalized | **`REJECT`** |
+
+**Classification de clôture de l'estimand :**
+
+\[
+\boxed{\texttt{B — HUMAN DECISION REQUIRED}}
+\]
+
+Trois constructions restent **réellement défendables** et
+estiment des questions **distinctes** :
+
+1. \(R\) — fraction de l'erreur de \(S\) éliminée ;
+2. \(Q\) — avantage relatif borné entre deux performances ;
+3. \(N\) — gain par unité de \(RV\) ex ante.
+
+Aucune n'est éliminée par mathématique pure. **STOP** — décision
+humaine avant données. Pas A (identifiable maintenant). Pas C
+(pas besoin d'hypothèse scientifique *nouvelle* au-delà du choix
+d'estimand). Pas D.
+
+**Aucun estimand final accepté dans cette revue.**
+
+### 14K.18 Décision autorisée — non exercée
+
+La revue **pourrait** recommander un final ; elle **s'abstient** :
+plusieurs constructions `PROMISING` restent légitimes. Demande
+explicite : **décision humaine** parmi \(\{R,Q,N\}\) (ou raffinement
+explicite), avec \(D\) secondaire.
+
+### 14K.19 Cohérence
+
+| Contrôle | OK |
+|----------|-----|
+| CRPS inchangé / ACCEPTED | oui |
+| Pas de nouvel estimand figé | oui |
+| \(k\) / stride / Spearman OPEN | oui |
+| NO \(Z_t\) ACCEPTED | oui |
+| NO DATA / NO EXPERIMENT | oui |
+| I02 NOT OPENED | oui |
+
+\[
+\boxed{\texttt{ESTIMAND CLASS = B}}
+\quad
+\boxed{R,\;Q,\;N\ \texttt{= PROMISING}}
+\quad
+\boxed{D\ \texttt{= SECONDARY}}
+\quad
+\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\]
+
 ---
 
 ## 15. Market-State / Regime Engine
@@ -4346,24 +4740,23 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 Ne pas résoudre dans ce draft :
 
-- **échelle / estimand définitif de \(\Delta_t^{(S)}\)** (§14J.13 — **C**) ;
+- **estimand principal** parmi \(\{R,Q,N\}\) — décision humaine
+  (§14K class **B**) ; politique skip exacte du dénominateur nul ;
 - stride 1 ; formule \(Z_t\) complète ;
 - correction multiplicité ; pool redundancy ;
 - désaccord matériel §9.16 ; agrégation \(L\)+forme ;
-- singularités — pas d'\(\varepsilon\) ;
+- singularités métriques — pas d'\(\varepsilon\) ;
 - \(k\) ; holdout ; Market-State Engine ;
 - Spearman ; procédure d'inférence (bootstrap / HAC).
 
 **CLOSED :**
 
 - horizons \(W_X/W_{RV}/\mathcal{M}_Z\) ;
-- **\(h=10\)** `INHERITED FIXED FORECAST HORIZON` ;
-- **\(V_{t,10}\)** fully specified ;
-- multi-\(h\) rejeté ;
-- forecast object \(\widehat{\mathbb{P}}_t^{R}\) ; uniform weights ;
-  tie rule A ; duplicate atoms ; **CRPS `ACCEPTED`** ;
-  log-score primary rejected ; early-history skip ;
-  common \(A_t\) ; common-\(k\) STRUCTURAL.
+- **\(h=10\)** ; **\(V_{t,10}\)** ; multi-\(h\) rejeté ;
+- forecast object ; CRPS `ACCEPTED` ; log-score primary rejected ;
+- \(D\) brut = REJECT primaire / secondaire OK ;
+- future-\(V\) normalization REJECT ;
+- cartographie \(R,Q,N\) = `PROMISING` (questions distinctes).
 
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
@@ -4401,9 +4794,10 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [x] \(\mathcal{M}_Z=\{3,12,21\}\) `ACCEPTED` (§14H) — no-primary
 - [x] **\(V_{t,10}\)** fully specified ; **\(h=10\)** `ACCEPTED`
       (§14I.14) — `INHERITED FIXED FORECAST HORIZON`
-- [x] Forecast object + **CRPS `ACCEPTED`** (§14J) ;
-      \(\Delta_t^{(S)}\) **not frozen** (scale = **C**)
-- [ ] Échelle / estimand définitif de \(\Delta_t^{(S)}\)
+- [x] Forecast object + **CRPS `ACCEPTED`** (§14J)
+- [x] Revue échelle / estimand §14K — class **B** ;
+      \(D\) secondaire ; future-\(V\) REJECT
+- [ ] **Décision humaine** estimand principal \(\in\{R,Q,N\}\)
 - [ ] stride 1 ; \(Z_t\) complète ; \(k\)
 - [x] Représentations \(S_1/S_2/S_3\) **acceptées**
 - [x] Invariant multiplicatif **accepté**
@@ -4430,8 +4824,8 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 | \(3\le m_Z\le W_{RV}+1\) `ACCEPTED` ; not identifiable ; class C | oui |
 | §14F multi-scale policy ; NUMERICAL after \(W_X\) | oui |
 | \(V_{t,10}\) + \(h=10\) ACCEPTED | oui |
-| CRPS ACCEPTED ; \(\Delta\) scale = C ; no \(Z_t\) | oui |
-| \(k\) / stride OPEN ; I02 NOT OPENED | oui |
+| CRPS ACCEPTED ; estimand class B ; no \(Z_t\) | oui |
+| \(k\) / stride / Spearman OPEN ; I02 NOT OPENED | oui |
 
 ---
 
@@ -4442,4 +4836,5 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [DR-007](../../docs/adr/DR-007-exploratory-vs-confirmatory-data.md)
 - [DR-008](../../docs/adr/DR-008-i01-e01-exploratory-source.md)
 - CRPS : proper scoring rule pour lois réelles (littérature ; pas un
-  calcul sur SPY) ; forme ensemble / energy score empirique
+  calcul sur SPY) ; forme ensemble / energy score empirique ;
+  homogénéité de degré 1
