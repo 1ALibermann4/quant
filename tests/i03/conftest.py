@@ -1,11 +1,16 @@
-"""Synthetic fixtures for I03 L1 (no market data)."""
+"""Synthetic fixtures for I03 L1/L2 (no market data)."""
 
 from __future__ import annotations
+
+import os
 
 import numpy as np
 import pytest
 
 from quant.i03.params import DEFAULT_CONFIG, I03Config
+
+# Allow B_n4/B_n3 overrides in synthetic tests only (not production default).
+os.environ.setdefault("I03_ALLOW_TEST_OVERRIDES", "1")
 
 
 @pytest.fixture

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import asdict, dataclass
 from typing import Any
 
@@ -20,6 +21,10 @@ from quant.i03.n3 import N3BatteryMeta, generate_n3_battery
 from quant.i03.n4 import N4ScalePath, generate_n4_battery
 from quant.i03.params import DEFAULT_CONFIG, I03Config
 from quant.i03.verdict import VerdictInput, VerdictResult, decide_verdict
+
+
+def _test_overrides_allowed() -> bool:
+    return os.environ.get("I03_ALLOW_TEST_OVERRIDES") == "1"
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,11 +72,20 @@ def run_structural_analysis(
 ) -> I03RunResult:
     """Run I03 structural pipeline on a return array (no download).
 
-    ``B_n4`` / ``B_n3`` are **test-only** overrides. Production callers must
-    leave them as ``None`` so frozen ``cfg.B_N4`` / ``cfg.B_N3`` apply.
+    ``B_n4`` / ``B_n3`` / ``compute_locality_on_n4=False`` are **test-only**.
+    They require ``I03_ALLOW_TEST_OVERRIDES=1``. Production callers must omit
+    overrides so frozen ``cfg.B_N4`` / ``cfg.B_N3`` and full locality apply.
     """
 
     cfg = cfg or DEFAULT_CONFIG
+    using_overrides = (
+        B_n4 is not None or B_n3 is not None or compute_locality_on_n4 is False
+    )
+    if using_overrides and not _test_overrides_allowed():
+        raise RuntimeError(
+            "I03 test-only overrides require I03_ALLOW_TEST_OVERRIDES=1"
+        )
+
     r = np.asarray(returns, dtype=np.float64)
     T = r.shape[0]
     blocks = build_blocks(T, cfg)

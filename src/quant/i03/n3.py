@@ -22,6 +22,14 @@ class N3BatteryMeta:
     converged_flags: tuple[bool, ...]
 
 
+def n3_nonconv_frac_invalid(n_nonconverged: int, B: int, frac_max: float = 0.05) -> bool:
+    """Prereg §9.3: INVALID iff ``n_non/B > frac_max`` (strict greater-than)."""
+
+    if B < 1:
+        raise ValueError("B must be positive")
+    return (n_nonconverged / B) > frac_max
+
+
 def generate_n3_battery(
     returns: np.ndarray,
     cfg: I03Config,
@@ -47,14 +55,13 @@ def generate_n3_battery(
         series_list.append(res.series)
         flags.append(res.converged)
     n_non = sum(1 for f in flags if not f)
-    frac = n_non / n
-    valid = frac <= cfg.iaaft_nonconv_frac
-    reason = None if valid else "N3_IAAFT_NONCONV_FRAC"
+    invalid = n3_nonconv_frac_invalid(n_non, n, cfg.iaaft_nonconv_frac)
+    reason = "N3_IAAFT_NONCONV_FRAC" if invalid else None
     meta = N3BatteryMeta(
         B_requested=n,
         n_converged=n - n_non,
         n_nonconverged=n_non,
-        valid=valid,
+        valid=not invalid,
         invalid_reason=reason,
         converged_flags=tuple(flags),
     )
