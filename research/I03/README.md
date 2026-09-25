@@ -6,16 +6,21 @@
 > **Frame :** Geometry review A @ `547fc57`  
 > **Pre-framing (historical) :** [`research/I03-pre/`](../I03-pre/)  
 > **D1–D8 freeze :** [I03-D1-D8-FREEZE.md](I03-D1-D8-FREEZE.md)  
+> **C1–C10 freeze :** [I03-C1-C10-FREEZE.md](I03-C1-C10-FREEZE.md)  
 > **Design doc :** [I03-DESIGN-v0.1.md](I03-DESIGN-v0.1.md)
 
 ```text
 I03 STATUS = DESIGN
+C1–C10 FREEZE ACTIVE
+PREREG BLOCKED ON HD-N4-SCALE (SCALE-M vs SCALE-W)
+PRIMARY ESTIMAND = E-MND
 NO MARKET DATA
 NO EXPERIMENT
-NO EXECUTABLE PREREG YET
 NO SCI / PRED / ECON CLAIM
 G0 FIXED (X, M=252, L2)
+K = {10,25,50}
 tau >= W_X = 20
+P = 3
 ```
 
 ## Object

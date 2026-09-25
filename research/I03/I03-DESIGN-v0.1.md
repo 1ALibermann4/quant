@@ -1,13 +1,17 @@
 # I03 — Design v0.1 (Intrinsic Recurrence of G0)
 
-> **STATUS :** **DESIGN** — not executable preregistration  
+> **STATUS :** **DESIGN** — C1–C10 freeze applied; **prereg blocked** on HD-N4-SCALE  
 > **Authority class :** RESEARCH  
 > **Protocol :** QDP v0.1 · DR-007  
 > **D1–D8 :** [I03-D1-D8-FREEZE.md](I03-D1-D8-FREEZE.md) — **HUMAN-FROZEN**  
+> **C1–C10 freeze :** [I03-C1-C10-FREEZE.md](I03-C1-C10-FREEZE.md) — **GOVERNS** (supersedes open options below)  
 > **Pre-framing :** [I03-pre decision dossier](../I03-pre/I03-INTRINSIC-RECURRENCE-DECISION-v0.1.md)  
 >
 > ```text
 > I03 STATUS = DESIGN
+> C1–C10 FREEZE = ACTIVE (see I03-C1-C10-FREEZE.md)
+> PREREG v0.1 = NOT DRAFTED (await HD-N4-SCALE)
+> PRIMARY ESTIMAND = E-MND (tautological E-RR rejected)
 > NO MARKET DATA USED
 > NO EXPERIMENT RUN
 > NO FUTURE TARGET
@@ -16,6 +20,10 @@
 > NO BEST-k
 > NO POST-HOC PERIODS
 > ```
+
+**Note.** Sections §C1–C10 below remain as the pre-freeze design discussion.
+Executable contracts and constants are only those in
+[I03-C1-C10-FREEZE.md](I03-C1-C10-FREEZE.md).
 
 **Label convention:** PROJECT FACT · MATHEMATICAL FACT · LITERATURE PRACTICE ·
 INTERPRETATION · HUMAN DECISION REQUIRED · RECOMMENDED ON METHODOLOGICAL GROUNDS.
