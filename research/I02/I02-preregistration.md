@@ -734,5 +734,5 @@ S3-A BEFORE DATA / BEFORE EXPERIMENT / BEFORE HAT
 | OPEN commit | `4f6be2a` |
 | L1 implementation | `8d05905` |
 | Gap-closure (v0.2) | `4778842` |
-| S3-A + L1 patch (v0.3) | *(this commit)* |
+| S3-A + L1 patch (v0.3) | `b5465b0` |
 | Draft history | [I02-hypothesis-draft.md](I02-hypothesis-draft.md) |
