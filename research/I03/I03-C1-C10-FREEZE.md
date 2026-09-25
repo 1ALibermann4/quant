@@ -1,20 +1,18 @@
 # I03 — C1–C10 freeze record (DESIGN finalization)
 
-> **STATUS :** C1–C10 MOSTLY FROZEN — **ONE FINAL HUMAN DECISION REMAINS**  
+> **STATUS :** C1–C10 FROZEN — **HD-N4-SCALE = SCALE-W**  
 > **Authority class :** RESEARCH / PROTOCOL  
 > **Baseline design :** `15ab106` · [I03-DESIGN-v0.1.md](I03-DESIGN-v0.1.md)  
 > **D1–D8 :** [I03-D1-D8-FREEZE.md](I03-D1-D8-FREEZE.md) — **not reopened**  
-> **Preregistration :** **NOT CREATED** (blocked on HD-N4-SCALE)
+> **HD-N4-SCALE :** [I03-HD-N4-SCALE-FREEZE.md](I03-HD-N4-SCALE-FREEZE.md) — \(W_\sigma=20\)  
+> **Preregistration :** [I03-PREREG-v0.1.md](I03-PREREG-v0.1.md)
 
 ```text
-I03 STATUS = DESIGN
-PREREG v0.1 = NOT DRAFTED (stop before prereg)
-NO MARKET DATA USED
+I03 STATUS = DESIGN + PREREG DRAFT COMPLETE
+HD-N4-SCALE = SCALE-W (W_sigma = 20)
+NO MARKET DATA USED TO CHOOSE SCALE
 NO EXPERIMENT RUN
-NO FUTURE TARGET
-NO RESULT-DRIVEN CONSTANT
-NO BEST-k
-NO POST-HOC PERIOD
+NO IMPLEMENTATION IN THIS FREEZE
 NO SCI / PRED / ECON CLAIM
 ```
 
@@ -232,17 +230,13 @@ nontrivial τ-separated state recurrence under G0.
 Both are **methodologically defensible** as N4 scale estimators. Neither is
 mathematically forced as *the* vol nuisance skeleton for N4.
 
-### FINAL HUMAN DECISION — HD-N4-SCALE (blocks prereg)
+### HD-N4-SCALE — RESOLVED as SCALE-W
 
-| Option | \(\hat\sigma_t\) definition (causal) | Advantage | Risk |
-|--------|--------------------------------------|-----------|------|
-| **SCALE-M** | Sample stdev of \(\{r_u\}_{u=t-M+1}^{t}\) with \(M=252\) (population or sample std — freeze with G0’s \(\hat\sigma\) formula used for \(X\)) | Aligns with how \(X\) is scaled | Slower vol; may under-preserve short vol bursts |
-| **SCALE-W** | Analogous stdev on \(\{r_u\}_{u=t-W_{RV}+1}^{t}\), \(W_{RV}=20\) | Aligns with I01 vol-control window | Closer to \(X\)’s own length; may preserve more short-run path |
+See [I03-HD-N4-SCALE-FREEZE.md](I03-HD-N4-SCALE-FREEZE.md).
+\(W_\sigma=20\). Formula in [I03-PREREG-v0.1.md](I03-PREREG-v0.1.md) §8.
 
-**Do not choose from market results.** Prereg is blocked until humans pick
-**SCALE-M** or **SCALE-W**.
+### Algorithm N4-A (complete; scale frozen)
 
-### Algorithm N4-A (complete, parametric on chosen scale)
 
 **Inputs:** return path \(\{r_t\}\); scale rule \(\hat\sigma_t\) from HD-N4-SCALE;
 seeds; \(B_{\mathrm{N4}}\).
@@ -615,22 +609,16 @@ Every item labeled **`DIAGNOSTIC — NON-PROMOTIONAL`**.
 | IAAFT \(I_{\max}\) | \(100\) | **FROZEN** | Convention | — |
 | IAAFT \(\varepsilon\) | \(10^{-8}\) | **FROZEN** | Numerical convention | — |
 | IAAFT fail rate gate | \(>5\%\) → INCONCLUSIVE | **FROZEN** | Policy | — |
-| **N4 scale window** | **UNFROZEN** | **HD-N4-SCALE** | SCALE-M vs SCALE-W | Changes preserved vol skeleton |
+| **N4 scale window** | \(W_\sigma=20\) (**SCALE-W**) | **FROZEN** | Derived nuisance-control horizon | See HD-N4-SCALE |
 
 No constant above was selected from observed market recurrence results.
 
 ---
 
-## Unresolved HUMAN DECISION (blocks prereg)
+## HD-N4-SCALE — RESOLVED
 
-### HD-N4-SCALE
-
-Choose exactly one:
-
-1. **SCALE-M** — \(\hat\sigma_t\) from causal window \(M=252\) (G0 standardization contract).
-2. **SCALE-W** — \(\hat\sigma_t\) from causal window \(W_{RV}=20\) (I02 vol-window contract).
-
-Until this is frozen: **do not draft I03-PREREG-v0.1**.
+**SCALE-W** frozen: \(W_\sigma := W_{RV} := W_X = 20\).  
+Record: [I03-HD-N4-SCALE-FREEZE.md](I03-HD-N4-SCALE-FREEZE.md).
 
 ---
 
@@ -638,7 +626,7 @@ Until this is frozen: **do not draft I03-PREREG-v0.1**.
 
 | Artifact | Status |
 |----------|--------|
-| `I03-PREREG-v0.1.md` | **NOT CREATED** |
+| `I03-PREREG-v0.1.md` | **DRAFT COMPLETE** (not implemented; not executed) |
 
 ---
 
