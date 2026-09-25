@@ -152,7 +152,14 @@ def test_knowable_bool_json_roundtrip_preserves_exact_bool(flag):
 
 
 _ascii = st.characters(min_codepoint=32, max_codepoint=126)
-_qcj_scalars = st.one_of(st.none(), st.booleans(), st.integers(), st.text(max_size=8, alphabet=_ascii))
+# QCJ-1 forbids integers outside IEEE-754 safe integer range.
+_SAFE_INT = 2**53 - 1
+_qcj_scalars = st.one_of(
+    st.none(),
+    st.booleans(),
+    st.integers(min_value=-_SAFE_INT, max_value=_SAFE_INT),
+    st.text(max_size=8, alphabet=_ascii),
+)
 
 
 @settings(max_examples=30, deadline=None)

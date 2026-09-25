@@ -90,7 +90,8 @@ objet multi-échelle ; no-primary.
 sensibilité prédéclarée \(\{20,40,80\}\) (diagnostic, no best-\(p\)).
 **Readiness :** §14M — **`R2` DESIGN CLOSED**.
 **Preregistration :** [I02-preregistration.md](I02-preregistration.md)
-— **v0.3** ; S3-A ACCEPTED ; readiness **`C2`** (contract + impl aligned).
+— **v0.3** ; S3-A ACCEPTED ; readiness **`C2`** then **`L2-PASS`**
+  ([I02-L2-CONTRACT-TEST.md](I02-L2-CONTRACT-TEST.md)).
 \[
 \boxed{k=50\ \texttt{ACCEPTED}}
 \quad
@@ -101,12 +102,14 @@ sensibilité prédéclarée \(\{20,40,80\}\) (diagnostic, no best-\(p\)).
 \boxed{\texttt{S3-A}}
 \quad
 \boxed{\texttt{C2}}
+\quad
+\boxed{\texttt{L2-PASS}}
 \]
 \[
 \boxed{\text{I02 = OPEN}}
 \]
-Core design **non rouvert**. Gaps A/B/C **CLOSED** (v0.3). Pas de HAT /
-run / market data. Ready for L2 contract-test closure only.
+Core design **non rouvert**. Gaps A/B/C **CLOSED** (v0.3). L2 contract
+tests closed. Pas de HAT / run / market data. Next: HAT protocol only.
 
 ---
 

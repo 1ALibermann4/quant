@@ -7,10 +7,11 @@ Authoritative contract: [`research/I02/I02-preregistration.md`](../../research/I
 ## Status
 
 - **I02 = OPEN**
-- L1: computational pipeline aligned with v0.3 (this package)
+- L1: computational pipeline aligned with v0.3 (this package) — **C2**
+- L2: contract-test closure — see [`I02-L2-CONTRACT-TEST.md`](../../research/I02/I02-L2-CONTRACT-TEST.md)
 - HAT: not claimed
 - Exploratory run: not authorized until HAT PASS
-- Readiness: **C2** (contract + implementation aligned; ready for L2 contract-test closure)
+- Readiness: **L2-PASS** (ready for HAT protocol construction only)
 
 ## Entry points
 

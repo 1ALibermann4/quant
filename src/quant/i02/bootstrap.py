@@ -76,12 +76,18 @@ def mbb_spearman_ci(
     b: int,
     params: I02Params = DEFAULT_PARAMS,
     seed: int | None = None,
+    n_replicates: int | None = None,
 ) -> MBBResult:
     """Percentile CI for Spearman ρ via non-circular MBB on paired series.
 
     Only finite pairs are kept (time order preserved). If ``n < b``,
     returns inconclusive. Degenerate replicates (undefined ρ) are dropped;
     if fewer than ``ceil(0.8 B)`` finite replicates remain → inconclusive.
+
+    ``n_replicates`` may override ``B`` for mechanical / unit tests only.
+    Scientific runs must leave it ``None`` so ``params.bootstrap_B``
+    (frozen at 9999) applies. The frozen params object itself cannot
+    silently change ``B``.
     """
 
     z = np.asarray(z, dtype=np.float64)
@@ -107,7 +113,9 @@ def mbb_spearman_ci(
 
     seed = params.bootstrap_seed if seed is None else int(seed)
     rng = np.random.default_rng(seed)
-    B = params.bootstrap_B
+    B = params.bootstrap_B if n_replicates is None else int(n_replicates)
+    if B < 1:
+        raise ValueError("n_replicates / bootstrap_B must be >= 1")
     index_draws = moving_block_bootstrap_indices(n, b, B, rng)
 
     rhos: list[float] = []
