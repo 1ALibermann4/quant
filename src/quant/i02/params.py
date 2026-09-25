@@ -4,10 +4,10 @@ Scientific constants are frozen here as the runtime source of truth.
 Do not expose them as CLI tuning knobs. Do not retune after results
 (DR-007 D-4 / I02 change-control class C).
 
-``X`` standardization length ``M`` and sigma floor ``x_sigma_epsilon``
-are **inherited from the I01 geometric form of** ``X`` (standardized
-log-returns), not listed in the I02 prereg §0 table. See
-:data:`quant.i02.contract_gaps.X_STANDARDIZATION_INHERITANCE_NOTE`.
+``X`` standardization length ``M`` is the inherited I01 geometric form
+(I02-PREREG-v0.2 §13). ``x_sigma_epsilon`` remains in this dataclass
+only until the L1 patch removes it; the scientific contract forbids
+using ε for I02 ``X`` (degenerate ``σ̂=0`` ⇒ undefined / skip).
 """
 
 from __future__ import annotations
@@ -28,8 +28,12 @@ class I02Params:
         stride: Query schedule stride.
         b_star: Primary block length for dependence-aware inference.
         b_sensitivity: Predetermined diagnostic block lengths.
+        bootstrap_B: Frozen MBB replicate count (PREREG-v0.2 §15).
+        bootstrap_seed: Frozen RNG seed (PREREG-v0.2 §15).
+        alpha: Two-sided CI level (PREREG-v0.2 §15).
         M: Causal standardization window for ``X`` (I01 inheritance).
-        x_sigma_epsilon: Floor on σ̂ in ``X`` standardization (I01 form).
+        x_sigma_epsilon: LEGACY L1 field — must not be used after §13
+            patch (kept temporarily for import compatibility).
     """
 
     W_X: int = 20
@@ -40,9 +44,11 @@ class I02Params:
     stride: int = 1
     b_star: int = 40
     b_sensitivity: tuple[int, ...] = (20, 40, 80)
-    # I01 geometric X inheritance (not in I02 prereg §0 table):
+    bootstrap_B: int = 9999
+    bootstrap_seed: int = 42
+    alpha: float = 0.05
     M: int = 252
-    x_sigma_epsilon: float = 1.0e-8
+    x_sigma_epsilon: float = 1.0e-8  # legacy — do not use post §13
 
     def __post_init__(self) -> None:
         if self.W_X < 1 or self.W_RV < 1 or self.h < 1 or self.k < 1:
@@ -55,6 +61,10 @@ class I02Params:
             raise ValueError("I02 freezes M_Z = (3, 12, 21)")
         if self.b_star != 40 or self.b_sensitivity != (20, 40, 80):
             raise ValueError("I02 freezes b*=40 and sensitivity {20,40,80}")
+        if self.bootstrap_B != 9999 or self.bootstrap_seed != 42:
+            raise ValueError("I02 freezes B=9999 and seed=42")
+        if self.alpha != 0.05:
+            raise ValueError("I02 freezes alpha=0.05")
         if self.W_X % 2 != 0:
             raise ValueError("W_X must be even for S2 early/late 10+10 split")
         if self.M < self.W_X:

@@ -4,10 +4,12 @@
 > **Authority class :** RESEARCH / PROTOCOL (normative for I02)
 > **Protocol :** QDP v0.1
 > **Design readiness :** R2 — DESIGN CLOSED @ `260988b` (pin `32b60c4`)
-> **Prereg readiness :** **P2** at open ; next = implementation + HAT
+> **Prereg ID :** **I02-PREREG-v0.2** (L1 contract-gap amendments)
+> **Prereg readiness :** **P2** at open ; L1 gaps review §13–§16
 > **I02 :** **OPEN**
-> **Scientific run :** NOT AUTHORIZED until implementation HAT PASS
+> **Scientific run :** NOT AUTHORIZED until gaps closed + HAT PASS
 > **Opened at :** `4f6be2a` — **before any I02 implementation**
+> **L1 implementation :** `8d05905`
 >
 > **Parent design history :** [I02-hypothesis-draft.md](I02-hypothesis-draft.md)
 > **Governance :** DR-007, DR-008, C02 v1.1, closure gates, MS-1…MS-4
@@ -18,11 +20,10 @@ Cross-references only.
 
 ```text
 I02 = OPEN
-CORE DESIGN = FROZEN
-PREREGISTRATION = UNCHANGED (status transition only)
-NO PARAMETER SEARCH
-NO DATA ANALYSIS IN THIS DOCUMENT
-NO IMPLEMENTATION IN THIS COMMIT
+CORE DESIGN = FROZEN (R2)
+L1 CONTRACT-GAP AMENDMENTS = §13–§16 (pre-experimental)
+NO PARAMETER SEARCH FROM DATA
+NO MARKET DATA IN THIS DOCUMENT
 ```
 
 ---
@@ -37,6 +38,8 @@ NO IMPLEMENTATION IN THIS COMMIT
 | \(h\) | 10 |
 | \(k\) | 50 |
 | stride | 1 |
+| \(X\) form | I01 causal standardized log-returns ; **\(M=252\)** inherited (§13) |
+| \(X\) degenerate \(\hat\sigma_t=0\) | **undefined / skip** — **no** \(\varepsilon_\sigma\) (§13) |
 | Target | \(V_{t,10}=\sqrt{\frac1{10}\sum_{j=1}^{10}r_{t+j}^{2}}\) |
 | Forecast | \(\widehat{\mathbb{P}}_t^{R}=\frac1{50}\sum_{i=1}^{50}\delta_{V_{s_i,10}}\) |
 | Pool | common \(A_t\) for \(X,S_1,S_2,S_3\) |
@@ -45,6 +48,7 @@ NO IMPLEMENTATION IN THIS COMMIT
 | Weights | uniform \(1/50\) |
 | Early history | skip if \(\lvert A_t\rvert<50\) |
 | Representations | \(X\), \(S_1\), \(S_2\), \(S_3\) (as accepted in draft) |
+| S3 kNN metric | **HUMAN DECISION REQUIRED** (§14) — not executable yet |
 | Score | CRPS (lower better) |
 | Primary estimand | \(R_t^{(S)}=\dfrac{\operatorname{CRPS}_S(t)-\operatorname{CRPS}_X(t)}{\operatorname{CRPS}_S(t)}\) |
 | Secondary | \(D_t^{(S)}=\operatorname{CRPS}_S(t)-\operatorname{CRPS}_X(t)\) — diagnostic only |
@@ -55,9 +59,12 @@ NO IMPLEMENTATION IN THIS COMMIT
 | \(RV=0\) | structural **skip** for affected \(Z^{(m)}\) / analyses |
 | \(Z\) role | query indexing / analysis only — **never** filters \(A_t\), neighbors, \(k\), weights, target, forecast |
 | Association | Spearman ; **two-sided** ; **non-causal** |
-| Inference | moving / block bootstrap |
+| Inference | non-circular **moving block bootstrap** on paired valid series (§15) |
 | Primary \(b\) | \(b^\star=40\) |
 | Robustness \(b\) | \(\{20,40,80\}\) — report **all** ; **no best-\(p\)** |
+| Bootstrap \(B\) | \(9999\) replicates (§15) |
+| Bootstrap seed | \(42\) (§15) |
+| Detectability | CI-dual at \(\alpha=0.05\) (§15) — **not** a separate null-world test |
 | Scales | report **all** \(m\) ; **no best-scale** |
 
 Duplicate forecast atoms: multiplicity preserved.
@@ -186,9 +193,20 @@ Negative exploratory ≠ SCI-FAIL of I02.
 
 ### 3.2 Necessary ≠ sufficient
 
-**Statistical detectability** (e.g. two-sided uncertainty at \(b^\star=40\)
-incompatible with \(\rho=0\) for a cell) is **necessary** for counting
-that cell as a detected association, **not sufficient** for PASS.
+**Statistical detectability** (preregistered meaning, §15):
+
+For a cell \((S,m)\), detectability at block length \(b\) means the
+two-sided **percentile CI** for Spearman \(\rho^{(S,m)}\) at level
+\(\alpha=0.05\), constructed by the frozen non-circular moving block
+bootstrap on the paired valid series, **does not contain** \(0\).
+
+This is **CI-dual** inference under stationarity/mixing assumptions
+for the paired process. It is **not** a separate null-world procedure
+that destroys association while preserving marginal dependence.
+See §15.4 for the explicit distinction.
+
+Detectability is **necessary** for counting a cell as a detected
+association, **not sufficient** for PASS.
 
 **Scientifically meaningful predictive structure** additionally
 requires the joint rules below.
@@ -456,9 +474,250 @@ design freeze `260988b` / `32b60c4`.
 confirmatory evidence obtained ; SCI promotion ; C02 qualification
 complete.
 
-**Next authorized work :** implement the frozen contract ; unit /
-contractual tests ; then HAT ; then exploratory execution under
-DR-007. Confirmatoire remains blocked per §6.
+**Next authorized work :** close remaining L1 contract gaps (§13–§16) ;
+patch implementation ; L2 contract tests ; then HAT ; then exploratory
+execution under DR-007. Confirmatoire remains blocked per §6.
+
+---
+
+## 13. Gap A — \(X\) inheritance (\(M=252\), \(\varepsilon_\sigma\))
+
+**Baseline L1 :** `8d05905` inherited I01 `M=252` and
+\(\varepsilon_\sigma=10^{-8}\).
+
+### 13.1 Trace of authority (I01)
+
+Exact I01 definition ([hypothesis.md](../I01/hypothesis.md) §4.2 ;
+[configuration.yaml](../I01/configuration.yaml) `state_X` ;
+DEC-04) :
+
+\[
+\hat\mu_t=\frac1M\sum_{u=t-M+1}^{t}r_u,
+\quad
+\hat\sigma_t=\sqrt{\frac1{M-1}\sum_{u=t-M+1}^{t}(r_u-\hat\mu_t)^{2}}
+\]
+
+\[
+\tilde r_u=\frac{r_u-\hat\mu_t}{\hat\sigma_t+\varepsilon},
+\quad
+X_t=(\tilde r_{t-W+1},\ldots,\tilde r_t),
+\quad W=20,\; M=252,\; \varepsilon=10^{-8}.
+\]
+
+I02 accepted “\(X\) forme I01 / rendements standardisés” with
+\(W_X=20\). That **does** entail the causal inclusive \(\mu/\sigma\)
+window of length **\(M=252\)** (no conflict with \(W_X=20\) :
+\(M\ge W\)).
+
+### 13.2 Verdict — \(M=252\)
+
+\[
+\boxed{M=252\ \texttt{= INHERITED REPRESENTATION CONTRACT}}
+\]
+
+**Amendment class :** **A** (clarification of already frozen “forme
+I01”) / recorded in §0.
+
+### 13.3 Verdict — \(\varepsilon_\sigma\)
+
+\(\varepsilon\) enters the **denominator for every window**, not only
+\(\hat\sigma=0\). For \(\hat\sigma>0\) it is a small but nonzero
+alteration of \(X\). For \(\hat\sigma=0\) (constant \(M\)-window) it
+is a **regularization** that replaces an undefined standardization
+by \((r-\mu)/\varepsilon\).
+
+| Class | Fit |
+|-------|-----|
+| A — pure numerical guard, no effect on valid non-degenerate windows | **no** (affects all windows) |
+| B — part of mathematical representation | yes under I01 ; **not** authorized by I02’s “no ε” doctrine for undefined objects |
+| C — undocumented regularization (relative to I02) | **yes** if silently kept |
+
+**Recommendation (accepted in this amendment) :**
+
+- **Do not** inherit \(\varepsilon_\sigma\) into I02.
+- If \(\hat\sigma_t>0\) : \(\tilde r_u=(r_u-\hat\mu_t)/\hat\sigma_t\).
+- If \(\hat\sigma_t=0\) : \(X_t\) **undefined** → exclude \(t\) from
+  queries and from \(A_t\) (reason `X_SIGMA_ZERO` / insufficient
+  representation) — **no** ε, clip, or sentinel.
+
+**Amendment class :** **B** (pre-experimental specification
+amendment — degenerate-window policy).
+
+### 13.4 Historical gap record
+
+L1 noted inheritance of both \(M\) and \(\varepsilon\). This section
+**keeps** that discovery and **closes** it asymmetrically as above.
+
+---
+
+## 14. Gap B — S3 metric / L+form aggregation
+
+### 14.1 Preserved doctrine (unchanged)
+
+\[
+S_3=[RV,Q],\quad Q=MA/RV,\quad \phi=\arccos Q
+\]
+
+\[
+\mathcal{M}_{S3}^{\mathrm{shape}}=\{d_Q,d_\phi\},
+\quad
+d_Q=\lvert\Delta Q\rvert,
+\quad
+d_\phi=\lvert\Delta\phi\rvert
+\]
+
+**No primary** between \(d_Q\) and \(d_\phi\). Material disagreement
+on the H2c / S3 conclusion ⇒ **`INCONCLUSIVE`** (draft §9.16).
+
+Level proximity (ACCEPTED) : \(\delta_{\mathrm{level}}=\lvert\Delta L\rvert\)
+on \(RV>0\).
+
+S2 precedent (ACCEPTED PRIMARY) :
+
+\[
+d_2=\sqrt{(\Delta L)^{2}+(\Delta D)^{2}}
+\]
+
+### 14.2 Executable gap
+
+The shape family \(\{d_Q,d_\phi\}\) does **not** specify how
+\(\Delta L\) combines with \(\Delta Q\) or \(\Delta\phi\) into **one**
+neighbor distance for kNN on \(S_3^\star=[L,Q]\).
+
+Draft explicitly left **aggregation L+form** OPEN. No frozen
+normalization/scaling of \((L,Q)\) or \((L,\phi)\) exists. Inventing
+Euclidean concatenation solely for implementability would be
+post-hoc.
+
+### 14.3 Minimal defensible alternatives (not chosen here)
+
+| ID | Distance branches (both reported; no primary) | Notes |
+|----|-----------------------------------------------|-------|
+| **S3-A** | \(d_{S3,Q}=\sqrt{(\Delta L)^{2}+(\Delta Q)^{2}}\), \(d_{S3,\phi}=\sqrt{(\Delta L)^{2}+(\Delta\phi)^{2}}\) | Mirrors accepted \(d_2\) pattern ; **units** \(L\) vs \(Q\)/\(\phi\) not neutralized |
+| **S3-B** | \(d_{S3,Q}=\lvert\Delta L\rvert+\lvert\Delta Q\rvert\), \(d_{S3,\phi}=\lvert\Delta L\rvert+\lvert\Delta\phi\rvert\) | Mirrors \(d_1\) robustness style ; same unit caveat |
+| **S3-C** | Shape-only \(d_Q\), \(d_\phi\) (no \(\Delta L\) in kNN) | Ignores level channel of \(S_3\) — weak vs representation |
+
+Under **S3-A** or **S3-B**, the evidence unit expands to two S3
+branches (e.g. \(S3_Q\), \(S3_\phi\)) co-reported ; disagreement ⇒
+`INCONCLUSIVE` ; **no** best-metric selection.
+
+### 14.4 Status
+
+\[
+\boxed{\texttt{HUMAN DECISION REQUIRED — S3 AGGREGATION}}
+\]
+
+**Amendment class if/when chosen :** **B** or **C** depending on
+whether the choice is treated as completing OPEN aggregation (B) or
+changing the evidence unit (C if grid expansion).
+
+**Not closed in v0.2.** Historical gap retained.
+
+---
+
+## 15. Gap C — Moving block bootstrap (executable algorithm)
+
+### 15.1 Frozen already
+
+\(b^\star=40\) ; robustness \(\{20,40,80\}\) ; stride 1 ; Spearman ;
+two-sided ; no best-\(b\).
+
+### 15.2 Algorithm (ACCEPTED in this amendment)
+
+| Item | Specification |
+|------|----------------|
+| Type | **Non-circular moving block bootstrap** (overlapping blocks ; Künsch-style) within the accepted block-bootstrap family. **Not** circular MBB. **Not** stationary bootstrap. |
+| Source series | For each fixed \((S,m)\): the **time-ordered** sequence of paired valid observations \((Z_{t}^{(m)}, R_{t}^{(S)})\) after structural skips removed (compressed valid series of length \(n\)). Calendar gaps from skips are **not** re-inserted as missingness inside blocks. |
+| Block construction | A block start \(j\in\{0,1,\ldots,n-b\}\) yields \((Y_j,\ldots,Y_{j+b-1})\) contiguous in the valid series. |
+| Edge handling | **No wrap**. Starts only in \(\{0,\ldots,n-b\}\). |
+| Bootstrap sample length | Draw blocks with replacement ; concatenate until length \(\ge n\) ; **truncate** to \(n\). |
+| Replicates \(B\) | **\(B=9999\)** fixed ex ante. |
+| RNG | NumPy Generator ; **seed \(=42\)** for the primary reported run ; seed recorded in artifacts. No result-dependent seed. |
+| Statistic | Spearman \(\rho\) on each replicate (average ranks ; NaN if undefined). |
+| Inferential object | Two-sided **percentile CI** at \(\alpha=0.05\): \([\rho^*_{(\alpha/2)},\rho^*_{(1-\alpha/2)}]\) from the \(B\) replicate rhos (after dropping undefined replicates). |
+| Detectability | CI at \(b^\star\) does **not** contain \(0\) (§3.2). |
+| Degenerate replicates | If \(\rho^*\) undefined (e.g. constant ranks): **drop** that replicate from the percentile sample. If fewer than \(\lceil 0.8 B\rceil\) finite replicates remain: cell inference **`INCONCLUSIVE`**. |
+| Insufficient \(n\) | If \(n < b\): cannot form a block → cell inference **`INCONCLUSIVE`** at that \(b\). |
+| Robustness | Repeat **identical** algorithm for \(b\in\{20,40,80\}\) ; report all ; **never** select best \(p\)/CI. |
+
+### 15.3 What this is / is not
+
+```text
+MBB percentile CI  =  sampling uncertainty for ρ̂
+                      under dependence (stationarity/mixing assumptions)
+
+MBB CI excluding 0  =  CI-dual “detectability” (preregistered)
+
+NOT automatically   =  a null construction that breaks association
+                      while preserving marginal serial dependence
+```
+
+No additional null-world zoo is introduced. If a future protocol
+requires a stricter dependence-preserving null test, that is a
+**new** preregistered procedure (change-control C), not a silent
+reinterpretation of MBB.
+
+### 15.4 Amendment of prior detectability wording
+
+v0.1’s phrase “uncertainty incompatible with \(\rho=0\)” is hereby
+**clarified** as the CI-dual rule above — not as an unspecified
+\(p\)-value search.
+
+**Amendment class :** **B** (pre-experimental specification
+amendment completing Gate 6 / §14M).
+
+### 15.5 Historical gap record
+
+L1 correctly stopped (`IMPLEMENTATION CONTRACT GAP`). Closed here
+for algorithm uniqueness ; CI vs null distinction retained
+explicitly.
+
+---
+
+## 16. Cross-check, readiness, remaining decisions
+
+### 16.1 Amendment classifications
+
+| Gap | Object | Class | Status |
+|-----|--------|-------|--------|
+| A | \(M=252\) | **A** | **CLOSED** |
+| A | \(\varepsilon_\sigma\) rejected ; \(\hat\sigma=0\) undefined | **B** | **CLOSED** |
+| B | S3 L+form aggregation | — | **OPEN — HUMAN** |
+| C | MBB algorithm + CI-dual detectability | **B** | **CLOSED** |
+
+### 16.2 HUMAN DECISIONS REQUIRED
+
+1. **S3 aggregation** among §14.3 alternatives (or a documented
+   refinement that does not invent undeclared normalizations).
+
+### 16.3 Implementation impact
+
+After human S3 decision:
+
+- patch `quant.i02` : remove \(\varepsilon_\sigma\) ; implement
+  \(\hat\sigma=0\) skip ; implement chosen S3 distances ; implement
+  §15 MBB ;
+- then L2 contract-test closure ;
+- then HAT.
+
+Until S3 is decided: **do not** claim full contract executability.
+
+### 16.4 Readiness
+
+\[
+\boxed{\texttt{C0 — GAPS REMAIN}}
+\]
+
+Reason : S3 aggregation still **HUMAN DECISION REQUIRED**.
+Gaps A and C closed in contract text ; implementation not yet
+patched to §13/§15.
+
+```text
+NO MARKET DATA USED
+NO EXPERIMENT RUN
+HAT NOT STARTED
+NO POST-HOC CHOICE
+```
 
 ---
 
@@ -466,10 +725,11 @@ DR-007. Confirmatoire remains blocked per §6.
 
 | Field | Value |
 |-------|-------|
-| Preregistration ID | I02-PREREG-v0.1 |
+| Preregistration ID | **I02-PREREG-v0.2** |
+| Previous | I02-PREREG-v0.1 @ `344b128` |
 | Design freeze commit | `260988b` |
 | Design freeze pin | `32b60c4` |
-| Preregistration commit | `344b128` |
 | OPEN commit | `4f6be2a` |
-| Supersedes | *(none — first preregistration)* |
+| L1 implementation | `8d05905` |
+| Gap-closure commit | *(this commit)* |
 | Draft history | [I02-hypothesis-draft.md](I02-hypothesis-draft.md) |

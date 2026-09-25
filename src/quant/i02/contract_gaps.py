@@ -1,7 +1,7 @@
-"""Documented implementation contract gaps for I02 L1.
+"""I02 L1 contract gaps — status after PREREG-v0.2 gap-closure review.
 
-Per L1 mandate: do **not** invent missing scientific rules.
-Other components may proceed independently.
+Historical gap texts are retained. Closed gaps point to the
+preregistration sections that supersede them.
 """
 
 from __future__ import annotations
@@ -16,86 +16,66 @@ class BlockingImplementationContradiction(RuntimeError):
 
 
 # ---------------------------------------------------------------------------
-# S3 neighbor metric / L+form aggregation
+# Gap A — X inheritance (CLOSED in I02-PREREG-v0.2 §13)
+# ---------------------------------------------------------------------------
+
+X_STANDARDIZATION_INHERITANCE_NOTE = """
+CLOSED (I02-PREREG-v0.2 §13)
+
+M=252: INHERITED REPRESENTATION CONTRACT (I01 forme X).
+
+epsilon_sigma: NOT inherited. If sigma_hat=0, X is undefined (skip).
+If sigma_hat>0, standardize by sigma_hat exactly (no epsilon).
+
+L1 code at 8d05905 still used I01 epsilon — must be patched after
+this amendment (readiness C0 until S3 also closed + patch).
+"""
+
+
+# ---------------------------------------------------------------------------
+# Gap B — S3 neighbor metric (STILL OPEN — HUMAN DECISION)
 # ---------------------------------------------------------------------------
 
 S3_KNN_AGGREGATION_GAP = """
 IMPLEMENTATION CONTRACT GAP — S3 kNN distance
+Status: OPEN — HUMAN DECISION REQUIRED (I02-PREREG-v0.2 §14)
 
 Affected object: neighbor selection for representation S3 = [RV, Q].
 
-Conflicting / open clauses:
+Preserved doctrine:
 
-1. Representations accepted (draft §9.13.3): S3(t) = [RV_t, Q_t].
-2. Level proximity (draft §9.14.1 ACCEPTED): δ_level = |ΔL| on RV > 0.
-3. Metric robustness set (draft §9.16.2 ACCEPTED):
-      M_S3 = {d_Q, d_φ} with NO primary between |ΔQ| and |Δφ|.
-4. Explicit OPEN (draft §9.16 / §16): exact aggregation of L+form
-      inside the kNN operator remains OPEN.
-5. Preregistration §0 lists a single comparator S3 for the evidence
-      grid — not two metric variants as primary estimands.
+* S3* = [L, Q]; Q = MA/RV; phi = arccos(Q)
+* Shape family {d_Q=|ΔQ|, d_phi=|Δphi|} — NO PRIMARY
+* Disagreement => INCONCLUSIVE
+* Level: δ_level = |ΔL|
+* Aggregation L+form was never frozen (draft OPEN)
 
-Minimal decision required (human / prereg bump class C):
+Minimal alternatives (see prereg §14.3) — NOT chosen by code:
 
-* Choose the unique primary distance for S3 neighbor selection
-  (how δ_level combines with d_Q and/or d_φ), OR
-* Expand the preregistered evidence unit to named S3 metric variants.
+* S3-A: sqrt((ΔL)^2+(ΔQ)^2) and sqrt((ΔL)^2+(Δphi)^2)
+* S3-B: |ΔL|+|ΔQ| and |ΔL|+|Δphi|
+* S3-C: shape-only d_Q / d_phi (weak)
 
-Until then: S3 features (RV, Q, L) may be computed; S3 kNN / CRPS_S3 /
-R^(S3) MUST NOT be silently invented.
+Until human decision: S3 kNN / CRPS_S3 / R^(S3) MUST NOT be invented.
 """
 
 
 # ---------------------------------------------------------------------------
-# Bootstrap algorithm uniqueness
+# Gap C — Bootstrap (CLOSED in I02-PREREG-v0.2 §15; code not yet patched)
 # ---------------------------------------------------------------------------
 
 BOOTSTRAP_ALGORITHM_GAP = """
-IMPLEMENTATION CONTRACT GAP — moving/block bootstrap inference
+FORMERLY: IMPLEMENTATION CONTRACT GAP — moving/block bootstrap
+Status: CONTRACT CLOSED in I02-PREREG-v0.2 §15
+Implementation: NOT YET PATCHED (still raises until L1 patch)
 
-Affected object: dependence-aware inference for Spearman(Z^(m), R^(S)).
+Frozen algorithm summary:
 
-Frozen:
+* non-circular moving block bootstrap on paired valid (Z,R) series
+* b* = 40; robustness {20,40,80}
+* B = 9999; seed = 42
+* percentile CI α=0.05; detectability = CI excludes 0 (CI-dual)
+* NOT a separate null-world association-breaking test
 
-* family = moving/block bootstrap (Gate 6 / §14M);
-* b* = 40 primary; diagnostic b ∈ {20, 40, 80};
-* no best-p / no ACF-tuned b;
-* seed must be explicit when RNG is used.
-
-NOT uniquely specified in the preregistration:
-
-* number of bootstrap replicates B;
-* overlapping moving-block vs non-overlapping partition;
-* circular wrapping at series ends;
-* whether resampling is applied to the paired (Z, R) series only
-  or to an underlying return path;
-* how two-sided uncertainty / p-values are formed from replicates.
-
-Minimal decision required: preregister the unique bootstrap algorithm
-and (if applicable) mark B as an execution parameter with a frozen
-default.
-
-Until then: do not invent a bootstrap CI / p-value procedure.
-Block-length constants remain available as frozen scientific params.
-"""
-
-
-# ---------------------------------------------------------------------------
-# X standardization inheritance note (non-blocking if accepted as I01 form)
-# ---------------------------------------------------------------------------
-
-X_STANDARDIZATION_INHERITANCE_NOTE = """
-CONTRACT NOTE — X standardization parameters
-
-I02 freezes W_X = 20 and inherits the I01 geometric form of X as
-standardized causal log-returns (draft héritage / I01 state_X).
-
-I01 parameters used for that form (not listed in I02 prereg §0 table):
-
-* M = 252 causal μ/σ window;
-* x_sigma_epsilon = 1e-8 floor on σ̂ (I01 standardization only —
-  distinct from the I02 ban on ε for RV=0 / CRPS_S=0).
-
-If this inheritance is rejected, treat as IMPLEMENTATION CONTRACT GAP
-and bump the preregistration before scientific runs.
+See research/I02/I02-preregistration.md §15.
 """

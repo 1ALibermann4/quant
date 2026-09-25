@@ -36,8 +36,9 @@
 > **Draft v0.25 scale estimand review :** `f3c54cc`
 > **Draft v0.26 gated design closure :** `7781a6a`
 > **Draft v0.27 close k and bootstrap policy :** `260988b`
-> **Preregistration contract :** [I02-preregistration.md](I02-preregistration.md) @ `344b128`
+> **Preregistration contract :** [I02-preregistration.md](I02-preregistration.md) @ `344b128` → **v0.2** gap closure *(ce commit)*
 > **OPEN I02 :** `4f6be2a`
+> **L1 implementation :** `8d05905`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -88,7 +89,7 @@ objet multi-échelle ; no-primary.
 sensibilité prédéclarée \(\{20,40,80\}\) (diagnostic, no best-\(p\)).
 **Readiness :** §14M — **`R2` DESIGN CLOSED**.
 **Preregistration :** [I02-preregistration.md](I02-preregistration.md)
-— **`P2`** at open.
+— **v0.2** ; readiness gap review **`C0`** (S3 HUMAN).
 \[
 \boxed{k=50\ \texttt{ACCEPTED}}
 \quad
@@ -96,13 +97,13 @@ sensibilité prédéclarée \(\{20,40,80\}\) (diagnostic, no best-\(p\)).
 \quad
 \boxed{\texttt{R2}}
 \quad
-\boxed{\texttt{P2}}
+\boxed{\texttt{C0}}
 \]
 \[
 \boxed{\text{I02 = OPEN}}
 \]
-Core design **non rouvert**. Pas d'implémentation dans ce commit.
-Pas de run scientifique avant HAT PASS.
+Core design **non rouvert**. L1 gaps A/C closed in contract ; S3
+aggregation **HUMAN DECISION**. Pas de HAT / run.
 
 ---
 
