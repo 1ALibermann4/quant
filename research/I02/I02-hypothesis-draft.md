@@ -34,7 +34,7 @@
 > **Draft v0.24 forecast object / scoring :** `c3a6909`
 > **Draft v0.25 scale estimand review :** `f3c54cc`
 > **Draft v0.26 gated design closure :** `7781a6a`
-> **Draft v0.27 close k and bootstrap policy :** *(ce commit)*
+> **Draft v0.27 close k and bootstrap policy :** `260988b`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
