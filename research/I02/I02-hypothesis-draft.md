@@ -30,6 +30,7 @@
 > **Draft v0.20 accept W_X=20 :** `e42b3a8`
 > **Draft v0.21 freeze M_Z :** `3d3d877`
 > **Draft v0.22 future target review :** `38812f8`
+> **Draft v0.23 accept h=10 :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -56,9 +57,15 @@ REPRESENTATION ACCEPTED / METRIC ROBUSTNESS SETS ACCEPTED
 \(\mathcal{M}_{S2}\) figés ; sujet métrique pré-cadrage **CLOSED**.
 
 **État \(Z_t\) :** Disp ; \(W_X=W_{RV}=20\) ; \(\mathcal{M}_Z=\{3,12,21\}\)
-no-primary. **Cible :** \(V_{t,h}\) formule §14I `ACCEPTED` ; \(h\)
-class `B` preferred inheritance — **non** accepté ici. CRPS /
-\(Z_t\) **non** acceptés.
+no-primary. **Cible :**
+\[
+V_{t,10}
+=
+\sqrt{\frac1{10}\sum_{j=1}^{10}r_{t+j}^{2}}
+\quad\texttt{ACCEPTED}
+\]
+\(h=10\) — `INHERITED FIXED FORECAST HORIZON` (§14I.14).
+CRPS / \(Z_t\) **non** acceptés.
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
@@ -192,23 +199,22 @@ de cette métrique dans les queues.
 
 ---
 
-## 3. Variable future candidate \(V_{t,h}\)
+## 3. Variable future \(V_{t,10}\)
 
-**Statut (mis à jour §14I) :** formule de \(V_{t,h}\) **`ACCEPTED`** ;
-\(h\) **OPEN** (héritage I01 methodologically preferred — §14I.7).
+**Statut :** formule et \(h=10\) **`ACCEPTED`** (§14I.5, §14I.14).
 
 $$
-V_{t,h}
+V_{t,10}
 =
 \sqrt{
-\frac{1}{h}
-\sum_{j=1}^{h}
+\frac{1}{10}
+\sum_{j=1}^{10}
 r_{t+j}^{2}
 }
 $$
 
-Terminologie §14I : *future realized RMS volatility* (undemeaned).
-Revue complète : §14I. \(h\) **n'est pas figé**.
+Terminologie : *future realized RMS volatility (undemeaned)*.
+Hard availability : \(s+10\le t\). Revue : §14I.
 
 ---
 
@@ -3712,7 +3718,8 @@ h\text{ IS NOT STRUCTURALLY IDENTIFIABLE}
 \]
 
 Candidat : `inherited fixed design constraint (candidate)` pour
-\(h=10\). **Cette revue n'accepte pas \(h=10\).**
+\(h=10\). **Cette revue (§14I.7) n'acceptait pas \(h=10\).**
+Acceptation formelle : §14I.14.
 
 ### 14I.8 Multi-\(h\)
 
@@ -3727,8 +3734,9 @@ Candidat : `inherited fixed design constraint (candidate)` pour
 
 ### 14I.9 Overlap temporel
 
-Pour \(h>1\), \(V_{t,h}\) et \(V_{t+1,h}\) partagent \(h-1\)
-rendements ⇒ dépendance sérielle forte des targets et des scores.
+Pour \(h=10\), \(V_{t,10}\) et \(V_{t+1,10}\) partagent jusqu'à
+**9** rendements futurs ⇒ dépendance sérielle forte des targets et
+des scores.
 
 | Effet | Remet en cause… |
 |-------|-----------------|
@@ -3740,10 +3748,12 @@ rendements ⇒ dépendance sérielle forte des targets et des scores.
 
 \[
 s+h\le t
+\qquad\xrightarrow{h=10}\qquad
+s+10\le t
 \]
 
 pour tout voisin historique de la query \(t\) : **nécessaire et
-suffisant** comme garde anti-fuite pour \(V_{s,h}\) dans
+suffisant** comme garde anti-fuite pour \(V_{s,10}\) dans
 \(\widehat F(\cdot\mid t)\). Autres fuites : futures features dans
 \(X/S/Z\), fuite via \(C_t\)/labels — hors formule \(V\) ; discipline
 AF-08 inchangée.
@@ -3770,10 +3780,10 @@ AF-08 inchangée.
 | Terminologie | future realized RMS volatility (undemeaned) |
 | Info equiv. \(C\) vs \(\sqrt{C}\) | oui (ordre) ; scoring **non** |
 | \(h\) classification | **`B`** preferred inheritance |
-| \(h=10\) | **non accepté** ici |
+| \(h=10\) | **non accepté** dans la revue §14I ; accepté §14I.14 |
 | Multi-\(h\) | rejeté pour I02 |
 | Overlap | inférence, pas définition |
-| Hard availability | \(s+h\le t\) OK |
+| Hard availability | \(s+10\le t\) OK |
 
 \[
 \boxed{\text{NO DATA USED}}
@@ -3783,16 +3793,79 @@ AF-08 inchangée.
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
 
-**Prochaine décision humaine :** accepter ou rejeter \(h=10\) comme
-inherited constraint ; **puis** seulement attaquer CRPS.
+**Décision humaine \(h\) :** §14I.14.
 
-### 14I.13 Cohérence
+### 14I.13 Cohérence (revue)
 
 | Contrôle | OK |
 |----------|-----|
 | Horizons non rouverts | oui |
 | Score non choisi | oui |
-| \(h\) non accepté implicitement | oui |
+| \(h\) non accepté implicitement dans la revue | oui |
+| I02 NOT OPENED | oui |
+
+### 14I.14 Décision humaine — \(h=10\) hérité
+
+**Statut :** `ACCEPTED` pour I02.
+
+\[
+\boxed{h=10}
+\quad
+\boxed{\texttt{INHERITED FIXED FORECAST HORIZON}}
+\]
+
+**Justification acceptée :** continuité expérimentale avec I01 ;
+minimal change ; anti-retuning ; I02 caractérise un phénomène
+découvert sous \(h=10\) ; aucun argument structurel pour un
+changement ; multi-\(h\) rejeté (§14I.8).
+
+**N'est pas :** optimal ; structurellement identifié ; universel ;
+« 10 ≈ deux semaines » ; sélection empirique.
+
+**Target finale :**
+
+\[
+\boxed{
+V_{t,10}
+=
+\sqrt{\frac1{10}\sum_{j=1}^{10}r_{t+j}^{2}}
+}
+\]
+
+Terminologie : *future realized RMS volatility (undemeaned)*.
+
+**Hard availability :** \(s+10\le t\).
+
+**Overlap :** sous stride 1, targets successives partagent jusqu'à
+9 rendements futurs — **n'invalide pas** la définition ; impose que
+la future inférence traite la dépendance sérielle (stride /
+bootstrap **OPEN**).
+
+**Anti-retuning :** un résultat défavorable sous \(h=10\) **n'autorise
+pas** de relancer I02 avec un autre \(h\). Autre horizon ⇒ nouvelle
+investigation / réplication.
+
+\[
+\boxed{h=10\ \texttt{ACCEPTED}}
+\quad
+\boxed{V_{t,10}\ \text{fully specified}}
+\quad
+\boxed{\text{NO CRPS ACCEPTED}}
+\quad
+\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\]
+
+**Prochaine étape :** forecast object / CRPS (ECDF des \(V_{s,10}\)
+voisins, \(\Delta_t^{(S)}\)) — sans données.
+
+### 14I.15 Cohérence (post-acceptation)
+
+| Contrôle | OK |
+|----------|-----|
+| \(h=10\) ACCEPTED as inherited forecast horizon | oui |
+| \(V_{t,10}\) fully specified | oui |
+| Multi-\(h\) non rouvert | oui |
+| Pas de CRPS / \(Z_t\) acceptés | oui |
 | I02 NOT OPENED | oui |
 
 ---
@@ -3809,9 +3882,7 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 Ne pas résoudre dans ce draft :
 
-- **acceptation formelle de \(h\)** (candidat héritage \(h=10\),
-  class `B` §14I.7) ;
-- CRPS / Spearman ;
+- CRPS / Spearman / forecast object (ECDF, \(\Delta_t^{(S)}\)) ;
 - stride 1 ; formule \(Z_t\) complète ;
 - correction multiplicité ; pool redundancy ;
 - désaccord matériel §9.16 ; agrégation \(L\)+forme ;
@@ -3821,9 +3892,9 @@ Ne pas résoudre dans ce draft :
 **CLOSED :**
 
 - horizons \(W_X/W_{RV}/\mathcal{M}_Z\) ;
-- **définition \(V_{t,h}=\sqrt{\mathrm{mean}(r_{t+1:t+h}^{2})}\)
-  `ACCEPTED`** (§14I.5) ;
-- multi-\(h\) rejeté pour I02.
+- **\(h=10\)** `INHERITED FIXED FORECAST HORIZON` ;
+- **\(V_{t,10}\)** fully specified ;
+- multi-\(h\) rejeté.
 
 \[
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
@@ -3859,13 +3930,12 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [x] **\(W_X=20\)** `ACCEPTED` ; \(W_{RV}=20\) ; domaine
       \(3\le m_Z\le 21\)
 - [x] \(\mathcal{M}_Z=\{3,12,21\}\) `ACCEPTED` (§14H) — no-primary
-- [x] **\(V_{t,h}\)** formule `ACCEPTED` (§14I.5) ; \(h\) class `B`
-      preferred — **pas** accepté
-- [ ] Décision humaine \(h\) ; puis CRPS ; stride 1 ; \(Z_t\)
-      complète ; \(k\)
+- [x] **\(V_{t,10}\)** fully specified ; **\(h=10\)** `ACCEPTED`
+      (§14I.14) — `INHERITED FIXED FORECAST HORIZON`
+- [ ] CRPS / forecast object ; stride 1 ; \(Z_t\) complète ; \(k\)
 - [x] Représentations \(S_1/S_2/S_3\) **acceptées**
 - [x] Invariant multiplicatif **accepté**
-- [ ] Observable futur **approuvé** — formule \(V\) ok ; **\(h\)** OPEN
+- [x] Observable futur **approuvé** — \(V_{t,10}\) + \(h=10\)
 - [ ] Score probabiliste **approuvé** (CRPS = acceptable candidate)
 - [ ] Rôle de `H_shape` défini
 - [ ] Kill criteria approuvés
@@ -3887,9 +3957,8 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 | \(W_{RV}:=W_X\) comparability coupling `ACCEPTED` | oui |
 | \(3\le m_Z\le W_{RV}+1\) `ACCEPTED` ; not identifiable ; class C | oui |
 | §14F multi-scale policy ; NUMERICAL after \(W_X\) | oui |
-| Horizons CLOSED ; \(\mathcal{M}_Z\) ACCEPTED | oui |
-| \(V_{t,h}\) formule ACCEPTED ; \(h\) not accepted ; no CRPS | oui |
-| `NO Z_t ACCEPTED` ; I02 NOT OPENED | oui |
+| \(V_{t,10}\) + \(h=10\) ACCEPTED ; no CRPS ; no \(Z_t\) | oui |
+| I01 CLOSED ; I02 NOT OPENED | oui |
 
 ---
 
