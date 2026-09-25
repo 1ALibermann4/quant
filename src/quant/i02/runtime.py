@@ -362,7 +362,7 @@ def main(argv: list[str] | None = None) -> int:
         fixture_sha256=digest,
         output_dir=args.output_dir,
     )
-    print(f"I02 runtime OK → {args.output_dir / 'artifact.json'}")
+    print(f"I02 runtime OK -> {args.output_dir / 'artifact.json'}")
     return 0
 
 
