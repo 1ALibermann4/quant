@@ -33,6 +33,7 @@
 > **Draft v0.23 accept h=10 :** `cd16496`
 > **Draft v0.24 forecast object / scoring :** `c3a6909`
 > **Draft v0.25 scale estimand review :** `f3c54cc`
+> **Draft v0.26 gated design closure :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -67,13 +68,24 @@ V_{t,10}
 \quad\texttt{ACCEPTED}
 \]
 \(h=10\) — `INHERITED FIXED FORECAST HORIZON` (§14I.14).
-**Forecast object / CRPS :** §14J — CRPS `ACCEPTED` ;
-\(D_t^{(S)}\) brute **non** estimand final.
-**Échelle / estimand :** §14K — class **B** (décision humaine
-entre constructions `PROMISING`) ; pas d'estimand figé.
-\(Z_t\) **non** acceptée. \(k\), stride, Spearman **OPEN**.
+**Forecast object / CRPS :** §14J — CRPS `ACCEPTED`.
+**Estimand :** §14K–§14L Gate 1 — \(R_t^{(S)}=D_t^{(S)}/\operatorname{CRPS}_S(t)\)
+`ACCEPTED` ; \(D\) secondaire.
+**\(Z_t^{(m)}\) :** §14L Gate 3 — formule exacte `ACCEPTED` ;
+objet multi-échelle ; no-primary.
+**Stride :** Gate 4 — policy A (stride 1 + inférence dépendante)
+`ACCEPTED`.
+**Association :** Gate 5 — Spearman `ACCEPTED` ; bilatéral.
+**\(k\) :** Gate 2 — class **B** ; héritage \(k=50\) recommandé ;
+**HUMAN DECISION REQUIRED**.
+**Inférence :** Gate 6 — famille block/moving bootstrap ;
+longueur de bloc **OPEN**.
+**Readiness :** Gate 8 — **`R1`**.
 \[
-\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\boxed{\text{NO }Z_t\text{ scalar primary};\ \texttt{formula ACCEPTED}}
+\]
+\[
+\boxed{\text{I02 = NOT OPENED}}
 \]
 I02 reste `NOT OPENED`.
 
@@ -333,12 +345,20 @@ D_t^{(S)}
 \operatorname{CRPS}_S(t)-\operatorname{CRPS}_X(t)
 $$
 
-\(D_t^{(S)}>0\) : \(X\) mieux scorée que \(S\) en \(t\).
-**Estimand scientifique principal :** **OPEN** — §14K
-(class **B** ; décision humaine).
+**Estimand principal `ACCEPTED` (§14L Gate 1) :**
+
+\[
+E_t^{(S)}
+=
+R_t^{(S)}
+=
+\frac{D_t^{(S)}}{\operatorname{CRPS}_S(t)}
+\]
+
+(\(D\) reste secondaire. Skip si \(\operatorname{CRPS}_S=0\).)
 
 Revue adversariale antérieure (§6.1) : historique ;
-verdicts score : §14J ; estimand : §14K.
+verdicts score : §14J ; estimand : §14K–§14L.
 
 ### 6.1 CRPS adversarial review (historique pré-§14J)
 
@@ -4726,6 +4746,481 @@ explicite), avec \(D\) secondaire.
 \boxed{\text{NO }Z_t\text{ ACCEPTED}}
 \]
 
+**Suite :** Gate 1 de §14L (retour à l'hypothèse) — peut figer
+parmi \(\{R,Q,N\}\).
+
+---
+
+## 14L. I02 design closure — gated review
+
+> **Nature :** mathématique / méthodologique / documentaire.
+> **NO DATA. NO EXPERIMENT. NO CODE.**
+> Une revue structurée par **gates séquentiels**.
+> Ambiguïté bloquante ⇒ `STOP AT GATE` ; sinon continuer
+> avec branches explicites.
+> I02 = `NOT OPENED`.
+
+Chaîne :
+
+\[
+\text{Estimand}
+\rightarrow k
+\rightarrow Z
+\rightarrow \text{stride}
+\rightarrow
+\text{association}
+\rightarrow
+\text{inférence}
+\rightarrow
+\text{cohérence}
+\rightarrow
+\text{readiness}.
+\]
+
+Baseline **non rouverte** : \(W_X=W_{RV}=20\),
+\(\mathcal{M}_Z=\{3,12,21\}\), \(h=10\), \(V_{t,10}\),
+\(\widehat{\mathbb{P}}_t^{R}\), \(A_t\) commun, poids \(1/k\),
+ties \((\mathrm{dist}\uparrow,s\uparrow)\), skip si
+\(\lvert A_t\rvert<k\), CRPS `ACCEPTED`, \(D\) secondaire.
+
+---
+
+### Gate 1 — Final estimand
+
+**Question :** laquelle de \(\{R,Q,N\}\) opérationnalise
+*incremental predictive value beyond \(S\)* sans changer
+silencieusement H1 ?
+
+#### 1A. Retour à l'hypothèse
+
+H1-I02 : \(X\) contient de l'information sur la loi future de
+\(V\) **non expliquée** par les résumés simples \(S\).
+
+| Construction | Alignement H1 |
+|--------------|---------------|
+| \(R=D/\operatorname{CRPS}_S\) | **direct** — fraction de l'erreur de \(S\) éliminée (forme skill / CRPSS) |
+| \(Q=D/(\operatorname{CRPS}_S+\operatorname{CRPS}_X)\) | relatif **entre** deux perfs — symétrie non exigée par H1 |
+| \(N=D/RV_t\) | gain **par unité de niveau** \(RV\) — autre question (échelle d'état) |
+
+#### 1B. \(R\)
+
+- Directionnel vs \(S\) ; interprétation naturelle « beyond \(S\) ».
+- Scale-invariant (§14K).
+- Dénominateur = score **réalisé** de \(S\) (dépendance outcome via
+  le scoring, pas via \(V\) comme normalisateur d'état).
+- \(\operatorname{CRPS}_S=0\) : singulier → **skip** structurel.
+- Ratios extrêmes si \(S\) déjà excellent : variance ↑ ; ce n'est
+  pas un motif de rejet de l'estimand, c'est une propriété du
+  skill relatif.
+
+#### 1C. \(Q\)
+
+- Symétrique, borné \((-1,1)\), scale-invariant.
+- Le dénominateur mélange les deux performances réalisées.
+- H1 est **asymétrique** (\(X\) beyond \(S\)) ⇒ la symétrie est
+  mathématiquement élégante mais **scientifiquement non
+  nécessaire** et reformule la question.
+
+#### 1D. \(N\)
+
+1. Scale-invariant : oui. 2. Ex ante : oui. 3. Commun : oui.
+4. \(RV_t=0\) : skip. 5–6. Change **unités et estimand** (pas
+   seulement un changement d'unité cosmétique).
+7–8. Diviser par \(RV\) (déjà dans \(S\)) **isole** l'avantage
+   du niveau trivial de volatilité — utile pour confondre moins
+   avec \(Z\), mais **ce n'est pas** la question H1 « beyond \(S\) ».
+
+#### 1E. Verdicts Gate 1
+
+| | Verdict |
+|--|---------|
+| \(R\) | **`ACCEPT`** — estimand principal |
+| \(Q\) | **`REJECT`** comme primaire (pas « robustesse ») |
+| \(N\) | **`REJECT`** comme primaire (autre question) |
+| \(D\) | secondaire diagnostic (inchangé) |
+
+\[
+\boxed{
+E_t^{(S)}
+:=
+R_t^{(S)}
+=
+\frac{D_t^{(S)}}{\operatorname{CRPS}_S(t)}
+=
+1-\frac{\operatorname{CRPS}_X(t)}{\operatorname{CRPS}_S(t)}
+}
+\]
+
+**Politique zéro :** si \(\operatorname{CRPS}_S(t)=0\), query \(t\)
+**skip** pour \(E_t^{(S)}\) (pas d'\(\varepsilon\)).
+
+**Status :** `ESTIMAND IDENTIFIED` — **pas** `HUMAN DECISION`
+sur le choix primaire. Terminologie :
+
+```text
+comparator-relative proper-score incremental predictive value
+```
+
+**Downstream :** Gates 2–6 utilisent \(E_t^{(S)}=R_t^{(S)}\).
+Continuer.
+
+---
+
+### Gate 2 — \(k\)
+
+**Question :** quelle taille de voisinage pour la mesure empirique
+commune ?
+
+#### 2A. Rôle de \(k\)
+
+| \(k\) petit | \(k\) grand |
+|-------------|-------------|
+| localité ↑ | résolution distributionnelle ↑ |
+| ECDF rugueuse ; var. score ↑ | localité ↓ ; spécificité conditionnelle ↓ |
+
+\(k_X=k_{S_i}\) : **STRUCTURAL** (déjà §14J).
+
+#### 2B. Héritage \(k=50\) (I01)
+
+| Pour | Contre |
+|------|--------|
+| Minimal change ; anti-retuning | I02 : voisins = **loi empirique**, pas seulement moyenne de voisinage |
+| Phénomène générateur sous \(k=50\) | \(k\) contrôle la résolution distributionnelle |
+| Continuité du voisinage | héritage peut être inapproprié si le rôle a changé |
+
+Contamination : choisir un nouveau \(k\) pour « mieux résoudre »
+l'ECDF **après** design = retuning. Hériter le \(k\) préenregistré
+du générateur reste la voie anti-snooping par défaut.
+
+#### 2C. Identifiabilité
+
+\[
+\boxed{\texttt{B — NOT STRUCTURALLY IDENTIFIED, I01 INHERITANCE METHODOLOGICALLY PREFERRED}}
+\]
+
+Recommandation documentaire : \(k=50\) comme
+`INHERITED FIXED NEIGHBORHOOD SIZE (candidate)`.
+
+**Pas figé numériquement ici** — parallèle \(W_X\)/\(h\) avant
+acceptation humaine.
+
+#### 2D. Multi-\(k\)
+
+Attaque : sensibilité vs tuning ; \(\times\mathcal{M}_Z\times S_i\) ;
+sélection post-hoc du « meilleur » \(k\).
+
+\[
+\boxed{\texttt{MULTI-}k\text{ REJECTED}}
+\]
+
+**Status Gate 2 :** classification **B** ;
+**HUMAN DECISION REQUIRED** pour accepter \(k=50\) (ou autre
+valeur unique préenregistrée). Analyse des gates suivants :
+valide pour **tout** \(k\) admissible commun — **continuer**
+sous branche « single common \(k\) ; candidat hérité 50 ».
+
+---
+
+### Gate 3 — Définition complète de \(Z_t\)
+
+**Question :** formule exacte, indexation, causalité, zéros,
+objet multi-échelle.
+
+#### 3A. Incréments et indexation
+
+\[
+L_t=\log(RV_t),
+\qquad
+\Delta L_u=L_u-L_{u-1}
+\quad(u\ge t_{\min}+1)
+\]
+
+Pour \(m\in\mathcal{M}_Z=\{3,12,21\}\) :
+
+\[
+\boxed{
+Z_t^{(m)}
+=
+\mathrm{Std}_{\mathrm{pop}}
+\bigl(
+\Delta L_{t-m+2},\ldots,\Delta L_t
+\bigr)
+}
+\]
+
+Vérification : \(m\) niveaux \(L\) distincts
+\(L_{t-m+1},\ldots,L_t\) produisent **\(m-1\)** incréments
+\(\Delta L_{t-m+2},\ldots,\Delta L_t\). Pour \(m=3\) : deux
+incréments ; \(m=12\) : onze ; \(m=21\) : vingt.
+\(\mathrm{Std}_{\mathrm{pop}}\) sur \(n=m-1\) points
+(`ACCEPTED` §14B).
+
+#### 3B. Causalité
+
+Tous les \(RV_u\) / \(L_u\) / \(\Delta L_u\) utilisés satisfont
+\(u\le t\). Aucune fenêtre centrée ; aucune normalisation future.
+\(Z_t^{(m)}\) est \(\mathcal{F}_t\)-mesurable.
+
+#### 3C. \(RV=0\)
+
+\(L_t\) exige \(RV_t>0\). **Pas d'\(\varepsilon\).**
+
+Si tout \(RV_u=0\) requis pour construire \(Z_t^{(m)}\) (fenêtre
+de niveaux \(L_{t-m+1},\ldots,L_t\) ou le \(RV\) du pas
+précédent pour le premier \(\Delta L\)) : **\(Z_t^{(m)}\)
+indéfini** ⇒ **skip** query pour les analyses impliquant cette
+échelle (politique structurelle, pas un appel à la rareté).
+
+#### 3D. Objet multi-échelle
+
+\[
+\boxed{
+\mathbf{Z}_t
+=
+\bigl(Z_t^{(3)},\,Z_t^{(12)},\,Z_t^{(21)}\bigr)
+}
+\]
+
+**Pas** de scalaire primaire. Gouvernance MS-1…MS-4 inchangée ;
+no-primary.
+
+#### 3E. Rôle de \(Z\)
+
+\(Z\) indexe / analyse l'état de la **query**.
+**Interdit :** filtrer \(A_t\) ; modifier voisins / \(k\) / poids /
+cible / forecast.
+
+#### 3F. Verdict Gate 3
+
+\[
+\boxed{Z_t^{(m)}\ \texttt{FORMULA ACCEPTED}}
+\]
+
+Status : **`ACCEPTED`** (formule + indexation + skip \(RV=0\) +
+vecteur multi-échelle + rôle). Continuer.
+
+---
+
+### Gate 4 — Stride / query schedule
+
+**Question :** calendrier des queries vs indépendance statistique.
+
+#### 4A. Deux problèmes distincts
+
+| | |
+|--|--|
+| Schedule | quelles dates \(t\) scorées |
+| Inférence | comment traiter la dépendance des \(E_t\) |
+
+stride \(=1\) maximise la résolution temporelle ; overlap de
+\(V\), \(X/S\), \(Z\), voisinages, scores, \(E\). Un stride plus
+grand **réduit** l'overlap mais **n'implique pas** l'indépendance.
+
+#### 4B. Options
+
+| | |
+|--|--|
+| **A.** stride 1 + inférence dependence-aware | préserve l'information |
+| B. stride \(\ge h\) (targets non chevauchants) | simplifie ; change la population échantillonnée |
+| C. autre stride fixe arbitraire | liberté sans axiome |
+| D. multi-stride | multiplicité / snooping |
+
+#### 4C. Information scientifique
+
+Écarter les queries intermédiaires : retire de l'information
+légitime ; modifie la population ; **n'est pas nécessaire** si
+l'inférence traite la dépendance ; simplifie la statistique au
+prix d'une perte d'information.
+
+#### 4D. Verdict Gate 4
+
+\[
+\boxed{\texttt{A — STRIDE 1 PREFERRED + DEPENDENCE-AWARE INFERENCE}}
+\]
+
+Multi-stride **rejeté**. Policy **`ACCEPTED`**. Continuer
+(Gate 6 porte l'inférence).
+
+---
+
+### Gate 5 — Relation primaire \(\mathbf{Z}\leftrightarrow E\)
+
+**Question :** la valeur prédictive incrémentale varie-t-elle
+systématiquement avec l'instabilité de régime ?
+
+\(E_t^{(S)}=R_t^{(S)}\) (Gate 1).
+
+#### 5A–5B. Options minimales
+
+| | Verdict |
+|--|---------|
+| A. Pearson | **`WEAK`** — linéarité / sensibilité d'échelle |
+| B. Spearman | **`ACCEPT`** — association monotone sans linéarité |
+| C. contraste ordinal/quantile préenregistré sur \(Z\) | diagnostic possible ; **pas** primaire (évite zoo) |
+
+#### 5C. Nature de l'estimand associationnel
+
+Spearman décrit une **association monotone** (descriptive /
+population-level sur le schedule). **Pas** un effet causal.
+I02 **n'implique pas** la causalité.
+
+Objet primaire par échelle (pas de min-\(p\) cross-scale) :
+
+\[
+\rho^{(m,S)}
+=
+\operatorname{Spearman}\bigl(Z_t^{(m)},\,E_t^{(S)}\bigr)
+\]
+
+sur le schedule stride-1 (queries non skippées).
+
+#### 5D. Directionnalité
+
+Pas d'hypothèse directionnelle **ex ante** légitime sans
+contamination exploratoire E04.
+
+\[
+\boxed{\texttt{TWO-SIDED}}
+\]
+
+« \(E\) dépend de l'instabilité » — pas « plus d'instabilité ⇒
+plus grand \(E\) » figé a priori.
+
+**Status Gate 5 :** Spearman `ACCEPTED` ; bilatéral ; non causal.
+Continuer.
+
+---
+
+### Gate 6 — Dépendance temporelle / inférence
+
+**Sources :** overlap \(h=10\) ; \(W_X=W_{RV}=20\) ; \(\mathcal{M}_Z\)
+jusqu'à 21 ; voisinages lents ; dépendance de scores / \(E\).
+
+#### 6A. Familles
+
+| | Verdict |
+|--|---------|
+| A. IID | **`REJECT`** |
+| B. HAC | `PROMISING` (alternative) |
+| C. Moving / block bootstrap | **`ACCEPT`** famille primaire |
+| D. Stationary bootstrap | `PROMISING` (variante) |
+
+Famille retenue : **block / moving-block bootstrap** dependence-aware.
+Pas de choix basé sur la significativité empirique.
+
+#### 6B. Longueur de bloc
+
+Empans connus (ordres de grandeur structurels) : \(h=10\),
+\(W_X=20\), mémoire \(Z\) \(\sim W_{RV}+(m-1)\) avec
+\(m\le 21\).
+
+La longueur exacte **n'est pas** structurellement unique.
+Règle candidate : préenregistrer une longueur fondée sur le
+**max des empans de dépendance design** — formule exacte
+**OPEN** / **HUMAN DECISION** (pas de tuning pour \(p\)-values).
+
+#### 6C. Multiplicité \(\mathcal{M}_Z\)
+
+MS-1…MS-4 : rapporter **les trois** \(m\) ; **interdit** :
+min \(p\) cross-scale ; sélection best-\(m\) ; primary scale.
+Correction zoo large : non. Exigence minimale : interprétation
+**conjointe** préenregistrée (les trois échelles visibles).
+
+**Status Gate 6 :** famille bootstrap blocs `ACCEPTED` ;
+longueur de bloc **OPEN** (décision humaine / règle
+préenregistrable) ; multiplicité = report all + no best-scale.
+
+---
+
+### Gate 7 — Cohérence interne
+
+**Design candidat assemblé :**
+
+| Bloc | Statut |
+|------|--------|
+| \(X,S_1,S_2,S_3\) | ACCEPTED (repr.) |
+| \(V_{t,10}\) | ACCEPTED |
+| Forecast \(\widehat{\mathbb{P}}\) common-\(k\) | ACCEPTED objet |
+| CRPS | ACCEPTED |
+| \(E_t^{(S)}=R_t^{(S)}\) | ACCEPTED |
+| \(Z_t^{(m)}\), \(m\in\{3,12,21\}\) | ACCEPTED |
+| Stride 1 | ACCEPTED policy |
+| Spearman bilatéral | ACCEPTED |
+| Inférence block bootstrap | famille ACCEPTED |
+| \(k\) numérique | **HUMAN** (B, candidat 50) |
+| Block length | **OPEN / HUMAN** |
+
+Contrôles : pas de fuite via \(Z\) dans le forecast ; pas de
+normalisation par \(V_{t,10}\) ; pools communs ; pas de multi-\(k\)
+/ multi-\(h\) / multi-stride ; skip zéros sans \(\varepsilon\) ;
+pas d'IID.
+
+\[
+\boxed{\texttt{Gate 7 = PASS (with bounded human blockers)}}
+\]
+
+Blockers : (1) gel numérique de \(k\) ; (2) règle de longueur de
+bloc.
+
+---
+
+### Gate 8 — Readiness
+
+\[
+\boxed{\texttt{R1 — DESIGN NEAR-CLOSED}}
+\]
+
+Seules des décisions humaines **bornées** restent. Pas R2/R3 :
+\(k\) et block length non figés. **I02 reste NOT OPENED** —
+pas d'ouverture automatique ; preregistration review ultérieure
+requise avant R2→open.
+
+---
+
+### 14L.9 Table des gates (résumé)
+
+| Gate | Verdict | Figé ? |
+|------|---------|--------|
+| 1 Estimand | \(R\) `ACCEPT` ; \(Q,N\) REJECT primaire | oui |
+| 2 \(k\) | class **B** ; héritage 50 recommandé | **HUMAN** |
+| 3 \(Z_t\) | formule + vecteur `ACCEPT` | oui |
+| 4 Stride | **A** stride 1 + dep. inference | oui |
+| 5 Association | Spearman `ACCEPT` ; two-sided | oui |
+| 6 Inférence | block bootstrap ; block length OPEN | partiel |
+| 7 Cohérence | PASS w/ blockers | — |
+| 8 Readiness | **R1** | — |
+
+### 14L.10 HUMAN DECISIONS REQUIRED
+
+1. **Accepter \(k=50\)** comme `INHERITED FIXED NEIGHBORHOOD SIZE`
+   (recommandé) — ou une autre valeur **unique** préenregistrée
+   (multi-\(k\) interdit).
+2. **Règle de longueur de bloc** pour le bootstrap (fondée sur
+   empans design ; pas de tuning significativité).
+
+### 14L.11 OPEN / ACCEPTED (post-§14L)
+
+**ACCEPTED (nouveaux ou confirmés) :** \(E=R\) ; \(Z_t^{(m)}\)
+formule ; stride-1 policy ; Spearman bilatéral ; famille
+block bootstrap ; skips structurels (\(\operatorname{CRPS}_S=0\),
+\(RV=0\), \(\lvert A_t\rvert<k\)).
+
+**OPEN :** valeur numérique \(k\) (décision) ; block length ;
+détail protocolaire de preregistration / holdout / kill criteria ;
+ouverture I02.
+
+**NOT OPENED :** I02.
+
+### 14L.12 Cohérence
+
+| Contrôle | OK |
+|----------|-----|
+| Baseline non rouverte | oui |
+| NO DATA / NO EXPERIMENT | oui |
+| Pas d'ensemble d'estimands | oui |
+| Multi-\(k\) / multi-stride rejetés | oui |
+| I02 NOT OPENED | oui |
+
 ---
 
 ## 15. Market-State / Regime Engine
@@ -4740,26 +5235,28 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 Ne pas résoudre dans ce draft :
 
-- **estimand principal** parmi \(\{R,Q,N\}\) — décision humaine
-  (§14K class **B**) ; politique skip exacte du dénominateur nul ;
-- stride 1 ; formule \(Z_t\) complète ;
-- correction multiplicité ; pool redundancy ;
-- désaccord matériel §9.16 ; agrégation \(L\)+forme ;
-- singularités métriques — pas d'\(\varepsilon\) ;
-- \(k\) ; holdout ; Market-State Engine ;
-- Spearman ; procédure d'inférence (bootstrap / HAC).
+- **gel numérique de \(k\)** (Gate 2 class B ; candidat hérité 50) ;
+- **règle de longueur de bloc** bootstrap (Gate 6) ;
+- détail preregistration / holdout / kill criteria ;
+- ouverture I02 ;
+- Market-State Engine ; désaccord matériel §9.16 ;
+  agrégation \(L\)+forme.
 
-**CLOSED :**
+**CLOSED (design) :**
 
-- horizons \(W_X/W_{RV}/\mathcal{M}_Z\) ;
-- **\(h=10\)** ; **\(V_{t,10}\)** ; multi-\(h\) rejeté ;
-- forecast object ; CRPS `ACCEPTED` ; log-score primary rejected ;
-- \(D\) brut = REJECT primaire / secondaire OK ;
-- future-\(V\) normalization REJECT ;
-- cartographie \(R,Q,N\) = `PROMISING` (questions distinctes).
+- horizons / \(h\) / \(V_{t,10}\) / forecast object / CRPS ;
+- estimand principal \(R_t^{(S)}\) ; \(D\) secondaire ;
+  \(Q,N\) non primaires ;
+- \(Z_t^{(m)}\) formule + \(\mathbf{Z}_t\) multi-échelle ;
+- stride 1 + inférence dependence-aware (policy) ;
+- Spearman bilatéral ; multi-\(k\) / multi-stride / future-\(V\)
+  norm. rejetés ;
+- readiness **R1**.
 
 \[
-\boxed{\text{NO }Z_t\text{ ACCEPTED}}
+\boxed{\texttt{R1 — DESIGN NEAR-CLOSED}}
+\quad
+\boxed{\text{I02 = NOT OPENED}}
 \]
 
 ---
@@ -4775,7 +5272,7 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [x] Revue documentaire \(Z_t\) (§14–§14A)
 - [x] Décision sémantique cas 3 / cas 5 : famille **A** =
       `PRIMARY SEMANTIC CANDIDATE` ; \(E\) = mécanisme alternatif
-      (≠ robustesse de A) — **pas** de \(Z_t\) acceptée (§14A.12)
+      (≠ robustesse de A) — formule \(Z\) : §14L Gate 3
 - [x] Revue Disp §14B ; **\(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\)
       `ACCEPTED`** (§14B.11) ; MAD REJECT ; MeanAD non retenue
 - [x] Revue architecture temporelle §14C
@@ -4795,10 +5292,14 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [x] **\(V_{t,10}\)** fully specified ; **\(h=10\)** `ACCEPTED`
       (§14I.14) — `INHERITED FIXED FORECAST HORIZON`
 - [x] Forecast object + **CRPS `ACCEPTED`** (§14J)
-- [x] Revue échelle / estimand §14K — class **B** ;
-      \(D\) secondaire ; future-\(V\) REJECT
-- [ ] **Décision humaine** estimand principal \(\in\{R,Q,N\}\)
-- [ ] stride 1 ; \(Z_t\) complète ; \(k\)
+- [x] Revue échelle §14K ; **estimand \(R\) `ACCEPTED`** (§14L G1)
+- [x] **\(Z_t^{(m)}\) formule `ACCEPTED`** (§14L G3) ; vecteur
+      multi-échelle ; no-primary
+- [x] Stride policy **A** `ACCEPTED` (§14L G4)
+- [x] Spearman bilatéral `ACCEPTED` (§14L G5)
+- [x] Famille inférence block bootstrap `ACCEPTED` (§14L G6)
+- [ ] **HUMAN :** gel \(k\) (candidat hérité 50, class B)
+- [ ] **HUMAN :** règle longueur de bloc
 - [x] Représentations \(S_1/S_2/S_3\) **acceptées**
 - [x] Invariant multiplicatif **accepté**
 - [x] Observable futur **approuvé** — \(V_{t,10}\) + \(h=10\)
@@ -4807,8 +5308,9 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [ ] Kill criteria approuvés
 - [ ] Stratégie de données / réplication définie
 - [ ] Risque de data snooping documenté
-- [ ] Protocole de gel avant premier résultat
+- [ ] Protocole de gel / preregistration avant premier résultat
 - [ ] Décision explicite **OPEN I02**
+- [x] Readiness class **R1** (§14L G8) — near-closed
 
 ---
 
@@ -4818,14 +5320,11 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 |----------|--------|
 | Aucun chiffre / donnée / calcul | oui |
 | \(S_1/S_2/S_3\) / §9.16 inchangés | oui |
-| Famille A = primary semantic candidate (§14A.12) | oui |
-| \(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\) `ACCEPTED` | oui |
-| \(W_{RV}:=W_X\) comparability coupling `ACCEPTED` | oui |
-| \(3\le m_Z\le W_{RV}+1\) `ACCEPTED` ; not identifiable ; class C | oui |
-| §14F multi-scale policy ; NUMERICAL after \(W_X\) | oui |
-| \(V_{t,10}\) + \(h=10\) ACCEPTED | oui |
-| CRPS ACCEPTED ; estimand class B ; no \(Z_t\) | oui |
-| \(k\) / stride / Spearman OPEN ; I02 NOT OPENED | oui |
+| Baseline horizons / target / CRPS non rouverte | oui |
+| Estimand \(R\) ACCEPTED ; \(D\) secondaire | oui |
+| \(Z_t^{(m)}\) formule ACCEPTED ; no primary scale | oui |
+| \(k\) class B HUMAN ; stride A ; Spearman ; block bootstrap | oui |
+| Readiness R1 ; I02 NOT OPENED | oui |
 
 ---
 
@@ -4835,6 +5334,5 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - E01–E04 ; [hypothesis.md](../I01/hypothesis.md) ; [protocol.md](../I01/protocol.md)
 - [DR-007](../../docs/adr/DR-007-exploratory-vs-confirmatory-data.md)
 - [DR-008](../../docs/adr/DR-008-i01-e01-exploratory-source.md)
-- CRPS : proper scoring rule pour lois réelles (littérature ; pas un
-  calcul sur SPY) ; forme ensemble / energy score empirique ;
-  homogénéité de degré 1
+- CRPS / skill score relatif (littérature ; pas un calcul sur SPY) ;
+  bootstrap sous dépendance (littérature méthodologique)
