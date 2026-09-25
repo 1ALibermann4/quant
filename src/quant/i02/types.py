@@ -1,0 +1,19 @@
+"""Machine-readable skip / undefined reasons (prereg §7 / L1 §14)."""
+
+from __future__ import annotations
+
+from enum import Enum
+
+
+class SkipReason(str, Enum):
+    """Why a query or derived object is non-evaluable."""
+
+    INSUFFICIENT_ADMISSIBLE_POOL = "INSUFFICIENT_ADMISSIBLE_POOL"
+    RV_ZERO = "RV_ZERO"
+    CRPS_COMPARATOR_ZERO = "CRPS_COMPARATOR_ZERO"
+    INSUFFICIENT_Z_HISTORY = "INSUFFICIENT_Z_HISTORY"
+    INSUFFICIENT_TARGET_HISTORY = "INSUFFICIENT_TARGET_HISTORY"
+    INSUFFICIENT_X_HISTORY = "INSUFFICIENT_X_HISTORY"
+    INSUFFICIENT_RV_HISTORY = "INSUFFICIENT_RV_HISTORY"
+    S3_CONTRACT_GAP = "S3_CONTRACT_GAP"
+    QUERY_OUT_OF_RANGE = "QUERY_OUT_OF_RANGE"
