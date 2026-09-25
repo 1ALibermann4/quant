@@ -36,7 +36,7 @@
 > **Draft v0.25 scale estimand review :** `f3c54cc`
 > **Draft v0.26 gated design closure :** `7781a6a`
 > **Draft v0.27 close k and bootstrap policy :** `260988b`
-> **Preregistration contract :** [I02-preregistration.md](I02-preregistration.md) @ `344b128` → **v0.2** gap closure *(ce commit)*
+> **Preregistration contract :** [I02-preregistration.md](I02-preregistration.md) @ `344b128` → **v0.2** `4778842`
 > **OPEN I02 :** `4f6be2a`
 > **L1 implementation :** `8d05905`
 > **Calculs dans ce document :** aucun

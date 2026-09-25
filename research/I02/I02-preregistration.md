@@ -731,5 +731,5 @@ NO POST-HOC CHOICE
 | Design freeze pin | `32b60c4` |
 | OPEN commit | `4f6be2a` |
 | L1 implementation | `8d05905` |
-| Gap-closure commit | *(this commit)* |
+| Gap-closure commit | `4778842` |
 | Draft history | [I02-hypothesis-draft.md](I02-hypothesis-draft.md) |
