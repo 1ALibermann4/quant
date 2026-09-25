@@ -66,8 +66,43 @@ def representation_constructible(
     return True
 
 
+def constructible_mask(
+    returns: np.ndarray,
+    params: I02Params,
+    *,
+    states_x: np.ndarray | None = None,
+    L: np.ndarray | None = None,
+    D: np.ndarray | None = None,
+    Q: np.ndarray | None = None,
+) -> np.ndarray:
+    """Boolean mask of sessions where all representations are constructible.
+
+    Equivalent to per-index :func:`representation_constructible`, using the
+    same precomputed series the pipeline already builds (no scientific change).
+    """
+
+    from quant.i02.distances import build_L_D_Q_series
+    from quant.i02.states_x import all_state_vectors_x
+
+    n = len(returns)
+    if states_x is None:
+        states_x = all_state_vectors_x(returns, params)
+    if L is None or D is None or Q is None:
+        L, D, Q = build_L_D_Q_series(returns, params)
+    x_ok = np.isfinite(states_x).all(axis=1)
+    feat_ok = np.isfinite(L) & np.isfinite(D) & np.isfinite(Q)
+    mask = x_ok & feat_ok
+    mask[: first_constructible_index(params)] = False
+    assert mask.shape == (n,)
+    return mask
+
+
 def admissible_pool(
-    returns: np.ndarray, t: int, params: I02Params
+    returns: np.ndarray,
+    t: int,
+    params: I02Params,
+    *,
+    constructible: np.ndarray | None = None,
 ) -> np.ndarray:
     """Return ranks ``s ∈ A_t`` (sorted ascending).
 
@@ -79,19 +114,19 @@ def admissible_pool(
     if t < 0 or t >= n:
         raise ValueError(f"query t={t} out of range")
     start = first_constructible_index(params)
-    if start >= t:
+    # s <= t - h  and  s <= n - 1 - h  and  s < t
+    upper = min(t - params.h, n - 1 - params.h)
+    if start > upper:
         return np.empty(0, dtype=np.intp)
-    candidates = np.arange(start, t, dtype=np.intp)
-    keep: list[int] = []
-    for s in candidates:
-        if int(s) + params.h > t:
-            continue
-        if int(s) + params.h > n - 1:
-            continue
-        if not representation_constructible(returns, int(s), params):
-            continue
-        keep.append(int(s))
-    return np.asarray(keep, dtype=np.intp)
+    candidates = np.arange(start, upper + 1, dtype=np.intp)
+    if constructible is None:
+        keep = [
+            int(s)
+            for s in candidates
+            if representation_constructible(returns, int(s), params)
+        ]
+        return np.asarray(keep, dtype=np.intp)
+    return candidates[np.asarray(constructible)[candidates]]
 
 
 def query_schedule(n_sessions: int, params: I02Params) -> np.ndarray:

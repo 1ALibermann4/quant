@@ -105,6 +105,7 @@ def evaluate_query(
     D: np.ndarray | None = None,
     Q: np.ndarray | None = None,
     v_series: np.ndarray | None = None,
+    constructible: np.ndarray | None = None,
 ) -> QueryResult:
     """Evaluate one query under the frozen v0.3 contract.
 
@@ -138,7 +139,11 @@ def evaluate_query(
         result.skip_reasons.append(exc.reason)
         return result
 
-    if not representation_constructible(returns, t, params):
+    if constructible is not None:
+        query_ok = bool(constructible[t])
+    else:
+        query_ok = representation_constructible(returns, t, params)
+    if not query_ok:
         try:
             rv = realized_rms_volatility(returns, t, params.W_RV)
             if rv == 0.0:
@@ -150,7 +155,9 @@ def evaluate_query(
             result.skip_reasons.append(SkipReason.INSUFFICIENT_RV_HISTORY)
         return result
 
-    pool = admissible_pool(returns, t, params)
+    pool = admissible_pool(
+        returns, t, params, constructible=constructible
+    )
     result.pool_indices = pool
     result.pool_size = int(pool.shape[0])
     if result.pool_size < params.k:
@@ -244,7 +251,7 @@ def evaluate_series(
 ) -> list[QueryResult]:
     """Evaluate a stride-1 (or provided) query schedule. No market data."""
 
-    from quant.i02.pool import query_schedule
+    from quant.i02.pool import constructible_mask, query_schedule
     from quant.i02.target import all_future_realized_rms
 
     returns = np.asarray(returns, dtype=np.float64)
@@ -253,16 +260,25 @@ def evaluate_series(
     states_x = all_state_vectors_x(returns, params)
     L, D, Q = build_L_D_Q_series(returns, params)
     v_series = all_future_realized_rms(returns, params)
-    return [
-        evaluate_query(
-            returns,
-            int(t),
-            params=params,
-            states_x=states_x,
-            L=L,
-            D=D,
-            Q=Q,
-            v_series=v_series,
+    constructible = constructible_mask(
+        returns, params, states_x=states_x, L=L, D=D, Q=Q
+    )
+    out: list[QueryResult] = []
+    n_q = len(query_indices)
+    for i, t in enumerate(query_indices):
+        if i > 0 and i % 500 == 0:
+            print(f"I02 evaluate_series: {i}/{n_q} queries", flush=True)
+        out.append(
+            evaluate_query(
+                returns,
+                int(t),
+                params=params,
+                states_x=states_x,
+                L=L,
+                D=D,
+                Q=Q,
+                v_series=v_series,
+                constructible=constructible,
+            )
         )
-        for t in query_indices
-    ]
+    return out

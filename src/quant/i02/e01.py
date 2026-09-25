@@ -110,6 +110,7 @@ def main(argv: list[str] | None = None) -> int:
         fixture_id=f"EXPLORATORY-SPY-{acq.acquired_at_utc.strftime('%Y%m%dT%H%M%SZ')}",
         fixture_sha256=dataset["log_returns_sha256"],
         output_dir=out,
+        store_full_queries=False,
     )
     # Attach dataset block without recomputing science
     artifact["dataset"] = dataset

@@ -61,49 +61,40 @@ def distance_s3_phi(L_a: float, Q_a: float, L_b: float, Q_b: float) -> float:
 
 def pairwise_s1(L: np.ndarray, library: np.ndarray, query_idx: int) -> np.ndarray:
     lq = float(L[query_idx])
-    return np.asarray(
-        [distance_s1_level(lq, float(L[s])) for s in library],
-        dtype=np.float64,
-    )
+    return np.abs(L[library] - lq).astype(np.float64, copy=False)
 
 
 def pairwise_s2(
     L: np.ndarray, D: np.ndarray, library: np.ndarray, query_idx: int
 ) -> np.ndarray:
-    lq, dq = float(L[query_idx]), float(D[query_idx])
-    return np.asarray(
-        [
-            distance_s2_d2(lq, dq, float(L[s]), float(D[s]))
-            for s in library
-        ],
-        dtype=np.float64,
-    )
+    dL = L[library] - float(L[query_idx])
+    dD = D[library] - float(D[query_idx])
+    return np.sqrt(dL * dL + dD * dD)
 
 
 def pairwise_s3_q(
     L: np.ndarray, Q: np.ndarray, library: np.ndarray, query_idx: int
 ) -> np.ndarray:
-    lq, qq = float(L[query_idx]), float(Q[query_idx])
-    return np.asarray(
-        [
-            distance_s3_q(lq, qq, float(L[s]), float(Q[s]))
-            for s in library
-        ],
-        dtype=np.float64,
-    )
+    dL = L[library] - float(L[query_idx])
+    dQ = Q[library] - float(Q[query_idx])
+    return np.sqrt(dL * dL + dQ * dQ)
 
 
 def pairwise_s3_phi(
     L: np.ndarray, Q: np.ndarray, library: np.ndarray, query_idx: int
 ) -> np.ndarray:
-    lq, qq = float(L[query_idx]), float(Q[query_idx])
-    return np.asarray(
-        [
-            distance_s3_phi(lq, qq, float(L[s]), float(Q[s]))
-            for s in library
-        ],
-        dtype=np.float64,
-    )
+    """Vectorized S3-φ using ``φ = arccos(Q)`` on finite library Q."""
+
+    lq = float(L[query_idx])
+    phi_q = phi_from_q(float(Q[query_idx]))
+    q_lib = np.asarray(Q[library], dtype=np.float64)
+    # Q is in (0,1] when defined; clamp only floating noise at 1
+    q_c = np.clip(q_lib, 0.0, 1.0)
+    phi_lib = np.arccos(q_c)
+    dL = L[library] - lq
+    dphi = phi_lib - phi_q
+    return np.sqrt(dL * dL + dphi * dphi)
+
 
 
 def pairwise_x(

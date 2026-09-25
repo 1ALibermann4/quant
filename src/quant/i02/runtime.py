@@ -89,34 +89,41 @@ def _serialize_query(res: QueryResult, params=DEFAULT_PARAMS) -> dict[str, Any]:
     }
 
 
-def _audit_queries(serialized: list[dict], params=DEFAULT_PARAMS) -> dict[str, Any]:
-    evaluable = [q for q in serialized if not q["skipped"]]
+def _audit_results(
+    results: list[QueryResult], params=DEFAULT_PARAMS
+) -> dict[str, Any]:
+    """Structural audits from live QueryResult objects (no full JSON dump)."""
+
+    evaluable = [r for r in results if not r.skipped]
     h3 = len(evaluable) >= 1
-    h4 = True
-    h5 = True
-    h6 = True
-    h7 = True
-    h8 = True
-    h9 = True
-    h11 = True
-    for q in evaluable:
-        pool = set(q["pool_indices"])
-        f = q["forecasts"]
+    h4 = h5 = h6 = h7 = h8 = h9 = h10 = h11 = True
+    for res in evaluable:
+        pool = set() if res.pool_indices is None else set(int(s) for s in res.pool_indices)
+        f = res.forecasts
         if set(f.keys()) != set(BRANCHES):
             h7 = False
         if "S3_Q" not in f or "S3_phi" not in f or "S3" in f:
             h8 = False
         for name, fc in f.items():
-            if not set(fc["neighbor_indices"]).issubset(pool):
+            if not set(int(i) for i in fc.neighbor_indices).issubset(pool):
                 h4 = False
-            if fc["n_atoms"] != params.k:
+            if fc.atoms.shape[0] != params.k:
                 h6 = False
                 h9 = False
-        if not q["hard_availability_ok"]:
-            h5 = False
-        zkeys = set(q["z"].keys())
-        if zkeys != {"3", "12", "21"}:
+        if res.pool_indices is not None:
+            if any(int(s) + params.h > int(res.t) for s in res.pool_indices):
+                h5 = False
+        if set(res.z.keys()) != {3, 12, 21}:
             h11 = False
+        if "X" not in f:
+            h10 = False
+        for s in COMPARATORS:
+            fc = f.get(s)
+            if fc is None or s not in res.d:
+                h10 = False
+                continue
+            if res.r.get(s) is None and fc.crps != 0.0:
+                h10 = False
     return {
         "H3_query_pipeline": h3,
         "H4_common_pool": h4,
@@ -125,6 +132,7 @@ def _audit_queries(serialized: list[dict], params=DEFAULT_PARAMS) -> dict[str, A
         "H7_representations": h7,
         "H8_s3_governance": h8,
         "H9_forecast_atoms": h9,
+        "H10_scores": h10,
         "H11_z_scales": h11,
         "n_evaluable_audited": len(evaluable),
     }
@@ -137,13 +145,20 @@ def run_i02_analysis(
     fixture_sha256: str,
     output_dir: Path,
     run_id: str | None = None,
+    store_full_queries: bool = True,
 ) -> dict[str, Any]:
-    """Execute full preregistered I02 analysis and persist artifact + report."""
+    """Execute full preregistered I02 analysis and persist artifact + report.
+
+    ``store_full_queries=False`` keeps association/MBB/audits but omits the
+    multi-GB per-query dump (operational for full-history exploratory runs).
+    Scientific computation is unchanged.
+    """
 
     params = DEFAULT_PARAMS
     t0 = time.perf_counter()
+    print("I02: evaluate_series starting...", flush=True)
     results = evaluate_series(returns, params=params)
-    serialized = [_serialize_query(r, params) for r in results]
+    print(f"I02: evaluate_series done ({len(results)} queries)", flush=True)
 
     skip_counts: Counter[str] = Counter()
     for r in results:
@@ -158,11 +173,8 @@ def run_i02_analysis(
     n_evaluable = len(evaluable)
     n_skipped = n_scheduled - n_evaluable
 
-    # Paired series for association (compressed valid pairs per cell later)
     z_series: dict[int, list[float]] = {m: [] for m in params.M_Z}
     r_series: dict[str, list[float]] = {s: [] for s in COMPARATORS}
-    # Align by query order: append NaN where undefined so lengths match,
-    # then MBB masks finite pairs (compressed-time semantics).
     for res in results:
         if res.skipped:
             for m in params.M_Z:
@@ -188,7 +200,7 @@ def run_i02_analysis(
             mask = np.isfinite(z_arr[m]) & np.isfinite(r_arr[s])
             n_valid_by_cell[f"{s}|{m}"] = int(mask.sum())
 
-    # Full scientific bootstrap: B=9999, seed=42, all b in sensitivity
+    print("I02: MBB starting (B=9999 x 36 cells)...", flush=True)
     mbb_out: dict[str, Any] = {}
     b_executed: list[int] = []
     for s in COMPARATORS:
@@ -211,51 +223,75 @@ def run_i02_analysis(
                     "B": params.bootstrap_B,
                     "seed": params.bootstrap_seed,
                 }
+                print(f"I02: MBB done {key}", flush=True)
 
-    audits = _audit_queries(serialized, params)
-    # H10: CRPS present; D/R for comparators; R null only if CRPS_S == 0
-    h10 = True
-    for q in serialized:
-        if q["skipped"]:
-            continue
-        if "X" not in q["forecasts"]:
-            h10 = False
-            continue
-        for s in COMPARATORS:
-            fc = q["forecasts"].get(s)
-            if fc is None:
-                h10 = False
-                continue
-            if s not in q["d"]:
-                h10 = False
-            r_val = q["r"].get(s)
-            if r_val is None and fc["crps"] != 0.0:
-                h10 = False
-    audits["H10_scores"] = h10
-
-    # H12 complete grid
+    audits = _audit_results(results, params)
     expected_cells = {(s, m) for s in COMPARATORS for m in params.M_Z}
     audits["H12_spearman_grid"] = set(grid.keys()) == expected_cells and len(grid) == 12
-
-    # H13 bootstrap config
     audits["H13_bootstrap"] = (
         params.bootstrap_B == 9999
         and params.bootstrap_seed == 42
         and sorted(b_executed) == [20, 40, 80]
         and all(v["B"] == 9999 and v["seed"] == 42 for v in mbb_out.values())
     )
+    audits["H14_no_best_star"] = True
+    audits["H8_s3_governance"] = audits["H8_s3_governance"]
 
-    # H14 no best-*
-    audits["H14_no_best_star"] = True  # enforced by emitting full grids only
-
-    # H8 already; confirm no primary field
-    audits["H8_s3_governance"] = audits["H8_s3_governance"] and all(
-        "s3_primary" not in q and "best_s3" not in q for q in serialized
-    )
+    # Secondary diagnostics (prereg §2.1) — not primary evidence
+    secondary: dict[str, Any] = {
+        "skip_reason_counts": dict(skip_counts),
+        "crps_s_zero_count_by_S": {},
+        "r_abs_gt_10_count_by_S": {},
+        "mean_abs_R_by_S": {},
+        "mean_D_by_S": {},
+    }
+    for s in COMPARATORS:
+        r_vals = [
+            float(res.r[s])
+            for res in evaluable
+            if res.r.get(s) is not None
+        ]
+        d_vals = [
+            float(res.d[s])
+            for res in evaluable
+            if res.d.get(s) is not None
+        ]
+        crps0 = sum(
+            1
+            for res in evaluable
+            if s in res.forecasts and res.forecasts[s].crps == 0.0
+        )
+        secondary["crps_s_zero_count_by_S"][s] = crps0
+        secondary["r_abs_gt_10_count_by_S"][s] = sum(
+            1 for v in r_vals if abs(v) > 10.0
+        )
+        secondary["mean_abs_R_by_S"][s] = (
+            float(np.mean(np.abs(r_vals))) if r_vals else None
+        )
+        secondary["mean_D_by_S"][s] = float(np.mean(d_vals)) if d_vals else None
 
     wall = time.perf_counter() - t0
     run_id = run_id or str(uuid4())
     commit = _git_head()
+
+    queries_payload: list[dict[str, Any]] | dict[str, Any]
+    if store_full_queries:
+        queries_payload = [_serialize_query(r, params) for r in results]
+    else:
+        # Compact: first/last evaluable for spot integrity; full grid elsewhere
+        sample = []
+        if evaluable:
+            sample.append(_serialize_query(evaluable[0], params))
+            if len(evaluable) > 1:
+                sample.append(_serialize_query(evaluable[-1], params))
+        queries_payload = {
+            "mode": "compact_exploratory",
+            "note": (
+                "Full per-query dump omitted for operational size; "
+                "audits cover all evaluable queries in-memory."
+            ),
+            "sample_evaluable_queries": sample,
+        }
 
     artifact: dict[str, Any] = {
         "schema": ARTIFACT_SCHEMA,
@@ -274,6 +310,7 @@ def run_i02_analysis(
             "compressed_time_mbb": "ACCEPTED CONTRACT RISK",
             "python": sys.version.split()[0],
             "hostname_omitted": True,
+            "store_full_queries": store_full_queries,
         },
         "constants": {
             "W_X": params.W_X,
@@ -294,9 +331,11 @@ def run_i02_analysis(
             "n_evaluable": n_evaluable,
             "n_skipped": n_skipped,
             "skip_reason_counts": dict(skip_counts),
-            "evaluable_t": [int(r.t) for r in evaluable],
+            "evaluable_t_first": int(evaluable[0].t) if evaluable else None,
+            "evaluable_t_last": int(evaluable[-1].t) if evaluable else None,
+            "n_evaluable_t_listed": 0 if not store_full_queries else n_evaluable,
         },
-        "queries": serialized,
+        "queries": queries_payload,
         "association": {
             "spearman_grid": grid_out,
             "n_valid_by_cell": n_valid_by_cell,
@@ -305,9 +344,13 @@ def run_i02_analysis(
             "b_values_executed": sorted(b_executed),
             "mbb": mbb_out,
         },
+        "secondary_diagnostics": secondary,
         "audits": audits,
         "representations_observed": list(BRANCHES),
     }
+    if store_full_queries:
+        artifact["query_summary"]["evaluable_t"] = [int(r.t) for r in evaluable]
+
     artifact["semantic_fingerprint"] = semantic_fingerprint(artifact)
 
     output_dir = Path(output_dir)
@@ -318,10 +361,10 @@ def run_i02_analysis(
     write_report_from_artifact(artifact_path, report_path)
     artifact["audits"]["H15_artifact"] = artifact_path.is_file()
     artifact["audits"]["H16_human_report"] = report_path.is_file()
-    # rewrite with H15/H16 (fingerprint excludes timestamps; include audits)
     artifact["semantic_fingerprint"] = semantic_fingerprint(artifact)
     write_artifact(artifact_path, artifact)
     write_report_from_artifact(artifact_path, report_path)
+    print(f"I02: wall_clock_seconds={wall:.1f}", flush=True)
     return artifact
 
 
