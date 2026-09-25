@@ -7,7 +7,7 @@
 > **Prereg readiness :** **P2** at open ; next = implementation + HAT
 > **I02 :** **OPEN**
 > **Scientific run :** NOT AUTHORIZED until implementation HAT PASS
-> **Opened at :** *(this OPEN commit)* — **before any I02 implementation**
+> **Opened at :** `4f6be2a` — **before any I02 implementation**
 >
 > **Parent design history :** [I02-hypothesis-draft.md](I02-hypothesis-draft.md)
 > **Governance :** DR-007, DR-008, C02 v1.1, closure gates, MS-1…MS-4
@@ -470,6 +470,6 @@ DR-007. Confirmatoire remains blocked per §6.
 | Design freeze commit | `260988b` |
 | Design freeze pin | `32b60c4` |
 | Preregistration commit | `344b128` |
-| OPEN commit | *(this commit)* |
+| OPEN commit | `4f6be2a` |
 | Supersedes | *(none — first preregistration)* |
 | Draft history | [I02-hypothesis-draft.md](I02-hypothesis-draft.md) |

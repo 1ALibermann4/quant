@@ -37,7 +37,7 @@
 > **Draft v0.26 gated design closure :** `7781a6a`
 > **Draft v0.27 close k and bootstrap policy :** `260988b`
 > **Preregistration contract :** [I02-preregistration.md](I02-preregistration.md) @ `344b128`
-> **OPEN I02 :** *(ce commit)*
+> **OPEN I02 :** `4f6be2a`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
