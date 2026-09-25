@@ -34,6 +34,7 @@
 > **Draft v0.24 forecast object / scoring :** `c3a6909`
 > **Draft v0.25 scale estimand review :** `f3c54cc`
 > **Draft v0.26 gated design closure :** `7781a6a`
+> **Draft v0.27 close k and bootstrap policy :** *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -76,13 +77,16 @@ objet multi-échelle ; no-primary.
 **Stride :** Gate 4 — policy A (stride 1 + inférence dépendante)
 `ACCEPTED`.
 **Association :** Gate 5 — Spearman `ACCEPTED` ; bilatéral.
-**\(k\) :** Gate 2 — class **B** ; héritage \(k=50\) recommandé ;
-**HUMAN DECISION REQUIRED**.
-**Inférence :** Gate 6 — famille block/moving bootstrap ;
-longueur de bloc **OPEN**.
-**Readiness :** Gate 8 — **`R1`**.
+**\(k=50\) :** §14M — `INHERITED FIXED NEIGHBOR COUNT` `ACCEPTED`.
+**Inférence :** moving/block bootstrap ; \(b^\star=40\) `ACCEPTED` ;
+sensibilité prédéclarée \(\{20,40,80\}\) (diagnostic, no best-\(p\)).
+**Readiness :** §14M — **`R2` DESIGN CLOSED**.
 \[
-\boxed{\text{NO }Z_t\text{ scalar primary};\ \texttt{formula ACCEPTED}}
+\boxed{k=50\ \texttt{ACCEPTED}}
+\quad
+\boxed{b^\star=40\ \texttt{ACCEPTED}}
+\quad
+\boxed{\texttt{R2}}
 \]
 \[
 \boxed{\text{I02 = NOT OPENED}}
@@ -4919,6 +4923,8 @@ valeur unique préenregistrée). Analyse des gates suivants :
 valide pour **tout** \(k\) admissible commun — **continuer**
 sous branche « single common \(k\) ; candidat hérité 50 ».
 
+**Post-hoc (humain) :** \(k=50\) `ACCEPTED` — §14M.1.
+
 ---
 
 ### Gate 3 — Définition complète de \(Z_t\)
@@ -5130,6 +5136,9 @@ Correction zoo large : non. Exigence minimale : interprétation
 longueur de bloc **OPEN** (décision humaine / règle
 préenregistrable) ; multiplicité = report all + no best-scale.
 
+**Post-hoc (humain + dérivation) :** \(b^\star=40\) + sensibilité
+\(\{20,40,80\}\) — §14M.2.
+
 ---
 
 ### Gate 7 — Cohérence interne
@@ -5147,8 +5156,8 @@ préenregistrable) ; multiplicité = report all + no best-scale.
 | Stride 1 | ACCEPTED policy |
 | Spearman bilatéral | ACCEPTED |
 | Inférence block bootstrap | famille ACCEPTED |
-| \(k\) numérique | **HUMAN** (B, candidat 50) |
-| Block length | **OPEN / HUMAN** |
+| \(k\) numérique | **HUMAN** (B, candidat 50) → **`ACCEPTED` \(k=50\)** §14M |
+| Block length | **OPEN / HUMAN** → **`ACCEPTED` \(b^\star=40\)** §14M |
 
 Contrôles : pas de fuite via \(Z\) dans le forecast ; pas de
 normalisation par \(V_{t,10}\) ; pools communs ; pas de multi-\(k\)
@@ -5156,11 +5165,10 @@ normalisation par \(V_{t,10}\) ; pools communs ; pas de multi-\(k\)
 pas d'IID.
 
 \[
-\boxed{\texttt{Gate 7 = PASS (with bounded human blockers)}}
+\boxed{\texttt{Gate 7 = PASS (blockers closed in §14M)}}
 \]
 
-Blockers : (1) gel numérique de \(k\) ; (2) règle de longueur de
-bloc.
+Blockers historiques : (1) \(k\) ; (2) \(b\) — **closés** §14M.
 
 ---
 
@@ -5170,10 +5178,11 @@ bloc.
 \boxed{\texttt{R1 — DESIGN NEAR-CLOSED}}
 \]
 
-Seules des décisions humaines **bornées** restent. Pas R2/R3 :
-\(k\) et block length non figés. **I02 reste NOT OPENED** —
-pas d'ouverture automatique ; preregistration review ultérieure
-requise avant R2→open.
+*(Statut au moment de §14L.)* Post-§14M : **`R2`** — voir §14M.6.
+
+Seules des décisions humaines **bornées** restaient. Pas R3 :
+preregistration review requise avant ouverture. **I02 reste
+NOT OPENED.**
 
 ---
 
@@ -5182,34 +5191,32 @@ requise avant R2→open.
 | Gate | Verdict | Figé ? |
 |------|---------|--------|
 | 1 Estimand | \(R\) `ACCEPT` ; \(Q,N\) REJECT primaire | oui |
-| 2 \(k\) | class **B** ; héritage 50 recommandé | **HUMAN** |
+| 2 \(k\) | class **B** → humain **`k=50 ACCEPTED`** §14M | oui (§14M) |
 | 3 \(Z_t\) | formule + vecteur `ACCEPT` | oui |
 | 4 Stride | **A** stride 1 + dep. inference | oui |
 | 5 Association | Spearman `ACCEPT` ; two-sided | oui |
-| 6 Inférence | block bootstrap ; block length OPEN | partiel |
-| 7 Cohérence | PASS w/ blockers | — |
-| 8 Readiness | **R1** | — |
+| 6 Inférence | block bootstrap ; \(b^\star=40\) §14M | oui (§14M) |
+| 7 Cohérence | PASS | — |
+| 8 Readiness | R1 → **R2** (§14M) | — |
 
 ### 14L.10 HUMAN DECISIONS REQUIRED
 
-1. **Accepter \(k=50\)** comme `INHERITED FIXED NEIGHBORHOOD SIZE`
-   (recommandé) — ou une autre valeur **unique** préenregistrée
-   (multi-\(k\) interdit).
-2. **Règle de longueur de bloc** pour le bootstrap (fondée sur
-   empans design ; pas de tuning significativité).
+*(Historique §14L — closés en §14M.)*
 
-### 14L.11 OPEN / ACCEPTED (post-§14L)
+1. ~~Accepter \(k=50\)~~ → **`ACCEPTED`** §14M.1
+2. ~~Règle de longueur de bloc~~ → **`b^\star=40`** + sensibilité
+   \(\{20,40,80\}\) §14M.4–5
 
-**ACCEPTED (nouveaux ou confirmés) :** \(E=R\) ; \(Z_t^{(m)}\)
-formule ; stride-1 policy ; Spearman bilatéral ; famille
-block bootstrap ; skips structurels (\(\operatorname{CRPS}_S=0\),
-\(RV=0\), \(\lvert A_t\rvert<k\)).
+### 14L.11 OPEN / ACCEPTED (post-§14L ; mis à jour §14M)
 
-**OPEN :** valeur numérique \(k\) (décision) ; block length ;
-détail protocolaire de preregistration / holdout / kill criteria ;
-ouverture I02.
+**ACCEPTED :** \(E=R\) ; \(Z_t^{(m)}\) ; stride-1 ; Spearman ;
+block bootstrap ; **\(k=50\)** ; **\(b^\star=40\)** ; skips
+structurels.
 
-**NOT OPENED :** I02.
+**OPEN (hors design core) :** preregistration formelle ; holdout ;
+kill criteria ; données / C02 ; **OPEN I02**.
+
+**NOT OPENED :** I02. **Readiness :** `R2`.
 
 ### 14L.12 Cohérence
 
@@ -5220,6 +5227,195 @@ ouverture I02.
 | Pas d'ensemble d'estimands | oui |
 | Multi-\(k\) / multi-stride rejetés | oui |
 | I02 NOT OPENED | oui |
+
+**Suite :** §14M (décisions humaines \(k\) + \(b\)).
+
+---
+
+## 14M. Final human closure — \(k\) and bootstrap block length
+
+> **Nature :** décision humaine (\(k\)) + dérivation méthodologique
+> (\(b\)) / documentaire.
+> **NO DATA ANALYSIS. NO EXPERIMENT.**
+> I02 = `NOT OPENED`.
+
+Baseline scientifique : `7781a6a` / pin `9e0e510`.
+
+### 14M.1 Décision humaine — \(k=50\)
+
+**Statut :** `ACCEPTED`.
+
+\[
+\boxed{k=50}
+\quad
+\boxed{\texttt{INHERITED FIXED NEIGHBOR COUNT}}
+\]
+
+**Justification acceptée :** héritage I01 ; minimal change ;
+anti-retuning ; Gate 2 class **B** ; aucun argument structurel
+établi contre \(k=50\) ; multi-\(k\) rejeté.
+
+**Conséquences :**
+
+\[
+\widehat{\mathbb{P}}_t^{R}
+=
+\frac1{50}\sum_{i=1}^{50}\delta_{V_{s_i,10}}
+\]
+
+même \(k\) pour \(X,S_1,S_2,S_3\) ; si \(\lvert A_t\rvert<50\) :
+**skip** \(t\) ; **pas** de \(k\) adaptatif.
+
+**N'est pas :** optimal ; structurellement unique ; universel ;
+choisi pour performance empirique.
+
+### 14M.2 Longueur de bloc — empans
+
+Famille d'inférence déjà `ACCEPTED` : moving / block bootstrap.
+\(b\) ne crée **pas** l'indépendance ; il doit couvrir la
+dépendance **design-induite** sans tuning de significativité.
+
+| Empan | Symbole | Valeur (architecture figée) |
+|-------|---------|------------------------------|
+| Overlap de cible \(V_{\cdot,10}\) | \(\tau_V=h\) | 10 |
+| Mémoire représentation \(X\) | \(\tau_X=W_X\) | 20 |
+| Mémoire \(RV\) / niveau | \(\tau_{RV}=W_{RV}\) | 20 |
+| Fenêtre d'incréments \(\Delta L\) (max \(m\)) | \(\max_m(m-1)\) | 20 |
+| **Mémoire de construction de \(Z^{(21)}\)** (rendements) | \(\tau_Z=W_{RV}+\max\mathcal{M}_Z-1\) | \(20+21-1=40\) |
+| Persistance voisinages / dynamique de marché | \(\tau_{\mathrm{emp}}\) | **non bornée structurellement** |
+
+Distinctions :
+
+1. **Mechanical overlap span** — chevauchement des fenêtres
+   \(X/RV/Z\) et schedule stride 1 : jusqu'à \(\tau_Z=40\).
+2. **State-memory span** — même \(\tau_Z\) pour l'échelle la plus
+   profonde.
+3. **Target overlap** — \(\tau_V=10\) (inclus dans le max).
+4. **Empirical serial dependence** (voisinages lents, régimes) —
+   peut **dépasser** tout empan design ; aucun \(b\) fixe ne la
+   « résout ».
+
+### 14M.3 Identifiabilité de \(b\)
+
+Attaques rejetées :
+
+| Attaque | |
+|---------|--|
+| \(b=10\) seulement parce que \(h=10\) | ignore \(W\) et \(Z\) |
+| \(b=20\) seulement parce que \(W_X=20\) | ignore \(\tau_Z\) |
+| \(b=21\) seulement parce que \(\max m_Z=21\) | ignore \(W_{RV}\) composé |
+| Round number arbitraire | sans dérivation |
+| \(b\) pour maximiser significativité / effet | snooping |
+| Essayer plusieurs \(b\) et reporter le meilleur | snooping |
+| \(b\) ⇒ indépendance | faux |
+
+**Verdict d'identifiabilité :** un \(b\) fixe **dérivé du max des
+empans design** est **défendable** comme longueur **primaire**
+alignée sur la dépendance *mécanique / d'état* figée — **oui**.
+
+Il n'est **pas** une borne supérieure sur \(\tau_{\mathrm{emp}}\).
+
+\[
+\boxed{\texttt{FIXED }b\text{ STRUCTURALLY DERIVED = DEFENSIBLE}}
+\]
+
+Pas besoin d'une règle data-driven (zoo ACF / Politis–White,
+etc.) pour le **primaire**.
+
+### 14M.4 Valeur primaire
+
+\[
+b^\star
+=
+\max\bigl(
+h,\;
+W_X,\;
+W_{RV}+\max\mathcal{M}_Z-1
+\bigr)
+=
+\max(10,\,20,\,40)
+=
+40
+\]
+
+\[
+\boxed{b^\star=40}
+\quad
+\boxed{\texttt{DESIGN-SPAN BLOCK LENGTH ACCEPTED}}
+\]
+
+**Interprétation :** longueur primaire du moving/block bootstrap
+pour les séries \((Z_t^{(m)},E_t^{(S)})\) (et statistiques
+dérivées) sur le schedule stride-1 (queries non skippées).
+Couvre overlap cible + représentations + construction
+\(Z^{(21)}\). **Ne prétend pas** absorber toute persistance
+empirique des voisinages.
+
+### 14M.5 Robustesse — sensibilité prédéclarée
+
+Parce que \(\tau_{\mathrm{emp}}\) peut dépasser \(b^\star\), une
+petite sensibilité **prédéclarée** est **nécessaire** pour la
+validité interprétative (pas pour la chasse au \(p\)).
+
+\[
+\mathcal{B}_{\mathrm{sens}}
+=
+\bigl\{\lfloor b^\star/2\rfloor,\; b^\star,\; 2b^\star\bigr\}
+=
+\{20,\,40,\,80\}
+\]
+
+| | |
+|--|--|
+| Status | `PREDECLARED DIAGNOSTIC SENSITIVITY` |
+| Primaire | \(b^\star=40\) |
+| Obligation | **rapporter les trois** ; pas de sélection best-\(p\) / best-effect |
+| Interprétation | discordance forte ⇒ dépendance plus longue que le design-span ; **ne flippe pas** le primaire a posteriori |
+
+\[
+\boxed{\texttt{SENSITIVITY REQUIRED — NO BEST-}p\text{ SELECTION}}
+\]
+
+### 14M.6 Readiness
+
+| Avant §14M | Après |
+|------------|-------|
+| R1 ; HUMAN : \(k\), \(b\) | \(k=50\) et \(b^\star=40\) figés |
+
+\[
+\boxed{\texttt{R2 — DESIGN CLOSED}}
+\]
+
+Le design expérimental scientifique / méthodologique I02 est
+**fermé** pour entrer en revue de **preregistration**. Ce n'est
+**pas** R3 / OPEN I02.
+
+**Blockers méthodologiques restants (hors design core) :**
+protocole de preregistration formel ; holdout / réplication ;
+kill criteria ; stratégie données / qualification C02 ;
+décision explicite OPEN I02. **Aucun** paramètre de design
+core (\(W,h,k,b,R,Z,\mathrm{stride},\mathrm{Spearman}\))
+ouvert.
+
+### 14M.7 Cohérence
+
+| Contrôle | OK |
+|----------|-----|
+| \(k=50\) ACCEPTED ; common ; skip \(\lvert A\rvert<50\) | oui |
+| \(b^\star=40\) dérivé ; pas \(b=h\) / \(W\) / \(m\) seuls | oui |
+| Sensibilité \(\{20,40,80\}\) diagnostic only | oui |
+| NO DATA / NO EXPERIMENT | oui |
+| I02 NOT OPENED ; readiness R2 | oui |
+
+\[
+\boxed{k=50\ \texttt{ACCEPTED}}
+\quad
+\boxed{b^\star=40\ \texttt{ACCEPTED}}
+\quad
+\boxed{\texttt{R2}}
+\quad
+\boxed{\text{I02 = NOT OPENED}}
+\]
 
 ---
 
@@ -5233,28 +5429,25 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 ## 16. OPEN QUESTION — liste exacte
 
-Ne pas résoudre dans ce draft :
+Ne pas résoudre dans ce draft (hors design core) :
 
-- **gel numérique de \(k\)** (Gate 2 class B ; candidat hérité 50) ;
-- **règle de longueur de bloc** bootstrap (Gate 6) ;
-- détail preregistration / holdout / kill criteria ;
-- ouverture I02 ;
+- protocole de **preregistration** formel ;
+- holdout / réplication / kill criteria ;
+- stratégie données / qualification C02 ;
+- décision explicite **OPEN I02** ;
 - Market-State Engine ; désaccord matériel §9.16 ;
   agrégation \(L\)+forme.
 
-**CLOSED (design) :**
+**CLOSED (design core) :**
 
-- horizons / \(h\) / \(V_{t,10}\) / forecast object / CRPS ;
-- estimand principal \(R_t^{(S)}\) ; \(D\) secondaire ;
-  \(Q,N\) non primaires ;
-- \(Z_t^{(m)}\) formule + \(\mathbf{Z}_t\) multi-échelle ;
-- stride 1 + inférence dependence-aware (policy) ;
-- Spearman bilatéral ; multi-\(k\) / multi-stride / future-\(V\)
-  norm. rejetés ;
-- readiness **R1**.
+- \(W_X,W_{RV},\mathcal{M}_Z,h,V_{t,10}\) ; forecast ; CRPS ;
+- estimand \(R\) ; \(Z_t^{(m)}\) ; stride 1 ; Spearman ;
+- **\(k=50\)** ; **\(b^\star=40\)** + sensibilité
+  \(\{20,40,80\}\) diagnostic ;
+- readiness **R2**.
 
 \[
-\boxed{\texttt{R1 — DESIGN NEAR-CLOSED}}
+\boxed{\texttt{R2 — DESIGN CLOSED}}
 \quad
 \boxed{\text{I02 = NOT OPENED}}
 \]
@@ -5270,47 +5463,28 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - [ ] Hypothèse finale approuvée (H1-v0.2 reste une candidate)
 - [x] Doctrine §9.16 **acceptée** ; métriques pré-cadrage **CLOSED**
 - [x] Revue documentaire \(Z_t\) (§14–§14A)
-- [x] Décision sémantique cas 3 / cas 5 : famille **A** =
-      `PRIMARY SEMANTIC CANDIDATE` ; \(E\) = mécanisme alternatif
-      (≠ robustesse de A) — formule \(Z\) : §14L Gate 3
+- [x] Décision sémantique cas 3 / cas 5 : famille **A** ;
+      formule \(Z\) : §14L Gate 3 `ACCEPTED`
 - [x] Revue Disp §14B ; **\(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\)
-      `ACCEPTED`** (§14B.11) ; MAD REJECT ; MeanAD non retenue
-- [x] Revue architecture temporelle §14C
-- [x] **\(W_{RV}:=W_X\)** `ACCEPTED` (§14C.9) —
-      `METHODOLOGICAL COMPARABILITY COUPLING` ; sémantiques distinctes
-- [x] Revue admissibilité \(m_Z\) (§14D) —
-      `STRUCTURALLY CONSTRAINED`
-- [x] Domaine **\(3\le m_Z\le W_{RV}+1\)** `ACCEPTED` (§14E.1) ;
-      not identifiable ; classification **C** (§14E.7)
-- [x] Gouvernance multi-échelle §14F : POLICY FREEZE ;
-      NUMERICAL \(\mathcal{M}_Z\) **après \(W_X\)** (`B`) ;
-      no-primary ; MS-1…4
-- [x] Revue \(W_X\) §14G : class `B` preferred
-- [x] **\(W_X=20\)** `ACCEPTED` ; \(W_{RV}=20\) ; domaine
-      \(3\le m_Z\le 21\)
-- [x] \(\mathcal{M}_Z=\{3,12,21\}\) `ACCEPTED` (§14H) — no-primary
-- [x] **\(V_{t,10}\)** fully specified ; **\(h=10\)** `ACCEPTED`
-      (§14I.14) — `INHERITED FIXED FORECAST HORIZON`
-- [x] Forecast object + **CRPS `ACCEPTED`** (§14J)
-- [x] Revue échelle §14K ; **estimand \(R\) `ACCEPTED`** (§14L G1)
-- [x] **\(Z_t^{(m)}\) formule `ACCEPTED`** (§14L G3) ; vecteur
-      multi-échelle ; no-primary
-- [x] Stride policy **A** `ACCEPTED` (§14L G4)
-- [x] Spearman bilatéral `ACCEPTED` (§14L G5)
-- [x] Famille inférence block bootstrap `ACCEPTED` (§14L G6)
-- [ ] **HUMAN :** gel \(k\) (candidat hérité 50, class B)
-- [ ] **HUMAN :** règle longueur de bloc
-- [x] Représentations \(S_1/S_2/S_3\) **acceptées**
-- [x] Invariant multiplicatif **accepté**
-- [x] Observable futur **approuvé** — \(V_{t,10}\) + \(h=10\)
-- [x] Score probabiliste **approuvé** — CRPS (§14J)
+      `ACCEPTED`**
+- [x] Architecture temporelle ; **\(W_{RV}:=W_X\)** ; domaine
+      \(m_Z\) ; multi-échelle ; **\(W_X=20\)** ;
+      \(\mathcal{M}_Z=\{3,12,21\}\)
+- [x] **\(V_{t,10}\)** ; **\(h=10\)**
+- [x] Forecast object + **CRPS** ; estimand **\(R\)**
+- [x] **\(Z_t^{(m)}\)** ; stride **A** ; Spearman bilatéral
+- [x] Famille block bootstrap
+- [x] **HUMAN :** **\(k=50\)** `ACCEPTED` (§14M.1)
+- [x] **HUMAN / dérivation :** **\(b^\star=40\)** + sensibilité
+      \(\{20,40,80\}\) (§14M.4–5)
+- [x] Représentations \(S_1/S_2/S_3\) ; invariant multiplicatif
 - [ ] Rôle de `H_shape` défini
 - [ ] Kill criteria approuvés
 - [ ] Stratégie de données / réplication définie
 - [ ] Risque de data snooping documenté
-- [ ] Protocole de gel / preregistration avant premier résultat
+- [ ] Protocole de gel / **preregistration** avant premier résultat
 - [ ] Décision explicite **OPEN I02**
-- [x] Readiness class **R1** (§14L G8) — near-closed
+- [x] Readiness class **R2** (§14M.6) — design closed
 
 ---
 
@@ -5319,12 +5493,10 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 | Contrôle | Statut |
 |----------|--------|
 | Aucun chiffre / donnée / calcul | oui |
-| \(S_1/S_2/S_3\) / §9.16 inchangés | oui |
-| Baseline horizons / target / CRPS non rouverte | oui |
-| Estimand \(R\) ACCEPTED ; \(D\) secondaire | oui |
-| \(Z_t^{(m)}\) formule ACCEPTED ; no primary scale | oui |
-| \(k\) class B HUMAN ; stride A ; Spearman ; block bootstrap | oui |
-| Readiness R1 ; I02 NOT OPENED | oui |
+| Baseline design non rouverte | oui |
+| \(k=50\) ; \(b^\star=40\) ; sensibilité diagnostic | oui |
+| Estimand \(R\) ; \(Z\) ; CRPS ; stride 1 ; Spearman | oui |
+| Readiness R2 ; I02 NOT OPENED | oui |
 
 ---
 
@@ -5334,5 +5506,5 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 - E01–E04 ; [hypothesis.md](../I01/hypothesis.md) ; [protocol.md](../I01/protocol.md)
 - [DR-007](../../docs/adr/DR-007-exploratory-vs-confirmatory-data.md)
 - [DR-008](../../docs/adr/DR-008-i01-e01-exploratory-source.md)
-- CRPS / skill score relatif (littérature ; pas un calcul sur SPY) ;
-  bootstrap sous dépendance (littérature méthodologique)
+- CRPS / skill score relatif ; bootstrap sous dépendance
+  (littérature méthodologique ; pas un calcul sur SPY)
