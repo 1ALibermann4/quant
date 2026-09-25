@@ -1,0 +1,42 @@
+{
+  "acquired_at_utc": "2026-09-24T12:00:16.920799+00:00",
+  "adjusted_price_sha256": "sha256:bc0d68b080f1f42c56f01da43820c11425ca1fc3a80bfb0ca32647821c2488d1",
+  "banner": "EXPLORATORY / UNQUALIFIED / NOT SCIENTIFICALLY PROMOTABLE",
+  "cache_dir": "data\\exploratory",
+  "calendar_authority": false,
+  "data_class": "EXPLORATORY",
+  "first_session": "1993-01-29",
+  "last_session": "2026-09-23",
+  "log_returns_sha256": "sha256:bde9a3045659bcb6ffdde99c52d7b088662456ed5d42737662f7c8384091c02e",
+  "n_sessions": 8470,
+  "note": "Reuse of I01-E01 DR-008 sandbox cache. Not C02. Not confirmatory. Date range not chosen from I02 results.",
+  "price_field": "Adj Close",
+  "qc_returns": {
+    "max_body": 0.13557709838015888,
+    "min_body": -0.1158867652303557,
+    "n": 8470,
+    "n_finite_including_r0_nan_slot": 8469,
+    "n_nonfinite_body": 0,
+    "n_zero_body": 62,
+    "r0_is_nan": true
+  },
+  "qualification": "UNQUALIFIED",
+  "request_parameters": {
+    "actions": true,
+    "auto_adjust": false,
+    "back_adjust": false,
+    "end": "2026-09-25",
+    "interval": "1d",
+    "keepna": false,
+    "prepost": false,
+    "raise_errors": true,
+    "repair": false,
+    "rounding": false,
+    "start": "1993-01-22",
+    "timeout": 30
+  },
+  "scientifically_promotable": false,
+  "source": "yfinance",
+  "ticker": "SPY",
+  "yfinance_version": "1.6.0"
+}
