@@ -1,19 +1,17 @@
 # I03-PRE — Intrinsic Recurrence / Stability Decision Dossier v0.1
 
-> **STATUS :** PRE-FRAMING DECISION DOSSIER — **I03 NOT OPEN**  
+> **STATUS :** PRE-FRAMING — **HISTORICAL** (D1–D8 human-frozen; I03 = DESIGN)  
 > **Authority class :** RESEARCH (mathematical / scientific design)  
 > **Parent decision :** Geometry Program Review v0.1 @ `547fc57` — **FRAME A**  
 > **Protocol :** QDP v0.1 · DR-007  
+> **Freeze record :** [I03-D1-D8-FREEZE.md](../I03/I03-D1-D8-FREEZE.md)  
+> **Design :** [I03-DESIGN-v0.1.md](../I03/I03-DESIGN-v0.1.md)  
 >
 > ```text
-> I03 NOT OPENED
-> NO MARKET DATA USED
-> NO EXPERIMENT RUN
-> NO FUTURE TARGET USED
-> NO NEW GEOMETRY SELECTED
-> NO NUMERICAL GATE SELECTED
-> NO PREREGISTRATION
-> NO IMPLEMENTATION
+> I03-PRE = HISTORICAL
+> D1–D8 = HUMAN-FROZEN (see I03 freeze record)
+> I03 STATUS = DESIGN (not executable prereg; not executed)
+> NO MARKET DATA USED IN THIS PRE-FRAMING
 > ```
 
 **Label convention**
