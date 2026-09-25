@@ -33,7 +33,7 @@
 > **Draft v0.23 accept h=10 :** `cd16496`
 > **Draft v0.24 forecast object / scoring :** `c3a6909`
 > **Draft v0.25 scale estimand review :** `f3c54cc`
-> **Draft v0.26 gated design closure :** *(ce commit)*
+> **Draft v0.26 gated design closure :** `7781a6a`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
