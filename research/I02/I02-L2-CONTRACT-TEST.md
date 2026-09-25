@@ -6,6 +6,7 @@
 > **Baseline implementation :** `b5465b0`
 > **Baseline pin :** `cc608fd`
 > **L2 suite :** `tests/i02/test_l2_contract.py`
+> **L2 closure commit :** `16cfee2`
 > **Market data :** NONE
 > **Experiment / HAT :** NOT STARTED
 
@@ -163,7 +164,7 @@ No preregistration amendment. No design redesign.
 | Scope | Result |
 |-------|--------|
 | `tests/i02` | **95 passed** |
-| Full repository (`pytest`) | **695 passed** (after L2-03 fix; re-run at commit) |
+| Full repository (`pytest`) | **695 passed** |
 
 ---
 
