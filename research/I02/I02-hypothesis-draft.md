@@ -35,6 +35,7 @@
 > **Draft v0.25 scale estimand review :** `f3c54cc`
 > **Draft v0.26 gated design closure :** `7781a6a`
 > **Draft v0.27 close k and bootstrap policy :** `260988b`
+> **Preregistration contract :** [I02-preregistration.md](I02-preregistration.md) *(ce commit)*
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
@@ -81,17 +82,21 @@ objet multi-échelle ; no-primary.
 **Inférence :** moving/block bootstrap ; \(b^\star=40\) `ACCEPTED` ;
 sensibilité prédéclarée \(\{20,40,80\}\) (diagnostic, no best-\(p\)).
 **Readiness :** §14M — **`R2` DESIGN CLOSED**.
+**Preregistration :** [I02-preregistration.md](I02-preregistration.md)
+— **`P2`** (may be opened ; HAT not built ⇒ not P3).
 \[
 \boxed{k=50\ \texttt{ACCEPTED}}
 \quad
 \boxed{b^\star=40\ \texttt{ACCEPTED}}
 \quad
 \boxed{\texttt{R2}}
+\quad
+\boxed{\texttt{P2}}
 \]
 \[
 \boxed{\text{I02 = NOT OPENED}}
 \]
-I02 reste `NOT OPENED`.
+I02 reste `NOT OPENED`. Core design **non rouvert**.
 
 ---
 
@@ -5429,25 +5434,26 @@ ce contrat. \(Z_t\) **n'est pas** un Market-State Engine.
 
 ## 16. OPEN QUESTION — liste exacte
 
-Ne pas résoudre dans ce draft (hors design core) :
+Ne pas résoudre dans le **draft** (hors design core) :
 
-- protocole de **preregistration** formel ;
-- holdout / réplication / kill criteria ;
-- stratégie données / qualification C02 ;
-- décision explicite **OPEN I02** ;
+- décision humaine explicite **OPEN I02** ;
+- construction / PASS du HAT d'implémentation
+  ([I02-preregistration.md](I02-preregistration.md) §7) ;
+- holdout confirmatoire exact (avant run confirmatoire seulement) ;
+- DR-003 D-1 / DR-005 ACCEPTED ; snapshot C02 confirmatoire ;
 - Market-State Engine ; désaccord matériel §9.16 ;
   agrégation \(L\)+forme.
 
-**CLOSED (design core) :**
+**CLOSED :**
 
-- \(W_X,W_{RV},\mathcal{M}_Z,h,V_{t,10}\) ; forecast ; CRPS ;
-- estimand \(R\) ; \(Z_t^{(m)}\) ; stride 1 ; Spearman ;
-- **\(k=50\)** ; **\(b^\star=40\)** + sensibilité
-  \(\{20,40,80\}\) diagnostic ;
-- readiness **R2**.
+- design core **R2** (§14M) ;
+- contrat de préinscription **P2**
+  ([I02-preregistration.md](I02-preregistration.md)).
 
 \[
 \boxed{\texttt{R2 — DESIGN CLOSED}}
+\quad
+\boxed{\texttt{P2 — MAY BE OPENED}}
 \quad
 \boxed{\text{I02 = NOT OPENED}}
 \]
@@ -5460,31 +5466,20 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 
 **I02 = NOT OPENED.**
 
-- [ ] Hypothèse finale approuvée (H1-v0.2 reste une candidate)
-- [x] Doctrine §9.16 **acceptée** ; métriques pré-cadrage **CLOSED**
-- [x] Revue documentaire \(Z_t\) (§14–§14A)
-- [x] Décision sémantique cas 3 / cas 5 : famille **A** ;
-      formule \(Z\) : §14L Gate 3 `ACCEPTED`
-- [x] Revue Disp §14B ; **\(\operatorname{Disp}=\mathrm{Std}_{\mathrm{pop}}\)
-      `ACCEPTED`**
-- [x] Architecture temporelle ; **\(W_{RV}:=W_X\)** ; domaine
-      \(m_Z\) ; multi-échelle ; **\(W_X=20\)** ;
-      \(\mathcal{M}_Z=\{3,12,21\}\)
-- [x] **\(V_{t,10}\)** ; **\(h=10\)**
-- [x] Forecast object + **CRPS** ; estimand **\(R\)**
-- [x] **\(Z_t^{(m)}\)** ; stride **A** ; Spearman bilatéral
-- [x] Famille block bootstrap
-- [x] **HUMAN :** **\(k=50\)** `ACCEPTED` (§14M.1)
-- [x] **HUMAN / dérivation :** **\(b^\star=40\)** + sensibilité
-      \(\{20,40,80\}\) (§14M.4–5)
-- [x] Représentations \(S_1/S_2/S_3\) ; invariant multiplicatif
-- [ ] Rôle de `H_shape` défini
-- [ ] Kill criteria approuvés
-- [ ] Stratégie de données / réplication définie
-- [ ] Risque de data snooping documenté
-- [ ] Protocole de gel / **preregistration** avant premier résultat
-- [ ] Décision explicite **OPEN I02**
-- [x] Readiness class **R2** (§14M.6) — design closed
+- [x] Design core **R2** (§14M)
+- [x] Contrat de préinscription
+      ([I02-preregistration.md](I02-preregistration.md)) — readiness **P2**
+- [x] Hypothèse preregistrable exacte ; unité de preuve \(S\times m\) ;
+      PASS/FAIL/INCONCLUSIVE ; kill ; holdout ; C02 split OPEN vs
+      confirmatoire ; HAT checklist ; change control
+- [ ] **Décision explicite OPEN I02**
+- [ ] HAT d'implémentation construit et **PASS** (après OPEN,
+      avant premier run scientifique)
+- [ ] (Confirmatoire seulement) DR-003 D-1 + DR-005 ACCEPTED ;
+      C02 ; holdout figé
+- [ ] Rôle de `H_shape` / kill opérationnels fins si besoin hors
+      contrat déjà écrit
+- [x] Readiness design **R2** ; prereg **P2**
 
 ---
 
@@ -5492,16 +5487,17 @@ Décisions **humaines**. Tant que la dernière case n'est pas cochée :
 
 | Contrôle | Statut |
 |----------|--------|
-| Aucun chiffre / donnée / calcul | oui |
-| Baseline design non rouverte | oui |
-| \(k=50\) ; \(b^\star=40\) ; sensibilité diagnostic | oui |
-| Estimand \(R\) ; \(Z\) ; CRPS ; stride 1 ; Spearman | oui |
-| Readiness R2 ; I02 NOT OPENED | oui |
+| Core design inchangé dans cette passe | oui |
+| Aucune donnée / expérience | oui |
+| Préinscription séparée du journal de design | oui |
+| C02 non exigé pour OPEN (DR-007) | oui |
+| R2 + P2 ; I02 NOT OPENED | oui |
 
 ---
 
 ## Références (lecture, pas autorité de validation)
 
+- [I02-preregistration.md](I02-preregistration.md) — contrat exécutable
 - [I01-exploratory-synthesis.md](../I01/I01-exploratory-synthesis.md)
 - E01–E04 ; [hypothesis.md](../I01/hypothesis.md) ; [protocol.md](../I01/protocol.md)
 - [DR-007](../../docs/adr/DR-007-exploratory-vs-confirmatory-data.md)
