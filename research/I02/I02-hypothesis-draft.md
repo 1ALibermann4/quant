@@ -30,7 +30,7 @@
 > **Draft v0.20 accept W_X=20 :** `e42b3a8`
 > **Draft v0.21 freeze M_Z :** `3d3d877`
 > **Draft v0.22 future target review :** `38812f8`
-> **Draft v0.23 accept h=10 :** *(ce commit)*
+> **Draft v0.23 accept h=10 :** `cd16496`
 > **Calculs dans ce document :** aucun
 > **Classe données I01 :** UNQUALIFIED (DR-007 / DR-008)
 
