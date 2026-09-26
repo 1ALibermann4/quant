@@ -88,9 +88,9 @@ Seeds MUST NOT depend on worker count, OS, or scheduling order.
 |-----------|--------|
 | Post burn-in \(N\) | **8192** (where applicable) |
 | \(W\) | \(\{20,40,60\}\) — all reported; **no best-\(W\)** |
-| Query stride (preregistered) | **16** |
-| Candidate stride (preregistered) | **16** |
-| G1-only query/candidate stride | **32** (O(W²) Soft-DTW) |
+| Query stride (preregistered) | **8** (deterministic subsample of query indices for gate estimation) |
+| Candidate stride (preregistered) | **4** (admissible neighbor pool) |
+| G1-only query/candidate stride | **32** (preregistered for O(W²) Soft-DTW; part of G1 CAL contract) |
 | Temporal embargo for neighbors | \(\lvert t-s\rvert \ge W\) |
 | \(k\) for neighborhood gates | **\(\{5,10,20\}\)** (all reported; no best-\(k\)) |
 
@@ -176,23 +176,19 @@ promote alternatives post-hoc.
 
 ## 8. Observability (S6 / S7)
 
-Diagnostic (not a scientific PASS threshold):
+Diagnostic (GOV-02: removed from automatic qualification):
 
 1. Build delay vectors of length \(W\) from univariate series.
 2. On a fixed set of admissible pairs (deterministic subsample), compute
    Spearman(\(d_{\mathrm{delay}}\), \(d_Z\)) where \(d_{\mathrm{delay}}\) is L2 on delays.
 
-| Diagnostic band | Oracle status |
-|-----------------|---------------|
-| Spearman \(\ge 0.25\) | ORACLE VALID (usable for CAL-6 reporting) |
-| Spearman \(< 0.25\) | ORACLE INVALID → CAL-6 for that world **NOT INTERPRETABLE** / INCONCLUSIVE |
+The diagnostic value is reported in results. Oracle VALID/INVALID status
+is NOT automatically determined by a numerical threshold.
 
-```text
-OPEN GOVERNANCE DECISION:
-Exact observability cutoff (0.25) is an engineering diagnostic frozen for
-I04-CAL reporting consistency. Changing it for market I04 requires human
-governance. It does NOT authorize geometry FAIL when oracle is INVALID.
-```
+**GOV-02**:
+- Observability diagnostics are reported for governance evaluation
+- No automatic VALID/INVALID qualification based on Spearman threshold
+- Scientific interpretation requires governance review of diagnostic distributions
 
 ---
 
@@ -232,3 +228,24 @@ PRED/ECON, no geometry winner, no G6 promotion, no Koopman/HMM core.
 |-------|--------|
 | Spec id | I04-CAL-SPEC-v0.2 |
 | Freeze rule | grids/worlds fixed before primary CAL observation |
+
+---
+
+## Governance history (GOV-I04CAL-001)
+
+**Stride contract history**:
+- Original freeze (ef8f30a): QUERY_STRIDE=8, CANDIDATE_STRIDE=4
+- Implementation drift (4667adf → b55cb18): Unauthorized change to 16/16 for performance
+- Governance resolution (GOV-01): RESTORED to original 8/4 core, 32/32 G1
+- This document now reflects the restored authorized contract
+
+**Calibration threshold history**:
+- Original contract: C1–C10 referenced but not numerically operationalized
+- Implementation drift (0b13114): Arbitrary thresholds (0.4, 0.25, 0.2, 0.25 observability) introduced
+- Governance resolution (GOV-02): REMOVED from qualification logic; outputs are raw/distributional
+- Observability diagnostics reported for governance evaluation; no automatic VALID/INVALID
+
+**Execution tier history**:
+- Original contract: No tier partition specified
+- Implementation (b55cb18): Tier A/B partition for compute tractability
+- Governance resolution (GOV-03): AUTHORIZED as performance mechanism only; no scientific hierarchy

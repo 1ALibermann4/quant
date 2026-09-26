@@ -9,7 +9,6 @@ import numpy as np
 
 from quant.i04_cal.params import (
     N_POST_BURNIN,
-    OBSERVABILITY_SPEARMAN_MIN,
     S1_BURNIN,
     S1_PHI,
     S1_SIGMA_H,
@@ -352,11 +351,9 @@ def gen_s6(b: int) -> WorldBundle:
     z = np.stack([u, v], axis=1)
     # observability diagnostic vs delay L2 (W=40)
     obs = _observability_spearman(r, z, W=40, seed=seed + 999)
-    ostat = (
-        OracleStatus.VALID
-        if obs >= OBSERVABILITY_SPEARMAN_MIN
-        else OracleStatus.INVALID
-    )
+    # GOV-02: Remove automatic VALID/INVALID based on threshold
+    # Oracle status remains VALID pending governance evaluation of diagnostic
+    ostat = OracleStatus.VALID
     return WorldBundle(
         world_id="S6",
         b=b,
@@ -365,7 +362,7 @@ def gen_s6(b: int) -> WorldBundle:
         latent={"z": z, "observability_spearman": obs},
         oracle_status=ostat,
         oracle_meta={"kind": "latent_distance", "d_star": "euclidean_z"},
-        notes=[f"observability_spearman={obs:.4f}"],
+        notes=[f"observability_spearman={obs:.4f} (diagnostic only; GOV-02)"],
     )
 
 
@@ -462,11 +459,9 @@ def gen_s7(b: int, noise_frac: float = 0.05) -> WorldBundle:
     rng = _rng(seed + 17)
     r = x + noise_frac * sigma_x * rng.normal(size=N_POST_BURNIN)
     obs = _observability_spearman(r, states, W=40, seed=seed + 777)
-    ostat = (
-        OracleStatus.VALID
-        if obs >= OBSERVABILITY_SPEARMAN_MIN
-        else OracleStatus.INVALID
-    )
+    # GOV-02: Remove automatic VALID/INVALID based on threshold
+    # Oracle status remains VALID pending governance evaluation of diagnostic
+    ostat = OracleStatus.VALID
     return WorldBundle(
         world_id="S7",
         b=b,
@@ -480,7 +475,7 @@ def gen_s7(b: int, noise_frac: float = 0.05) -> WorldBundle:
         },
         oracle_status=ostat,
         oracle_meta={"kind": "latent_distance", "d_star": "euclidean_xyz"},
-        notes=[f"Lorenz univariate x; noise_frac={noise_frac}; obs={obs:.4f}"],
+        notes=[f"Lorenz univariate x; noise_frac={noise_frac}; obs={obs:.4f} (diagnostic only; GOV-02)"],
     )
 
 

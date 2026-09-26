@@ -10,6 +10,8 @@ __all__ = ["SPEC_ID", "B_WORLD", "WINDOWS", "QUERY_STRIDE"]
 SPEC_ID = "I04-CAL-SPEC-v0.2"
 B_WORLD = 32
 WINDOWS: tuple[int, ...] = (20, 40, 60)
+# GOV-01 RESTORED: Original frozen contract (8/4)
 QUERY_STRIDE = 8
+CANDIDATE_STRIDE = 4
 K_NEIGHBORS: tuple[int, ...] = (5, 10, 20)
 N_POST_BURNIN = 8192

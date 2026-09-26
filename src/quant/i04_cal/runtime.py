@@ -6,7 +6,14 @@ import argparse
 import os
 from pathlib import Path
 
-from quant.i04_cal.params import DEFAULT_CAL_CONFIG, CalConfig, WINDOWS, K_NEIGHBORS
+from quant.i04_cal.params import (
+    DEFAULT_CAL_CONFIG,
+    CalConfig,
+    CANDIDATE_STRIDE,
+    K_NEIGHBORS,
+    QUERY_STRIDE,
+    WINDOWS,
+)
 from quant.i04_cal.pipeline import run_calibration
 
 
@@ -43,6 +50,8 @@ def main(argv: list[str] | None = None) -> int:
     cfg = CalConfig(
         B=B,
         windows=WINDOWS,
+        query_stride=QUERY_STRIDE,
+        candidate_stride=CANDIDATE_STRIDE,
         k_neighbors=K_NEIGHBORS,
         workers=int(args.workers),
         worlds=worlds,

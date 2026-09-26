@@ -9,9 +9,12 @@ from typing import Any
 SPEC_ID = "I04-CAL-SPEC-v0.2"
 B_WORLD = 32
 WINDOWS: tuple[int, ...] = (20, 40, 60)
-QUERY_STRIDE = 16
-CANDIDATE_STRIDE = 16
-# Expensive O(W^2) geometries: coarser preregistered strides (frozen before CAL)
+# GOV-01 RESTORED: Original frozen contract (8/4)
+# History: original freeze=8/4, drift=16/16, governance=restore 8/4
+QUERY_STRIDE = 8
+CANDIDATE_STRIDE = 4
+# G1 Soft-DTW uses coarser preregistered strides (32/32) due to O(W^2) cost
+# This was part of the original frozen contract and remains authorized
 EXPENSIVE_QUERY_STRIDE = 32
 EXPENSIVE_CANDIDATE_STRIDE = 32
 EXPENSIVE_GEOMETRIES: frozenset[str] = frozenset({"G1"})
@@ -47,8 +50,8 @@ GORD_TAU = 1
 PERTURB_CS: tuple[float, ...] = (0.05, 0.1, 0.2)
 # Recurrence horizons as multiples of W
 RECURRENCE_H_MULT: tuple[int, ...] = (2, 5, 10)
-# Observability diagnostic threshold (OPEN GOVERNANCE documented)
-OBSERVABILITY_SPEARMAN_MIN = 0.25
+# GOV-02: Observability diagnostic threshold removed from automatic qualification
+# Diagnostic values are reported for governance evaluation
 # S7 noise fractions of sigma_x
 S7_NOISE_FRAC: tuple[float, ...] = (0.0, 0.05, 0.1)
 # S1 SV
@@ -79,24 +82,32 @@ def geometry_aux_seed(geometry_id: int) -> int:
 
 @dataclass(frozen=True, slots=True)
 class CalConfig:
-    """Operational run config (not a scientific retune surface)."""
+    """Operational run config (not a scientific retune surface).
+
+    GOV-03: Execution tiers are performance-only, not scientific hierarchy.
+    The frozen benchmark remains the UNION of all authorized families.
+    """
 
     spec_id: str = SPEC_ID
     B: int = B_WORLD
     windows: tuple[int, ...] = WINDOWS
     query_stride: int = QUERY_STRIDE
+    candidate_stride: int = CANDIDATE_STRIDE
     k_neighbors: tuple[int, ...] = K_NEIGHBORS
     workers: int = 1
     include_hold_geometries: bool = False  # G6 never in CAL-qualified path
     worlds: tuple[str, ...] = tuple(WORLD_INDEX.keys())
     geometries: tuple[str, ...] = (
-        # TIER-A (required for CAL-PASS of the measurement bench)
+        # GOV-03: Performance partition for compute tractability
+        # Tier A: G0, G3, G4, G7, GORD
+        # Tier B: G1, G2, G5 (run separately as run1b)
+        # All families are scientifically required; tiers are operational only
         "G0",
         "G3",
         "G4",
         "G7",
         "GORD",
-        # TIER-B (extended; Soft-DTW / SW / AIRM) — run separately as run1b
+        # Tier B geometries commented for Tier-A-only runs
         # "G1", "G2", "G5",
     )
 
@@ -106,6 +117,7 @@ class CalConfig:
             "B": self.B,
             "windows": list(self.windows),
             "query_stride": self.query_stride,
+            "candidate_stride": self.candidate_stride,
             "k_neighbors": list(self.k_neighbors),
             "workers": self.workers,
             "worlds": list(self.worlds),
