@@ -58,7 +58,11 @@ def main(argv: list[str] | None = None) -> int:
         geometries=geos,
     )
     man = run_calibration(
-        args.out_dir, cfg, resume=bool(args.resume), max_cells=args.max_cells
+        args.out_dir,
+        cfg,
+        resume=bool(args.resume),
+        max_cells=args.max_cells,
+        use_cache=True,  # PERF-02: enable deterministic caching
     )
     print(
         f"I04-CAL done status={man['status']} rows={man.get('n_rows')} "

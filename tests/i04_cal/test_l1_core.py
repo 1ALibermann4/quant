@@ -102,3 +102,54 @@ def test_pipeline_max_cells(tmp_path):
     )
     man = run_calibration(tmp_path / "out", cfg, max_cells=1)
     assert man["n_rows"] >= 1
+
+
+def test_embedding_cache_reuse():
+    """Test that embeddings are cached and reused correctly."""
+    from quant.i04_cal.cache import clear_caches, get_cache_stats
+
+    r = np.random.default_rng(0).normal(size=1000)
+    W = 20
+    indices = np.arange(W - 1, 100)
+    cache_key = ("test_world_unique", 0, W, "G0", "default")
+
+    from quant.i04_cal.gates import build_embeddings
+    from quant.i04_cal.geometries import g0_embed
+
+    # First call: miss
+    emb1 = build_embeddings(r, indices, W, g0_embed, cache_key=cache_key)
+    stats = get_cache_stats()
+    initial_misses = stats["embedding_misses"]
+    initial_hits = stats["embedding_hits"]
+
+    # Second call: hit
+    emb2 = build_embeddings(r, indices, W, g0_embed, cache_key=cache_key)
+    stats = get_cache_stats()
+
+    # Check that second call was a hit (not a new miss)
+    assert stats["embedding_hits"] == initial_hits + 1
+    assert stats["embedding_misses"] == initial_misses
+
+    # Should be identical
+    assert emb1 == emb2
+
+
+def test_distance_cache_symmetric():
+    """Test that distances are cached symmetrically."""
+    from quant.i04_cal.cache import (
+        clear_caches,
+        get_cached_distance_symmetric,
+        set_cached_distance_symmetric,
+    )
+
+    clear_caches()
+
+    # Set symmetric distance
+    set_cached_distance_symmetric("w", 0, 20, "G0", "default", 100, 200, 5.5)
+
+    # Should retrieve same value for both orders
+    d1 = get_cached_distance_symmetric("w", 0, 20, "G0", "default", 100, 200)
+    d2 = get_cached_distance_symmetric("w", 0, 20, "G0", "default", 200, 100)
+
+    assert d1 == 5.5
+    assert d2 == 5.5

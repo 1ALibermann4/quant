@@ -97,7 +97,20 @@ def knn_for_query(
     W: int,
     k: int,
     rng: np.random.Generator,
+    cache_context: tuple[Any, ...] | None = None,
 ) -> tuple[list[int], list[float], list[int], list[float]]:
+    """Find k nearest neighbors for query t.
+
+    If cache_context is provided (world_id, b, W, geometry_id, variant_id),
+    distances are cached symmetrically for reuse.
+    """
+    from quant.i04_cal.cache import (
+        get_cached_distance_symmetric,
+        record_distance_hit,
+        record_distance_miss,
+        set_cached_distance_symmetric,
+    )
+
     dlist: list[tuple[float, int]] = []
     for s in candidates:
         s = int(s)
@@ -105,7 +118,26 @@ def knn_for_query(
             continue
         if s not in emb or t not in emb:
             continue
-        d = dist_fn(emb[t], emb[s])
+
+        # Try to get cached distance if context provided
+        if cache_context is not None:
+            world_id, b, W_val, geometry_id, variant_id = cache_context
+            cached = get_cached_distance_symmetric(
+                world_id, b, W_val, geometry_id, variant_id, t, s
+            )
+            if cached is not None:
+                record_distance_hit()
+                d = cached
+            else:
+                record_distance_miss()
+                d = dist_fn(emb[t], emb[s])
+                if np.isfinite(d):
+                    set_cached_distance_symmetric(
+                        world_id, b, W_val, geometry_id, variant_id, t, s, float(d)
+                    )
+        else:
+            d = dist_fn(emb[t], emb[s])
+
         if not np.isfinite(d):
             continue
         dlist.append((float(d), s))
@@ -127,10 +159,37 @@ def build_embeddings(
     indices: np.ndarray,
     W: int,
     embed_fn: Callable[..., Any],
+    cache_key: tuple[Any, ...] | None = None,
 ) -> dict[int, Any]:
+    """Build embeddings for given indices.
+
+    If cache_key is provided, results are cached for reuse across cells
+    sharing the same (world, W, geometry) configuration.
+    """
+    from quant.i04_cal.cache import (
+        get_cached_embeddings,
+        record_embedding_hit,
+        record_embedding_miss,
+        set_cached_embeddings,
+    )
+
+    # Check cache if key provided
+    if cache_key is not None:
+        cached = get_cached_embeddings(cache_key)
+        if cached is not None:
+            record_embedding_hit()
+            return cached
+        else:
+            record_embedding_miss()
+
     out: dict[int, Any] = {}
     for t in indices:
         out[int(t)] = embed_fn(r, int(t), W)
+
+    # Store in cache if key provided
+    if cache_key is not None:
+        set_cached_embeddings(cache_key, out)
+
     return out
 
 
@@ -157,7 +216,10 @@ def compute_gates_for_spec(
     q_idx = query_indices(T, W, stride=q_stride)
     c_idx = candidate_indices(T, W, stride=c_stride)
     union_idx = np.unique(np.concatenate([q_idx, c_idx]))
-    emb = build_embeddings(r, union_idx, W, embed_fn)
+
+    # Phase 1: Cache embeddings for reuse across cells sharing (world, b, W, geometry)
+    cache_key = (world.world_id, world.b, W, spec.geometry_id, spec.variant_id)
+    emb = build_embeddings(r, union_idx, W, embed_fn, cache_key=cache_key)
     rng = np.random.default_rng(seed)
 
     results: dict[str, Any] = {
@@ -174,20 +236,29 @@ def compute_gates_for_spec(
 
     k_max = max(K_NEIGHBORS)
     sample = next(iter(emb.values())) if emb else None
+    cache_context = (world.world_id, world.b, W, spec.geometry_id, spec.variant_id)
+
     if _is_vector_embed(sample) and spec.geometry_id in {"G0", "G3", "G7", "GORD", "G4"}:
         # G4 embed is window vector but distance is MMD on delays — not pure L2 on embed
         if spec.geometry_id in {"G0", "G3", "G7", "GORD"}:
             nn_cache = _vector_knn_batch(q_idx, c_idx, emb, W, k_max, rng)
         else:
             nn_cache = {
-                int(t): knn_for_query(int(t), emb, dist_fn, c_idx, W, k_max, rng)
+                int(t): knn_for_query(
+                    int(t), emb, dist_fn, c_idx, W, k_max, rng, cache_context
+                )
                 for t in q_idx
             }
     else:
         nn_cache = {
-            int(t): knn_for_query(int(t), emb, dist_fn, c_idx, W, k_max, rng)
+            int(t): knn_for_query(
+                int(t), emb, dist_fn, c_idx, W, k_max, rng, cache_context
+            )
             for t in q_idx
         }
+
+    # Phase 2: Extract distances once for reuse across gates
+    distance_cache_key = (world.world_id, world.b, W, spec.geometry_id, spec.variant_id)
 
     for k in K_NEIGHBORS:
         contrasts = []

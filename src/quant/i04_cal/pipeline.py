@@ -55,8 +55,13 @@ def run_calibration(
     *,
     resume: bool = False,
     max_cells: int | None = None,
+    use_cache: bool = True,
 ) -> dict[str, Any]:
-    """Execute I04-CAL. max_cells is TEST-ONLY (requires I04_CAL_ALLOW_TEST_OVERRIDES=1)."""
+    """Execute I04-CAL. max_cells is TEST-ONLY (requires I04_CAL_ALLOW_TEST_OVERRIDES=1).
+
+    use_cache: Enable deterministic caching of embeddings and distances
+    across cells sharing (world, b, W, geometry) configuration.
+    """
 
     cfg = cfg or DEFAULT_CAL_CONFIG
     out_dir = Path(out_dir)
@@ -68,6 +73,11 @@ def run_calibration(
 
     if max_cells is not None and os.environ.get("I04_CAL_ALLOW_TEST_OVERRIDES") != "1":
         raise RuntimeError("max_cells requires I04_CAL_ALLOW_TEST_OVERRIDES=1")
+
+    # Clear caches if caching is disabled
+    if not use_cache:
+        from quant.i04_cal.cache import clear_caches
+        clear_caches()
 
     ch = config_hash(cfg)
     head = _git_head() or "unknown"
@@ -84,6 +94,7 @@ def run_calibration(
             "executable": sys.executable,
             "numpy": np.__version__,
         },
+        "use_cache": use_cache,
         "status": ExecStatus.INCOMPLETE.value,
         "note": "SYNTHETIC ONLY — NO MARKET DATA — NO GEOMETRY WINNER",
     }
@@ -127,7 +138,7 @@ def run_calibration(
     t0 = time.perf_counter()
     n_done = 0
     with results_path.open("a", encoding="utf-8") as fout:
-        # Cache worlds per (world,b)
+        # Cache worlds per (world,b) — Phase 4: cross-cell reuse
         world_cache: dict[tuple[str, int], Any] = {}
         for world, b, W, spec in cells:
             wb = world_cache.get((world, b))
@@ -191,5 +202,11 @@ def run_calibration(
     manifest["n_rows"] = n_rows
     manifest["expected_cells"] = expected
     manifest["elapsed_seconds"] = round(elapsed, 3)
+
+    # Add cache statistics if caching was used
+    if use_cache:
+        from quant.i04_cal.cache import get_cache_stats
+        manifest["cache_stats"] = get_cache_stats()
+
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return manifest
