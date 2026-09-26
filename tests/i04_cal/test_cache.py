@@ -92,3 +92,48 @@ def test_cache_statistics():
     # Check that second call was a hit (not a new miss)
     assert stats["embedding_hits"] >= 1
     assert stats["embedding_misses"] >= 1
+
+
+def test_soft_dtw_divergence_self_term_reuse():
+    """Test that Soft-DTW divergence correctly reuses self-terms."""
+    from quant.i04_cal.geometries import (
+        soft_dtw_divergence,
+        _sdtw_self_term,
+        _SDTW_SELF_CACHE,
+    )
+
+    x = np.linspace(0, 1, 20)
+    y = np.linspace(0, 1, 20) + 0.1
+    gamma = 1.0
+
+    # Clear cache
+    _SDTW_SELF_CACHE.clear()
+
+    # Compute divergence
+    d1 = soft_dtw_divergence(x, y, gamma)
+
+    # Check that self-terms were cached
+    assert len(_SDTW_SELF_CACHE) == 2  # Should have x and y
+
+    # Verify self-terms are correct
+    x_self = _sdtw_self_term(x, gamma)
+    y_self = _sdtw_self_term(y, gamma)
+
+    # Manual computation
+    from quant.i04_cal.geometries import soft_dtw
+    x_self_manual = soft_dtw(x, x, gamma)
+    y_self_manual = soft_dtw(y, y, gamma)
+
+    assert abs(x_self - x_self_manual) < 1e-10
+    assert abs(y_self - y_self_manual) < 1e-10
+
+    # Verify divergence uses cached values
+    d2 = soft_dtw_divergence(x, y, gamma)
+    assert abs(d1 - d2) < 1e-10
+
+    # Verify we can compute divergence with different y but same x
+    y2 = np.linspace(0, 1, 20) + 0.2
+    d3 = soft_dtw_divergence(x, y2, gamma)
+
+    # x self-term should be reused, y2 is new
+    assert len(_SDTW_SELF_CACHE) == 3  # x, y, y2

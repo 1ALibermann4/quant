@@ -1,4 +1,4 @@
-"""I04-CAL calibration runner with fail-closed checkpointing."""
+"""I04-CAL calibration runner with fail-closed checkpointing and deterministic parallelism."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ import platform
 import subprocess
 import sys
 import time
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,13 @@ from quant.i04_cal.geometries import iter_geometry_specs
 from quant.i04_cal.params import DEFAULT_CAL_CONFIG, CalConfig, SPEC_ID, world_seed
 from quant.i04_cal.types import ExecStatus, GeometryStatus
 from quant.i04_cal.worlds import generate_world
+
+
+# Control numerical library threading to prevent oversubscription
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
 
 
 def _git_head() -> str | None:
@@ -38,6 +46,51 @@ def _git_dirty() -> bool:
         return bool(out.strip())
     except (subprocess.CalledProcessError, FileNotFoundError, OSError):
         return True
+
+
+def _compute_cell_gates(world: str, b: int, W: int, spec: Any) -> dict[str, Any]:
+    """Compute gates for a single cell. Returns result dict.
+
+    Each process maintains its own internal cache for world reuse.
+    """
+    # Per-process world cache
+    if not hasattr(_compute_cell_gates, "_world_cache"):
+        _compute_cell_gates._world_cache = {}
+    world_cache = _compute_cell_gates._world_cache
+
+    wb = world_cache.get((world, b))
+    if wb is None:
+        wb = generate_world(world, b)
+        world_cache[(world, b)] = wb
+
+    seed = world_seed(world, b) + 17 * W + hash(spec.variant_id) % 997
+
+    try:
+        gates = compute_gates_for_spec(wb, spec, W, seed=int(seed) & 0x7FFFFFFF)
+        return {
+            "cell_key": cell_key(world, b, W, f"{spec.geometry_id}:{spec.variant_id}"),
+            "config_hash": None,  # Will be filled by caller
+            "world_id": world,
+            "b": b,
+            "seed": wb.seed,
+            "W": W,
+            "world_status": wb.world_status.value,
+            "oracle_status": wb.oracle_status.value,
+            "oracle_meta": wb.oracle_meta,
+            "latent_notes": wb.notes,
+            "gates": gates,
+            "status": "OK",
+        }
+    except Exception as e:  # noqa: BLE001 — capture technical failure per cell
+        return {
+            "cell_key": cell_key(world, b, W, f"{spec.geometry_id}:{spec.variant_id}"),
+            "config_hash": None,  # Will be filled by caller
+            "world_id": world,
+            "b": b,
+            "W": W,
+            "status": "FAILED_TECHNICAL",
+            "error": repr(e),
+        }
 
 
 def config_hash(cfg: CalConfig) -> str:
@@ -81,6 +134,7 @@ def run_calibration(
 
     ch = config_hash(cfg)
     head = _git_head() or "unknown"
+    workers = cfg.workers if hasattr(cfg, "workers") else 1
     manifest = {
         "schema": "I04-CAL-MANIFEST-v1",
         "spec_id": SPEC_ID,
@@ -95,6 +149,7 @@ def run_calibration(
             "numpy": np.__version__,
         },
         "use_cache": use_cache,
+        "workers": workers,
         "status": ExecStatus.INCOMPLETE.value,
         "note": "SYNTHETIC ONLY — NO MARKET DATA — NO GEOMETRY WINNER",
     }
@@ -137,54 +192,68 @@ def run_calibration(
 
     t0 = time.perf_counter()
     n_done = 0
-    with results_path.open("a", encoding="utf-8") as fout:
-        # Cache worlds per (world,b) — Phase 4: cross-cell reuse
-        world_cache: dict[tuple[str, int], Any] = {}
-        for world, b, W, spec in cells:
-            wb = world_cache.get((world, b))
-            if wb is None:
-                wb = generate_world(world, b)
-                world_cache[(world, b)] = wb
-            seed = world_seed(world, b) + 17 * W + hash(spec.variant_id) % 997
-            try:
-                gates = compute_gates_for_spec(wb, spec, W, seed=int(seed) & 0x7FFFFFFF)
-                row = {
-                    "cell_key": cell_key(
-                        world, b, W, f"{spec.geometry_id}:{spec.variant_id}"
-                    ),
-                    "config_hash": ch,
-                    "world_id": world,
-                    "b": b,
-                    "seed": wb.seed,
-                    "W": W,
-                    "world_status": wb.world_status.value,
-                    "oracle_status": wb.oracle_status.value,
-                    "oracle_meta": wb.oracle_meta,
-                    "latent_notes": wb.notes,
-                    "gates": gates,
-                    "status": "OK",
-                }
-            except Exception as e:  # noqa: BLE001 — capture technical failure per cell
-                row = {
-                    "cell_key": cell_key(
-                        world, b, W, f"{spec.geometry_id}:{spec.variant_id}"
-                    ),
-                    "config_hash": ch,
-                    "world_id": world,
-                    "b": b,
-                    "W": W,
-                    "status": "FAILED_TECHNICAL",
-                    "error": repr(e),
-                }
-            fout.write(json.dumps(row, default=str) + "\n")
-            fout.flush()
-            n_done += 1
-            if n_done % 1 == 0:
-                print(
-                    f"I04-CAL cells {n_done}/{len(cells)} last={row['cell_key']} "
-                    f"status={row.get('status')}",
-                    flush=True,
-                )
+
+    # Phase 5: Deterministic multiprocessing
+    workers = cfg.workers if hasattr(cfg, "workers") else 1
+    use_multiprocessing = workers > 1
+
+    if use_multiprocessing:
+        # Parallel execution with deterministic ordering
+        # Each worker has its own process-local cache
+        results_dict: dict[str, dict[str, Any]] = {}
+
+        with ProcessPoolExecutor(max_workers=workers) as executor:
+            # Submit all tasks
+            future_to_cell = {}
+            for i, (world, b, W, spec) in enumerate(cells):
+                future = executor.submit(_compute_cell_gates, world, b, W, spec)
+                future_to_cell[future] = (i, cell_key(world, b, W, f"{spec.geometry_id}:{spec.variant_id}"))
+
+            # Collect results as they complete
+            for future in as_completed(future_to_cell):
+                i, key = future_to_cell[future]
+                try:
+                    result = future.result()
+                    result["config_hash"] = ch
+                    results_dict[key] = result
+                except Exception as e:
+                    # Worker failure - fail closed
+                    results_dict[key] = {
+                        "cell_key": key,
+                        "config_hash": ch,
+                        "status": "FAILED_TECHNICAL",
+                        "error": f"Worker exception: {repr(e)}",
+                    }
+
+        # Write results in deterministic order (original cell order)
+        with results_path.open("a", encoding="utf-8") as fout:
+            for world, b, W, spec in cells:
+                key = cell_key(world, b, W, f"{spec.geometry_id}:{spec.variant_id}")
+                row = results_dict[key]
+                fout.write(json.dumps(row, default=str) + "\n")
+                fout.flush()
+                n_done += 1
+                if n_done % 1 == 0:
+                    print(
+                        f"I04-CAL cells {n_done}/{len(cells)} last={row['cell_key']} "
+                        f"status={row.get('status')}",
+                        flush=True,
+                    )
+    else:
+        # Serial execution (original path)
+        with results_path.open("a", encoding="utf-8") as fout:
+            for world, b, W, spec in cells:
+                row = _compute_cell_gates(world, b, W, spec)
+                row["config_hash"] = ch
+                fout.write(json.dumps(row, default=str) + "\n")
+                fout.flush()
+                n_done += 1
+                if n_done % 1 == 0:
+                    print(
+                        f"I04-CAL cells {n_done}/{len(cells)} last={row['cell_key']} "
+                        f"status={row.get('status')}",
+                        flush=True,
+                    )
 
     elapsed = time.perf_counter() - t0
     # Determine completeness: count expected without max_cells

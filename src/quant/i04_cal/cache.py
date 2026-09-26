@@ -113,9 +113,17 @@ def set_cached_distance_symmetric(
     s: int,
     distance: float,
 ) -> None:
-    """Cache distance symmetrically (both directions)."""
+    """Cache distance symmetrically (both directions) with size limit."""
     key1 = _make_distance_key(world_id, b, W, geometry_id, variant_id, t, s)
     key2 = _make_distance_key(world_id, b, W, geometry_id, variant_id, s, t)
+
+    # Check if we're about to exceed limit
+    if len(_distance_cache) >= MAX_DISTANCE_CACHE_SIZE:
+        # Remove oldest entries (simple FIFO)
+        # Remove half the cache when limit reached
+        items = list(_distance_cache.items())
+        for k, _ in items[:MAX_DISTANCE_CACHE_SIZE // 2]:
+            _distance_cache.pop(k)
 
     _distance_cache[key1] = distance
     _distance_cache[key2] = distance  # Symmetric

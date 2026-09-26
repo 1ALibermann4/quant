@@ -76,8 +76,31 @@ def soft_dtw(x: np.ndarray, y: np.ndarray, gamma: float, band: int | None = None
     return float(R[n, m])
 
 
+# Cache for Soft-DTW self-terms (SDTW(x,x), SDTW(y,y))
+# These depend only on the representation and geometry parameters,
+# not on the specific pair being evaluated.
+_SDTW_SELF_CACHE: dict[tuple[bytes, float], float] = {}
+
+
+def _sdtw_self_term(x: np.ndarray, gamma: float) -> float:
+    """Compute or retrieve cached SDTW(x,x) self-term."""
+    key = (x.tobytes(), float(gamma))
+    if key not in _SDTW_SELF_CACHE:
+        _SDTW_SELF_CACHE[key] = soft_dtw(x, x, gamma)
+    return _SDTW_SELF_CACHE[key]
+
+
 def soft_dtw_divergence(x: np.ndarray, y: np.ndarray, gamma: float) -> float:
-    return soft_dtw(x, y, gamma) - 0.5 * soft_dtw(x, x, gamma) - 0.5 * soft_dtw(y, y, gamma)
+    """Soft-DTW divergence: SDTW(x,y) - 0.5*SDTW(x,x) - 0.5*SDTW(y,y).
+
+    Optimization: Reuses cached self-terms SDTW(x,x) and SDTW(y,y)
+    which depend only on the representation, not the pair.
+    """
+    return (
+        soft_dtw(x, y, gamma)
+        - 0.5 * _sdtw_self_term(x, gamma)
+        - 0.5 * _sdtw_self_term(y, gamma)
+    )
 
 
 def g1_embed(r: np.ndarray, t: int, W: int) -> np.ndarray:
