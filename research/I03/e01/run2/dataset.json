@@ -1,0 +1,43 @@
+{
+  "acquired_at_utc": "2026-09-24T12:00:16.920799+00:00",
+  "adjusted_price_sha256": "sha256:bc0d68b080f1f42c56f01da43820c11425ca1fc3a80bfb0ca32647821c2488d1",
+  "authorized_snapshot_check": {
+    "acquired_match": true,
+    "first_match": true,
+    "last_match": true,
+    "n_sessions_match": true,
+    "price_sha256_match": true,
+    "returns_sha256_match": true
+  },
+  "banner": "EXPLORATORY / UNQUALIFIED / NOT SCIENTIFICALLY PROMOTABLE",
+  "cache_stem": "UNQUALIFIED_SPY_20260924T120016Z",
+  "calendar_authority": false,
+  "canonical_input": {
+    "directory": "data\\exploratory\\canonical_i03_spy_v1",
+    "returns_npy_file_sha256": "sha256:4aee1aaea6886a727b5f322e51af9e2c05132b32aaaa47d0d5c0dc68c795943e",
+    "schema": "I03-CANONICAL-INPUT-v1",
+    "source_csv_file_sha256": "sha256:ac7c6a7f081e3548d94c6c744a31b3398ccffae5129799015b3331568159b2c2",
+    "source_meta_file_sha256": "sha256:c37b7ae0ed24dd6510feef5c753f1dca8201b793e066628e1730b43ebf507caf"
+  },
+  "data_class": "EXPLORATORY",
+  "first_session": "1993-01-29",
+  "last_session": "2026-09-23",
+  "log_returns_sha256": "sha256:bde9a3045659bcb6ffdde99c52d7b088662456ed5d42737662f7c8384091c02e",
+  "n_sessions": 8470,
+  "note": "Amendment B canonical numerical input. Same authorized SPY returns payload as DR-008 / I02-E01. Not C02. Not confirmatory.",
+  "price_field": "Adj Close",
+  "qc_returns": {
+    "max_body": 0.13557709838015888,
+    "min_body": -0.1158867652303557,
+    "n": 8470,
+    "n_finite_including_r0_nan_slot": 8469,
+    "n_nonfinite_body": 0,
+    "n_zero_body": 62,
+    "r0_is_nan": true
+  },
+  "qualification": "UNQUALIFIED",
+  "scientifically_promotable": false,
+  "source": "canonical_input_amendment_B",
+  "ticker": "SPY",
+  "yfinance_version": "1.6.0"
+}

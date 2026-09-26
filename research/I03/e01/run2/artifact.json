@@ -1,0 +1,327 @@
+{
+  "schema": "I03-ARTIFACT-v1",
+  "prereg_id": "I03-PREREG-v0.1",
+  "input_hash": "sha256:bde9a3045659bcb6ffdde99c52d7b088662456ed5d42737662f7c8384091c02e",
+  "implementation_id": "1dfdae6775925c0f76a2761344f8aa245f29ff6a",
+  "mode": "E01_EXPLORATORY_UNQUALIFIED",
+  "fixture_id": "EXPLORATORY-SPY-UNQUALIFIED_SPY_20260924T120016Z",
+  "config": {
+    "W_X": 20,
+    "M": 252,
+    "W_sigma": 20,
+    "tau": 20,
+    "K": [
+      10,
+      25,
+      50
+    ],
+    "k_max": 50,
+    "P": 3,
+    "B_N4": 999,
+    "B_N3": 999,
+    "alpha": 0.05,
+    "master_seed": 42,
+    "n_min": 250,
+    "m_rand": 50,
+    "iaaft_I_max": 100,
+    "iaaft_eps": 1e-08,
+    "iaaft_nonconv_frac": 0.05,
+    "n4_z_frac_min": 0.95,
+    "prereg_id": "I03-PREREG-v0.1"
+  },
+  "contract_surface": {
+    "W_X": 20,
+    "M": 252,
+    "W_sigma": 20,
+    "tau": 20,
+    "K": [
+      10,
+      25,
+      50
+    ],
+    "P": 3,
+    "B_N4": 999,
+    "B_N3": 999,
+    "alpha": 0.05,
+    "n_min": 250,
+    "iaaft_I_max": 100,
+    "iaaft_eps": 1e-08,
+    "n4_seed_doctrine": "42 + b (b=1..B_N4)",
+    "n3_seed_doctrine": "10000 + b (b=1..B_N3)",
+    "validity_seed_doctrine": "20000 + p (+ 1000*b for N4 surrogates)"
+  },
+  "blocks": [
+    {
+      "period": 1,
+      "start": 0,
+      "end": 2822,
+      "n": 2823
+    },
+    {
+      "period": 2,
+      "start": 2823,
+      "end": 5645,
+      "n": 2823
+    },
+    {
+      "period": 3,
+      "start": 5646,
+      "end": 8469,
+      "n": 2824
+    }
+  ],
+  "emnd": [
+    {
+      "period": 1,
+      "n_queries": 2571,
+      "n_skipped_undefined_x": 252,
+      "n_skipped_insufficient_pool": 0,
+      "theta_by_k": {
+        "10": 3.859335495339422,
+        "25": 4.095941103288431,
+        "50": 4.29290062392035
+      }
+    },
+    {
+      "period": 2,
+      "n_queries": 2823,
+      "n_skipped_undefined_x": 0,
+      "n_skipped_insufficient_pool": 0,
+      "theta_by_k": {
+        "10": 3.685117805772465,
+        "25": 3.8978688458478246,
+        "50": 4.074203240654269
+      }
+    },
+    {
+      "period": 3,
+      "n_queries": 2824,
+      "n_skipped_undefined_x": 0,
+      "n_skipped_insufficient_pool": 0,
+      "theta_by_k": {
+        "10": 3.5321969175125383,
+        "25": 3.731692535088638,
+        "50": 3.8991966311715283
+      }
+    }
+  ],
+  "locality": [
+    {
+      "period": 1,
+      "Lambda": 0.5136658157041173,
+      "Gamma": 0.3008102094612582,
+      "hard_degenerate": false,
+      "DIAGNOSTIC": "NON-PROMOTIONAL"
+    },
+    {
+      "period": 2,
+      "Lambda": 0.4968686821484349,
+      "Gamma": 0.29215259164476165,
+      "hard_degenerate": false,
+      "DIAGNOSTIC": "NON-PROMOTIONAL"
+    },
+    {
+      "period": 3,
+      "Lambda": 0.4758921405460369,
+      "Gamma": 0.29144092914181696,
+      "hard_degenerate": false,
+      "DIAGNOSTIC": "NON-PROMOTIONAL"
+    }
+  ],
+  "n4": {
+    "valid": true,
+    "invalid_reason": null,
+    "Z_frac": 0.9976387249114522,
+    "B_used": 999,
+    "W_sigma": 20,
+    "seed_doctrine": "42 + b",
+    "preserves": "sigma_hat_path_by_construction_on_observed_returns",
+    "does_not_claim": "rolling_stdev_recomputed_on_r_star_equals_sigma_hat"
+  },
+  "n3": {
+    "valid": false,
+    "invalid_reason": "N3_IAAFT_NONCONV_FRAC",
+    "B_requested": 999,
+    "n_converged": 0,
+    "n_nonconverged": 999,
+    "method": "IAAFT",
+    "I_max": 100,
+    "epsilon": 1e-08,
+    "seed_doctrine": "10000 + b"
+  },
+  "survival": {
+    "C4": false,
+    "C3": false,
+    "F4": false,
+    "pvalues": {
+      "N4": {
+        "1": {
+          "10": 0.666,
+          "25": 0.822,
+          "50": 0.877
+        },
+        "2": {
+          "10": 0.119,
+          "25": 0.281,
+          "50": 0.424
+        },
+        "3": {
+          "10": 0.029,
+          "25": 0.064,
+          "50": 0.115
+        }
+      },
+      "N3": {
+        "1": {
+          "10": 1.0,
+          "25": 1.0,
+          "50": 1.0
+        },
+        "2": {
+          "10": 1.0,
+          "25": 1.0,
+          "50": 1.0
+        },
+        "3": {
+          "10": 1.0,
+          "25": 1.0,
+          "50": 1.0
+        }
+      }
+    },
+    "S": {
+      "N4": {
+        "1": {
+          "10": false,
+          "25": false,
+          "50": false
+        },
+        "2": {
+          "10": false,
+          "25": false,
+          "50": false
+        },
+        "3": {
+          "10": true,
+          "25": false,
+          "50": false
+        }
+      },
+      "N3": {
+        "1": {
+          "10": false,
+          "25": false,
+          "50": false
+        },
+        "2": {
+          "10": false,
+          "25": false,
+          "50": false
+        },
+        "3": {
+          "10": false,
+          "25": false,
+          "50": false
+        }
+      }
+    }
+  },
+  "predicates": {
+    "V": true,
+    "E": false
+  },
+  "verdict": {
+    "label": "INCONCLUSIVE",
+    "nd_code": null,
+    "reason": "NEG_E"
+  },
+  "execution": {
+    "workers_requested": 4,
+    "workers_used": 4,
+    "logical_cpus": 8,
+    "note": "workers is operational only; not a scientific parameter"
+  },
+  "timing": {
+    "total_seconds": 7218.321,
+    "workers_requested": 4,
+    "workers_used": 4,
+    "checkpoint_dir": "research\\I03\\e01\\run2_ckpt",
+    "resume": false,
+    "note": "engineering observation only; no scientific performance gate"
+  },
+  "dataset": {
+    "data_class": "EXPLORATORY",
+    "qualification": "UNQUALIFIED",
+    "scientifically_promotable": false,
+    "banner": "EXPLORATORY / UNQUALIFIED / NOT SCIENTIFICALLY PROMOTABLE",
+    "source": "canonical_input_amendment_B",
+    "ticker": "SPY",
+    "yfinance_version": "1.6.0",
+    "price_field": "Adj Close",
+    "acquired_at_utc": "2026-09-24T12:00:16.920799+00:00",
+    "n_sessions": 8470,
+    "first_session": "1993-01-29",
+    "last_session": "2026-09-23",
+    "calendar_authority": false,
+    "cache_stem": "UNQUALIFIED_SPY_20260924T120016Z",
+    "adjusted_price_sha256": "sha256:bc0d68b080f1f42c56f01da43820c11425ca1fc3a80bfb0ca32647821c2488d1",
+    "log_returns_sha256": "sha256:bde9a3045659bcb6ffdde99c52d7b088662456ed5d42737662f7c8384091c02e",
+    "canonical_input": {
+      "schema": "I03-CANONICAL-INPUT-v1",
+      "directory": "data\\exploratory\\canonical_i03_spy_v1",
+      "returns_npy_file_sha256": "sha256:4aee1aaea6886a727b5f322e51af9e2c05132b32aaaa47d0d5c0dc68c795943e",
+      "source_csv_file_sha256": "sha256:ac7c6a7f081e3548d94c6c744a31b3398ccffae5129799015b3331568159b2c2",
+      "source_meta_file_sha256": "sha256:c37b7ae0ed24dd6510feef5c753f1dca8201b793e066628e1730b43ebf507caf"
+    },
+    "qc_returns": {
+      "n": 8470,
+      "n_finite_including_r0_nan_slot": 8469,
+      "r0_is_nan": true,
+      "n_nonfinite_body": 0,
+      "n_zero_body": 62,
+      "min_body": -0.1158867652303557,
+      "max_body": 0.13557709838015888
+    },
+    "authorized_snapshot_check": {
+      "price_sha256_match": true,
+      "returns_sha256_match": true,
+      "n_sessions_match": true,
+      "first_match": true,
+      "last_match": true,
+      "acquired_match": true
+    },
+    "note": "Amendment B canonical numerical input. Same authorized SPY returns payload as DR-008 / I02-E01. Not C02. Not confirmatory."
+  },
+  "input_mode": "canonical",
+  "environment": {
+    "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "executable": "C:\\Users\\Jean Marie\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+    "numpy": "2.5.3"
+  },
+  "operator": {
+    "command": "python -m quant.i03 --mode e01 --canonical-dir ...",
+    "prereg_id": "I03-PREREG-v0.1",
+    "B_N4": 999,
+    "B_N3": 999,
+    "workers_requested": 4,
+    "checkpoint_dir": "research\\I03\\e01\\run2_ckpt",
+    "resume": false,
+    "test_overrides_enabled": false,
+    "note": "workers/checkpoint_dir/resume are operational only; not scientific parameters"
+  },
+  "run_class": "I03-E01-EXPLORATORY-UNQUALIFIED",
+  "not_scientific_evidence_promotable": true,
+  "exploratory_verdict": {
+    "label": "EXPL-INCONCLUSIVE",
+    "structural_label": "INCONCLUSIVE",
+    "structural_nd_code": null,
+    "structural_reason": "NEG_E",
+    "mapping": "PASS\u2192EXPL-SUPPORT; FAIL\u2192EXPL-ABSENT; INCONCLUSIVE\u2192EXPL-INCONCLUSIVE",
+    "explicit": {
+      "EXPL-SUPPORT_ne_SCI-PASS": true,
+      "EXPL-ABSENT_ne_SCI-FAIL": true,
+      "EXPL-INCONCLUSIVE_ne_evidence_of_absence": true
+    }
+  }
+}

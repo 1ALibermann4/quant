@@ -1,0 +1,53 @@
+{
+  "b": 715,
+  "family": "N4",
+  "payload": {
+    "b": 715,
+    "family": "N4",
+    "locality": [
+      {
+        "Gamma": 0.28355637224729674,
+        "Lambda": 0.5133111267353884,
+        "hard_degenerate": false,
+        "n_queries_used": 2571,
+        "period": 1
+      },
+      {
+        "Gamma": 0.2710413767096726,
+        "Lambda": 0.5021178864074534,
+        "hard_degenerate": false,
+        "n_queries_used": 2823,
+        "period": 2
+      },
+      {
+        "Gamma": 0.2722218787741626,
+        "Lambda": 0.48302285717419224,
+        "hard_degenerate": false,
+        "n_queries_used": 2824,
+        "period": 3
+      }
+    ],
+    "seed": 757,
+    "theta": {
+      "1": {
+        "10": 3.8396288136316947,
+        "25": 4.06200134785911,
+        "50": 4.249497061166366
+      },
+      "2": {
+        "10": 3.688854566165222,
+        "25": 3.885168734810093,
+        "50": 4.051323562405007
+      },
+      "3": {
+        "10": 3.5829692113551994,
+        "25": 3.771113039542832,
+        "50": 3.9288019707033137
+      }
+    }
+  },
+  "payload_sha256": "sha256:66e37624ea38ed7c56ffb348c915cc53fff03128bafd4ffedb86bdf948e86a6a",
+  "run_id": "e887ab0ebdf2d55fd9cb694a0c99a8b765214300366732424ff38ef3bf21a17a",
+  "schema": "I03-CHECKPOINT-RECORD-v1",
+  "seed": 757
+}

@@ -1,0 +1,33 @@
+{
+  "B_n3": 999,
+  "B_n4": 999,
+  "config": {
+    "B_N3": 999,
+    "B_N4": 999,
+    "K": [
+      10,
+      25,
+      50
+    ],
+    "M": 252,
+    "P": 3,
+    "W_X": 20,
+    "W_sigma": 20,
+    "alpha": 0.05,
+    "iaaft_I_max": 100,
+    "iaaft_eps": 1e-08,
+    "iaaft_nonconv_frac": 0.05,
+    "k_max": 50,
+    "m_rand": 50,
+    "master_seed": 42,
+    "n4_z_frac_min": 0.95,
+    "n_min": 250,
+    "prereg_id": "I03-PREREG-v0.1",
+    "tau": 20
+  },
+  "do_loc_n4": true,
+  "implementation": "I03-PERF-01-PHASE1C",
+  "input_sha256": "sha256:bde9a3045659bcb6ffdde99c52d7b088662456ed5d42737662f7c8384091c02e",
+  "run_id": "e887ab0ebdf2d55fd9cb694a0c99a8b765214300366732424ff38ef3bf21a17a",
+  "schema": "I03-CHECKPOINT-MANIFEST-v1"
+}

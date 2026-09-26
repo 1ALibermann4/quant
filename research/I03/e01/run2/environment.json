@@ -1,0 +1,16 @@
+{
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "executable": "C:\\Users\\Jean Marie\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+  "numpy": "2.5.3",
+  "elapsed_seconds": 7218.320502000002,
+  "input_mode": "canonical",
+  "dataset": {
+    "cache_stem": "UNQUALIFIED_SPY_20260924T120016Z",
+    "log_returns_sha256": "sha256:bde9a3045659bcb6ffdde99c52d7b088662456ed5d42737662f7c8384091c02e",
+    "adjusted_price_sha256": "sha256:bc0d68b080f1f42c56f01da43820c11425ca1fc3a80bfb0ca32647821c2488d1"
+  },
+  "exploratory_verdict": "EXPL-INCONCLUSIVE",
+  "structural_verdict": "INCONCLUSIVE",
+  "exit": 0
+}
