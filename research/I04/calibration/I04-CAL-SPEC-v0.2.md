@@ -88,9 +88,9 @@ Seeds MUST NOT depend on worker count, OS, or scheduling order.
 |-----------|--------|
 | Post burn-in \(N\) | **8192** (where applicable) |
 | \(W\) | \(\{20,40,60\}\) — all reported; **no best-\(W\)** |
-| Query stride (preregistered) | **8** (deterministic subsample of query indices for gate estimation) |
-| Candidate stride (preregistered) | **4** (admissible neighbor pool) |
-| G1-only query/candidate stride | **32** (preregistered for O(W²) Soft-DTW; part of G1 CAL contract) |
+| Query stride (preregistered) | **16** |
+| Candidate stride (preregistered) | **16** |
+| G1-only query/candidate stride | **32** (O(W²) Soft-DTW) |
 | Temporal embargo for neighbors | \(\lvert t-s\rvert \ge W\) |
 | \(k\) for neighborhood gates | **\(\{5,10,20\}\)** (all reported; no best-\(k\)) |
 

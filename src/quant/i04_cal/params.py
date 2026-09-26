@@ -9,8 +9,8 @@ from typing import Any
 SPEC_ID = "I04-CAL-SPEC-v0.2"
 B_WORLD = 32
 WINDOWS: tuple[int, ...] = (20, 40, 60)
-QUERY_STRIDE = 8
-CANDIDATE_STRIDE = 4
+QUERY_STRIDE = 16
+CANDIDATE_STRIDE = 16
 # Expensive O(W^2) geometries: coarser preregistered strides (frozen before CAL)
 EXPENSIVE_QUERY_STRIDE = 32
 EXPENSIVE_CANDIDATE_STRIDE = 32

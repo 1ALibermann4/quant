@@ -168,8 +168,12 @@ def run_calibration(
             fout.write(json.dumps(row, default=str) + "\n")
             fout.flush()
             n_done += 1
-            if n_done % 10 == 0:
-                print(f"I04-CAL cells {n_done}/{len(cells)}", flush=True)
+            if n_done % 1 == 0:
+                print(
+                    f"I04-CAL cells {n_done}/{len(cells)} last={row['cell_key']} "
+                    f"status={row.get('status')}",
+                    flush=True,
+                )
 
     elapsed = time.perf_counter() - t0
     # Determine completeness: count expected without max_cells
