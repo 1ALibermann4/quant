@@ -89,6 +89,15 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="HAT: write/overwrite the synthetic HAT fixture into --fixture-dir",
     )
+    p.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help=(
+            "Operational process workers for surrogate batteries (PERF-01 Phase 1B). "
+            "Not a scientific parameter. Default 1 = serial reference."
+        ),
+    )
     return p
 
 
@@ -108,14 +117,20 @@ def _run_hat(args: argparse.Namespace) -> int:
     assert digest == meta["sha256"]
 
     cfg = DEFAULT_CONFIG
+    workers = int(getattr(args, "workers", 1) or 1)
+    if workers < 1:
+        raise SystemExit("--workers must be >= 1")
     t0 = time.perf_counter()
-    # Official HAT: full frozen B=999, full locality — no overrides
-    result = run_structural_analysis(returns, cfg)
+    # Official HAT: full frozen B=999, full locality — no scientific overrides
+    result = run_structural_analysis(returns, cfg, workers=workers)
     elapsed = time.perf_counter() - t0
 
     impl = _git_head() or "unknown"
     timing = {
         "total_seconds": round(elapsed, 3),
+        "workers_requested": workers,
+        "workers_used": result.workers_used,
+        "logical_cpus": os.cpu_count(),
         "note": "engineering observation only; no scientific performance gate",
     }
     artifact = artifact_dict(

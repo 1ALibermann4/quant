@@ -19,7 +19,7 @@ from quant.i03.locality import (
     locality_validity_ok,
 )
 from quant.i03.n3 import N3BatteryMeta, generate_n3_battery
-from quant.i03.n4 import N4ScalePath, generate_n4_battery
+from quant.i03.n4 import N4ScalePath, build_n4_scale_path, generate_n4_battery
 from quant.i03.params import DEFAULT_CONFIG, I03Config
 from quant.i03.verdict import VerdictInput, VerdictResult, decide_verdict
 
@@ -44,6 +44,8 @@ class I03RunResult:
     verdict: VerdictResult
     B_n4_used: int
     B_n3_used: int
+    workers_requested: int = 1
+    workers_used: int = 1
 
 
 def _x_defined_mask(states: np.ndarray) -> np.ndarray:
@@ -70,12 +72,17 @@ def run_structural_analysis(
     B_n4: int | None = None,
     B_n3: int | None = None,
     compute_locality_on_n4: bool = True,
+    workers: int = 1,
 ) -> I03RunResult:
     """Run I03 structural pipeline on a return array (no download).
 
     ``B_n4`` / ``B_n3`` / ``compute_locality_on_n4=False`` are **test-only**.
     They require ``I03_ALLOW_TEST_OVERRIDES=1``. Production callers must omit
     overrides so frozen ``cfg.B_N4`` / ``cfg.B_N3`` and full locality apply.
+
+    ``workers`` is **operational only** (PERF-01 Phase 1B). It does not change
+    seeds, ``B``, or any scientific constant. ``workers=1`` is the serial
+    reference path.
     """
 
     cfg = cfg or DEFAULT_CONFIG
@@ -87,49 +94,86 @@ def run_structural_analysis(
             "I03 test-only overrides require I03_ALLOW_TEST_OVERRIDES=1"
         )
 
+    workers_req = int(workers)
+    if workers_req < 1:
+        raise ValueError("workers must be >= 1")
+
     r = np.asarray(returns, dtype=np.float64)
     T = r.shape[0]
     blocks = build_blocks(T, cfg)
 
     states, defined, emnd_obs = _emnd_on_returns(r, blocks, cfg)
 
-    n4_scale, n4_sur = generate_n4_battery(r, cfg, B=B_n4)
-    n3_meta, n3_sur = generate_n3_battery(r, cfg, B=B_n3)
-    Bn4 = len(n4_sur)
-    Bn3 = len(n3_sur)
+    n4_scale = build_n4_scale_path(r, cfg)
+    Bn4 = cfg.B_N4 if B_n4 is None else int(B_n4)
+    Bn3 = cfg.B_N3 if B_n3 is None else int(B_n3)
+    if Bn4 < 1 or Bn3 < 1:
+        raise ValueError("B must be positive")
 
-    # PERF-01 Phase 1A: fuse N4 E-MND + locality on the same states pass
-    # (scientifically identical; avoids rebuilding G0/E-MND solely for locality).
-    theta_n4: list[dict[int, dict[int, float]]] = []
-    loc_n4: list[tuple[LocalityBlockDiagnostic, ...]] = []
     do_loc_n4 = bool(compute_locality_on_n4 and n4_scale.valid)
-    for i, rs in enumerate(n4_sur, start=1):
-        st, df, em = _emnd_on_returns(rs, blocks, cfg)
-        theta_n4.append(_theta_map(em))
-        if do_loc_n4:
-            loc_n4.append(
-                tuple(
-                    locality_for_block(
-                        st, df, b, cfg, seed=20_000 + b.period + 1000 * i
-                    )
-                    for b in blocks
-                )
-            )
-        if i == Bn4 or i % 50 == 0:
-            print(f"N4 E-MND {i}/{Bn4}", file=sys.stderr, flush=True)
-            if do_loc_n4:
-                print(f"N4 locality {i}/{Bn4}", file=sys.stderr, flush=True)
 
-    theta_n3: list[dict[int, dict[int, float]]] = []
-    for i, rs in enumerate(n3_sur, start=1):
-        _s, _d, em = _emnd_on_returns(rs, blocks, cfg)
-        theta_n3.append(_theta_map(em))
-        if i == Bn3 or i % 50 == 0:
-            print(f"N3 E-MND {i}/{Bn3}", file=sys.stderr, flush=True)
+    if workers_req == 1:
+        # Phase-1A serial fused path (reference).
+        _, n4_sur = generate_n4_battery(r, cfg, B=Bn4)
+        n3_meta, n3_sur = generate_n3_battery(r, cfg, B=Bn3)
+        theta_n4: list[dict[int, dict[int, float]]] = []
+        loc_n4: list[tuple[LocalityBlockDiagnostic, ...]] = []
+        for i, rs in enumerate(n4_sur, start=1):
+            st, df, em = _emnd_on_returns(rs, blocks, cfg)
+            theta_n4.append(_theta_map(em))
+            if do_loc_n4:
+                loc_n4.append(
+                    tuple(
+                        locality_for_block(
+                            st, df, b, cfg, seed=20_000 + b.period + 1000 * i
+                        )
+                        for b in blocks
+                    )
+                )
+            if i == Bn4 or i % 50 == 0:
+                print(f"N4 E-MND {i}/{Bn4}", file=sys.stderr, flush=True)
+                if do_loc_n4:
+                    print(f"N4 locality {i}/{Bn4}", file=sys.stderr, flush=True)
+
+        theta_n3: list[dict[int, dict[int, float]]] = []
+        for i, rs in enumerate(n3_sur, start=1):
+            _s, _d, em = _emnd_on_returns(rs, blocks, cfg)
+            theta_n3.append(_theta_map(em))
+            if i == Bn3 or i % 50 == 0:
+                print(f"N3 E-MND {i}/{Bn3}", file=sys.stderr, flush=True)
+        workers_used = 1
+    else:
+        from quant.i03.parallel import (
+            run_n3_battery_parallel,
+            run_n4_battery_parallel,
+        )
+
+        print(
+            f"N4 parallel battery B={Bn4} workers={workers_req}",
+            file=sys.stderr,
+            flush=True,
+        )
+        theta_n4, loc_n4 = run_n4_battery_parallel(
+            r,
+            n4_scale,
+            cfg,
+            B=Bn4,
+            workers=workers_req,
+            do_loc_n4=do_loc_n4,
+            blocks=blocks,
+        )
+        print(
+            f"N3 parallel battery B={Bn3} workers={workers_req}",
+            file=sys.stderr,
+            flush=True,
+        )
+        n3_meta, theta_n3, _ordered_n3 = run_n3_battery_parallel(
+            r, cfg, B=Bn3, workers=workers_req, blocks=blocks
+        )
+        workers_used = workers_req
 
     survival = build_survival_grid(_theta_map(emnd_obs), theta_n4, theta_n3, cfg)
 
-    # Locality observed
     loc_obs = tuple(
         locality_for_block(states, defined, b, cfg, seed=20_000 + b.period)
         for b in blocks
@@ -138,8 +182,6 @@ def run_structural_analysis(
     V = bool(n4_scale.valid) and locality_validity_ok(loc_obs, loc_n4) if loc_n4 else False
     if not n4_scale.valid:
         V = False
-    # If we skipped N4 locality (empty), hard-fail V only when scale invalid;
-    # when compute_locality_on_n4 False (unit tests), treat V from hard checks only
     if not compute_locality_on_n4:
         V = all(not d.hard_degenerate and d.Lambda < 1.0 for d in loc_obs)
 
@@ -166,6 +208,8 @@ def run_structural_analysis(
         verdict=verdict,
         B_n4_used=Bn4,
         B_n3_used=Bn3,
+        workers_requested=workers_req,
+        workers_used=workers_used,
     )
 
 
@@ -269,6 +313,12 @@ def artifact_dict(
             "label": result.verdict.label.value,
             "nd_code": result.verdict.nd_code,
             "reason": result.verdict.reason,
+        },
+        "execution": {
+            "workers_requested": result.workers_requested,
+            "workers_used": result.workers_used,
+            "logical_cpus": os.cpu_count(),
+            "note": "workers is operational only; not a scientific parameter",
         },
     }
     if timing is not None:
