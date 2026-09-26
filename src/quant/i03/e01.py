@@ -139,11 +139,17 @@ def run_e01(
     cache_dir: Path | None = None,
     out_dir: Path,
     canonical_dir: Path | None = None,
+    workers: int = 1,
+    checkpoint_dir: Path | None = None,
+    resume: bool = False,
 ) -> int:
     """Execute one I03-E01 exploratory market run. Returns process exit code.
 
     Provide exactly one of ``cache_dir`` (CSV) or ``canonical_dir`` (Amendment B).
     Scientific pipeline ``run_structural_analysis`` is unchanged.
+
+    ``workers`` / ``checkpoint_dir`` / ``resume`` are **operational only**
+    (PERF-01 Phase 1B/1C). Defaults preserve the historical serial path.
     """
 
     if os.environ.get("I03_ALLOW_TEST_OVERRIDES") == "1":
@@ -152,6 +158,14 @@ def run_e01(
             file=sys.stderr,
         )
         del os.environ["I03_ALLOW_TEST_OVERRIDES"]
+
+    workers_req = int(workers)
+    if workers_req < 1:
+        print("STOP: --workers must be >= 1", file=sys.stderr)
+        return 2
+    if resume and checkpoint_dir is None:
+        print("STOP: --resume requires --checkpoint-dir", file=sys.stderr)
+        return 2
 
     has_cache = cache_dir is not None
     has_canon = canonical_dir is not None
@@ -246,8 +260,20 @@ def run_e01(
     )
 
     cfg = DEFAULT_CONFIG
+    from quant.i03.checkpoint import CheckpointError
+
     t0 = time.perf_counter()
-    result = run_structural_analysis(returns, cfg)
+    try:
+        result = run_structural_analysis(
+            returns,
+            cfg,
+            workers=workers_req,
+            checkpoint_dir=checkpoint_dir,
+            resume=resume,
+        )
+    except CheckpointError as e:
+        print(f"STOP: {e}", file=sys.stderr)
+        return 2
     elapsed = time.perf_counter() - t0
 
     impl = _git_head() or "unknown"
@@ -261,6 +287,10 @@ def run_e01(
         mode="E01_EXPLORATORY_UNQUALIFIED",
         timing={
             "total_seconds": round(elapsed, 3),
+            "workers_requested": workers_req,
+            "workers_used": result.workers_used,
+            "checkpoint_dir": str(checkpoint_dir) if checkpoint_dir else None,
+            "resume": bool(resume),
             "note": "engineering observation only; no scientific performance gate",
         },
         fixture_id=fixture_id,
@@ -282,7 +312,14 @@ def run_e01(
         "prereg_id": PREREG_ID,
         "B_N4": cfg.B_N4,
         "B_N3": cfg.B_N3,
+        "workers_requested": workers_req,
+        "checkpoint_dir": str(checkpoint_dir) if checkpoint_dir else None,
+        "resume": bool(resume),
         "test_overrides_enabled": False,
+        "note": (
+            "workers/checkpoint_dir/resume are operational only; "
+            "not scientific parameters"
+        ),
     }
     artifact["run_class"] = "I03-E01-EXPLORATORY-UNQUALIFIED"
     artifact["not_scientific_evidence_promotable"] = True

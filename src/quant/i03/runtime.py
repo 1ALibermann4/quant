@@ -134,7 +134,7 @@ def _run_hat(args: argparse.Namespace) -> int:
     assert digest == meta["sha256"]
 
     cfg = DEFAULT_CONFIG
-    workers = int(getattr(args, "workers", 1) or 1)
+    workers = int(getattr(args, "workers", 1))
     if workers < 1:
         raise SystemExit("--workers must be >= 1")
     ckpt = getattr(args, "checkpoint_dir", None)
@@ -244,13 +244,26 @@ def main(argv: list[str] | None = None) -> int:
     if args.mode == "e01":
         from quant.i03.e01 import run_e01
 
+        workers = int(getattr(args, "workers", 1))
+        if workers < 1:
+            raise SystemExit("--workers must be >= 1")
+        ckpt = getattr(args, "checkpoint_dir", None)
+        resume = bool(getattr(args, "resume", False))
+        if resume and ckpt is None:
+            raise SystemExit("--resume requires --checkpoint-dir")
+        common = {
+            "out_dir": args.out_dir,
+            "workers": workers,
+            "checkpoint_dir": ckpt,
+            "resume": resume,
+        }
         if args.canonical_dir is not None:
             return run_e01(
                 canonical_dir=args.canonical_dir,
-                out_dir=args.out_dir,
                 cache_dir=None,
+                **common,
             )
-        return run_e01(cache_dir=args.cache_dir, out_dir=args.out_dir)
+        return run_e01(cache_dir=args.cache_dir, **common)
     return _run_hat(args)
 
 
