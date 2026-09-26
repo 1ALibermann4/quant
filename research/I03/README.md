@@ -14,6 +14,7 @@
 > **L2 report :** [I03-L2-CONTRACT-TEST.md](I03-L2-CONTRACT-TEST.md)  
 > **HAT report :** [I03-HAT.md](I03-HAT.md)  
 > **E01 :** [I03-E01.md](I03-E01.md) — EXPLORATORY / UNQUALIFIED  
+> **Amendment B :** [I03-AMENDMENT-B-CANONICAL-INPUT.md](I03-AMENDMENT-B-CANONICAL-INPUT.md) — transport only  
 > **Code :** `src/quant/i03/`
 
 ```text
@@ -59,6 +60,10 @@ E01 (exploratory SPY / DR-008 cache — Windows `py -3.12` for hash match):
 $env:PYTHONPATH = "src"
 py -3.12 -m quant.i03 --mode e01 --cache-dir data/exploratory --out-dir research/I03/e01/run1
 ```
+
+Amendment B (canonical returns artifact — produce on Windows; consume on Cloud):
+see [I03-AMENDMENT-B-CANONICAL-INPUT.md](I03-AMENDMENT-B-CANONICAL-INPUT.md).
+**Real SPY canonical artifact and E01 not authorized in the Amendment B milestone.**
 
 See [I03-E01.md](I03-E01.md).
 
