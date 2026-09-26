@@ -98,12 +98,27 @@ def run_structural_analysis(
     Bn4 = len(n4_sur)
     Bn3 = len(n3_sur)
 
+    # PERF-01 Phase 1A: fuse N4 E-MND + locality on the same states pass
+    # (scientifically identical; avoids rebuilding G0/E-MND solely for locality).
     theta_n4: list[dict[int, dict[int, float]]] = []
+    loc_n4: list[tuple[LocalityBlockDiagnostic, ...]] = []
+    do_loc_n4 = bool(compute_locality_on_n4 and n4_scale.valid)
     for i, rs in enumerate(n4_sur, start=1):
-        _s, _d, em = _emnd_on_returns(rs, blocks, cfg)
+        st, df, em = _emnd_on_returns(rs, blocks, cfg)
         theta_n4.append(_theta_map(em))
+        if do_loc_n4:
+            loc_n4.append(
+                tuple(
+                    locality_for_block(
+                        st, df, b, cfg, seed=20_000 + b.period + 1000 * i
+                    )
+                    for b in blocks
+                )
+            )
         if i == Bn4 or i % 50 == 0:
             print(f"N4 E-MND {i}/{Bn4}", file=sys.stderr, flush=True)
+            if do_loc_n4:
+                print(f"N4 locality {i}/{Bn4}", file=sys.stderr, flush=True)
 
     theta_n3: list[dict[int, dict[int, float]]] = []
     for i, rs in enumerate(n3_sur, start=1):
@@ -119,21 +134,6 @@ def run_structural_analysis(
         locality_for_block(states, defined, b, cfg, seed=20_000 + b.period)
         for b in blocks
     )
-
-    loc_n4: list[tuple[LocalityBlockDiagnostic, ...]] = []
-    if compute_locality_on_n4 and n4_scale.valid:
-        for bi, rs in enumerate(n4_sur, start=1):
-            st, df, _ = _emnd_on_returns(rs, blocks, cfg)
-            loc_n4.append(
-                tuple(
-                    locality_for_block(
-                        st, df, b, cfg, seed=20_000 + b.period + 1000 * bi
-                    )
-                    for b in blocks
-                )
-            )
-            if bi == Bn4 or bi % 50 == 0:
-                print(f"N4 locality {bi}/{Bn4}", file=sys.stderr, flush=True)
 
     V = bool(n4_scale.valid) and locality_validity_ok(loc_obs, loc_n4) if loc_n4 else False
     if not n4_scale.valid:

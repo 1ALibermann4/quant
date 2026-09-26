@@ -1,6 +1,8 @@
 """Locality validity diagnostics C6-D (I03-PREREG-v0.1 §10).
 
 DIAGNOSTIC — NON-PROMOTIONAL. Not recurrence estimands.
+
+PERF-01 Phase 1A: exact serial kernel optimization (bitwise-equivalent).
 """
 
 from __future__ import annotations
@@ -10,8 +12,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from quant.i03.blocks import TemporalBlock
-from quant.i03.emnd import admissible_pool
-from quant.i03.g0 import euclidean_distance
+from quant.i03.emnd import iter_block_query_pools
 from quant.i03.params import I03Config
 
 
@@ -31,14 +32,10 @@ def _query_list(
     x_defined: np.ndarray,
     cfg: I03Config,
 ) -> list[int]:
-    out: list[int] = []
-    for t in block.indices:
-        if not x_defined[t]:
-            continue
-        pool = admissible_pool(int(t), block, x_defined, cfg)
-        if pool.size >= cfg.k_max:
-            out.append(int(t))
-    return out
+    """Admissible query times (ascending). Kept for L1/L2 API compatibility."""
+
+    _, _, queries = iter_block_query_pools(block, x_defined, cfg)
+    return [t for t, _ in queries]
 
 
 def locality_for_block(
@@ -51,14 +48,13 @@ def locality_for_block(
 ) -> LocalityBlockDiagnostic:
     """Compute ``Lambda_p``, ``Gamma_p`` with prereg RNG stream."""
 
-    queries = _query_list(block, x_defined, cfg)
+    _, _, queries = iter_block_query_pools(block, x_defined, cfg)
     rng = np.random.default_rng(seed)
     lambdas: list[float] = []
     gammas: list[float] = []
     hard = False
 
-    for t in queries:  # increasing order already
-        pool = admissible_pool(t, block, x_defined, cfg)
+    for t, pool in queries:  # increasing order already
         qx = states[t]
         diff = states[pool] - qx
         dists = np.sqrt(np.sum(diff * diff, axis=1))
@@ -115,7 +111,6 @@ def locality_validity_ok(
 
     if not observed:
         return False
-    # medians over N4 surrogates per period
     for obs in observed:
         p = obs.period
         if obs.hard_degenerate or not np.isfinite(obs.Lambda) or not np.isfinite(obs.Gamma):

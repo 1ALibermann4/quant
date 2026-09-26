@@ -83,14 +83,32 @@ def x_is_defined(returns: np.ndarray, t: int, params: I02Params) -> bool:
 
 
 def all_state_vectors_x(returns: np.ndarray, params: I02Params) -> np.ndarray:
-    """Stack ``X_t``; NaN rows where undefined (including ``σ̂=0``)."""
+    """Stack ``X_t``; NaN rows where undefined (including ``σ̂=0``).
 
-    n = returns.shape[0]
-    X = np.full((n, params.W_X), np.nan, dtype=np.float64)
+    PERF-01 Phase 1A: same arithmetic as ``state_vector_x`` per ``t``, without
+    exception-driven control flow (bitwise-identical floats on valid rows).
+    """
+
+    r = np.asarray(returns, dtype=np.float64)
+    n = r.shape[0]
+    M = params.M
+    W_X = params.W_X
+    X = np.full((n, W_X), np.nan, dtype=np.float64)
     start = first_valid_x_index(params)
     for t in range(start, n):
-        try:
-            X[t] = state_vector_x(returns, t, params)
-        except XUndefinedError:
-            pass
+        mu_start = t - M + 1
+        if mu_start < 1:
+            continue
+        w_mu = r[mu_start : t + 1]
+        if w_mu.shape[0] != M or np.isnan(w_mu).any():
+            continue
+        mu = float(np.mean(w_mu))
+        sigma = float(np.std(w_mu, ddof=1))
+        if sigma == 0.0:
+            continue
+        x_start = t - W_X + 1
+        w_x = r[x_start : t + 1]
+        if w_x.shape[0] != W_X or np.isnan(w_x).any():
+            continue
+        X[t] = (w_x - mu) / sigma
     return X
