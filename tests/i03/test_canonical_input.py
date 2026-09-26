@@ -9,12 +9,19 @@ import numpy as np
 import pytest
 
 from quant.i03.canonical_input import (
+    AUTHORIZED_MANIFEST_GIT_TRANSPORT_SHA256,
+    AUTHORIZED_MANIFEST_PRODUCER_WT_CRLF_SHA256,
+    AUTHORIZED_RETURNS_NPY_FILE_SHA256,
+    AUTHORIZED_RETURNS_SHA256,
     SCHEMA_ID,
     CanonicalInputError,
     canonicalize_returns,
+    canonicalize_text_utf8_lf,
     file_sha256,
     load_canonical_artifact,
     payload_sha256,
+    serialize_manifest_canonical,
+    text_transport_sha256,
     write_canonical_artifact,
 )
 from quant.i03.compare_hat import compare_artifacts
@@ -272,3 +279,68 @@ def test_deterministic_roundtrip_and_pipeline_semantic_identity(
     art_b = artifact_dict(b, input_hash=payload_sha256(loaded), mode="TEST")
     cmp = compare_artifacts(art_a, art_b)
     assert cmp["status"] == "SEMANTIC_IDENTICAL", cmp
+
+
+def test_manifest_transport_identity_lf_canonical_and_crlf_invariant(
+    tmp_path: Path,
+) -> None:
+    """Transport hash is LF Git identity; CRLF checkout must not change it."""
+
+    original, man = _write_synth(tmp_path)
+    man_path = tmp_path / "manifest.json"
+    raw_lf = man_path.read_bytes()
+    assert b"\r" not in raw_lf
+    assert serialize_manifest_canonical(man) == raw_lf
+
+    transport = text_transport_sha256(man_path)
+    assert transport == text_transport_sha256(raw_lf)
+
+    # Simulate Windows autocrlf checkout of the same logical JSON.
+    crlf_path = tmp_path / "manifest_crlf.json"
+    crlf_bytes = raw_lf.replace(b"\n", b"\r\n")
+    assert b"\r\n" in crlf_bytes
+    crlf_path.write_bytes(crlf_bytes)
+    assert text_transport_sha256(crlf_path) == transport
+    assert canonicalize_text_utf8_lf(crlf_bytes) == raw_lf
+
+    # Raw working-tree hash may differ under CRLF; transport hash must not.
+    assert file_sha256(crlf_path) != file_sha256(man_path)
+
+    npy_before = file_sha256(tmp_path / "returns.npy")
+    payload_before = payload_sha256(original)
+    loaded, _ = load_canonical_artifact(tmp_path)
+    assert file_sha256(tmp_path / "returns.npy") == npy_before
+    assert payload_sha256(loaded) == payload_before
+    assert np.array_equal(original, loaded, equal_nan=True)
+
+
+def test_authorized_spy_manifest_transport_constants_and_crlf_checkout(
+    tmp_path: Path,
+) -> None:
+    """M1 artifact: Git LF transport hash; CRLF WT hash is historical only."""
+
+    root = Path(__file__).resolve().parents[2]
+    src = root / "data" / "exploratory" / "canonical_i03_spy_v1"
+    if not (src / "returns.npy").is_file():
+        pytest.skip("authorized SPY canonical artifact not present")
+
+    npy_h = file_sha256(src / "returns.npy")
+    assert npy_h == AUTHORIZED_RETURNS_NPY_FILE_SHA256
+    man_raw = (src / "manifest.json").read_bytes()
+    transport = text_transport_sha256(man_raw)
+    assert transport == AUTHORIZED_MANIFEST_GIT_TRANSPORT_SHA256
+    # Historical M1 CRLF working-tree hash (NON-CANONICAL for transport).
+    crlf = canonicalize_text_utf8_lf(man_raw).replace(b"\n", b"\r\n")
+    assert (
+        "sha256:" + __import__("hashlib").sha256(crlf).hexdigest()
+        == AUTHORIZED_MANIFEST_PRODUCER_WT_CRLF_SHA256
+    )
+
+    # Copy artifact and force CRLF manifest; authorized gate must still PASS.
+    dest = tmp_path / "canon"
+    dest.mkdir()
+    (dest / "returns.npy").write_bytes((src / "returns.npy").read_bytes())
+    (dest / "manifest.json").write_bytes(crlf)
+    loaded, man = load_canonical_artifact(dest, require_authorized_spy=True)
+    assert payload_sha256(loaded) == AUTHORIZED_RETURNS_SHA256
+    assert man["returns_npy_file_sha256"] == AUTHORIZED_RETURNS_NPY_FILE_SHA256

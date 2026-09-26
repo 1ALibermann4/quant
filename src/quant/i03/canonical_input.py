@@ -44,6 +44,19 @@ AUTHORIZED_META_FILE_SHA256 = (
 AUTHORIZED_CSV_SIZE = 1_080_047
 AUTHORIZED_META_SIZE = 974
 
+# Authorized SPY canonical artifact (M1) — dual hash disciplines for text vs binary.
+AUTHORIZED_RETURNS_NPY_FILE_SHA256 = (
+    "sha256:4aee1aaea6886a727b5f322e51af9e2c05132b32aaaa47d0d5c0dc68c795943e"
+)
+# Git blob / Cloud LF bytes — CANONICAL FOR GIT TRANSPORT (M2 discovery).
+AUTHORIZED_MANIFEST_GIT_TRANSPORT_SHA256 = (
+    "sha256:9d285f24f031424aa016313195b25917e189f8aa6cb0e5960c18587cee0cbf8f"
+)
+# M1 Windows working-tree CRLF bytes — historical provenance only; NON-CANONICAL.
+AUTHORIZED_MANIFEST_PRODUCER_WT_CRLF_SHA256 = (
+    "sha256:4cf1e219a824f5a73739c8eaaa160a81e4caf92a5b0e6fba91a70c690f5c6901"
+)
+
 
 class CanonicalInputError(RuntimeError):
     """Fail-closed validation / production error for Amendment B."""
@@ -76,6 +89,50 @@ def payload_sha256(returns: np.ndarray) -> str:
 
     arr = np.ascontiguousarray(returns, dtype="<f8")
     return "sha256:" + hashlib.sha256(arr.tobytes(order="C")).hexdigest()
+
+
+def canonicalize_text_utf8_lf(raw: bytes) -> bytes:
+    """Normalize UTF-8 text to LF-only (Git transport identity for JSON).
+
+    CRLF working-tree checkouts hash to the same transport identity as the
+    committed LF blob. Lone CR is rejected.
+    """
+
+    if b"\r\n" in raw:
+        raw = raw.replace(b"\r\n", b"\n")
+    if b"\r" in raw:
+        raise CanonicalInputError("text artifact contains unexpected CR bytes")
+    return raw
+
+
+def text_transport_sha256(raw_or_path: bytes | Path) -> str:
+    """SHA-256 of LF-canonical UTF-8 text (CANONICAL GIT TRANSPORT FILE HASH)."""
+
+    raw = (
+        Path(raw_or_path).read_bytes()
+        if not isinstance(raw_or_path, (bytes, bytearray))
+        else bytes(raw_or_path)
+    )
+    return "sha256:" + hashlib.sha256(canonicalize_text_utf8_lf(raw)).hexdigest()
+
+
+def serialize_manifest_canonical(manifest: dict[str, Any]) -> bytes:
+    """Deterministic UTF-8 JSON with LF newlines only (no OS text-mode translation)."""
+
+    text = json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+    raw = text.encode("utf-8")
+    if b"\r" in raw:
+        raise CanonicalInputError("canonical manifest serialization must be LF-only")
+    return raw
+
+
+def write_manifest_json(path: Path, manifest: dict[str, Any]) -> str:
+    """Write manifest via binary LF bytes; return GIT TRANSPORT FILE HASH."""
+
+    path = Path(path)
+    raw = serialize_manifest_canonical(manifest)
+    path.write_bytes(raw)
+    return "sha256:" + hashlib.sha256(raw).hexdigest()
 
 
 def canonicalize_returns(returns: np.ndarray) -> np.ndarray:
@@ -205,7 +262,10 @@ def build_manifest(
         "r0_is_nan": True,
         "note": (
             "FLOAT64 PAYLOAD HASH = SHA-256 of float64 little-endian C-order bytes. "
-            "FILE HASH = SHA-256 of the on-disk .npy container. "
+            "RETURNS.NPY FILE HASH = SHA-256 of the on-disk .npy container. "
+            "MANIFEST GIT TRANSPORT FILE HASH = SHA-256 of UTF-8 JSON with LF "
+            "newlines (Git blob / transferred bytes); never use OS CRLF "
+            "working-tree bytes as transport identity. "
             "Amendment B transport only — not a scientific redesign."
         ),
         "producer_note": producer_note,
@@ -260,10 +320,7 @@ def write_canonical_artifact(
         producer_note=producer_note,
         extra=extra,
     )
-    (out_dir / MANIFEST_FILENAME).write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    write_manifest_json(out_dir / MANIFEST_FILENAME, manifest)
     return manifest
 
 
@@ -322,12 +379,24 @@ def load_canonical_artifact(
         )
 
     if require_authorized_spy:
-        _assert_authorized_manifest(manifest, payload_h)
+        _assert_authorized_manifest(
+            manifest,
+            payload_h,
+            npy_file_h=file_h,
+            man_path=man_path,
+        )
 
     return returns, manifest
 
 
-def _assert_authorized_manifest(manifest: dict[str, Any], payload_h: str) -> None:
+def _assert_authorized_manifest(
+    manifest: dict[str, Any],
+    payload_h: str,
+    *,
+    npy_file_h: str,
+    man_path: Path,
+) -> None:
+    transport_h = text_transport_sha256(man_path)
     checks = {
         "stem": manifest.get("source_snapshot_stem") == AUTHORIZED_CACHE_STEM,
         "n": manifest.get("n_sessions") == AUTHORIZED_N_SESSIONS,
@@ -339,6 +408,9 @@ def _assert_authorized_manifest(manifest: dict[str, Any], payload_h: str) -> Non
         "csv_file": manifest.get("source_csv_file_sha256") == AUTHORIZED_CSV_FILE_SHA256,
         "meta_file": manifest.get("source_meta_file_sha256")
         == AUTHORIZED_META_FILE_SHA256,
+        "npy_file": npy_file_h == AUTHORIZED_RETURNS_NPY_FILE_SHA256,
+        "manifest_git_transport": transport_h
+        == AUTHORIZED_MANIFEST_GIT_TRANSPORT_SHA256,
         "class": manifest.get("classification") == "EXPLORATORY",
         "qual": manifest.get("qualification") == "UNQUALIFIED",
     }

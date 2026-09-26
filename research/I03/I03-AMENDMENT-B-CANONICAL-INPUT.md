@@ -73,12 +73,28 @@ amendment). Prereg text is **not** rewritten.
 **FLOAT64 PAYLOAD HASH** = SHA-256 of float64 LE C-order bytes  
 → must equal `bde9a3045659bcb6ffdde99c52d7b088662456ed5d42737662f7c8384091c02e`
 
-**FILE HASH** = SHA-256 of the on-disk `.npy` container (includes NumPy header)
+**RETURNS.NPY FILE HASH** = SHA-256 of the on-disk `.npy` container (includes NumPy header)  
+→ authorized: `4aee1aaea6886a727b5f322e51af9e2c05132b32aaaa47d0d5c0dc68c795943e`
+
+**MANIFEST GIT TRANSPORT FILE HASH** = SHA-256 of UTF-8 JSON with **LF** newlines  
+(the Git blob / Cloud-transferred bytes)  
+→ authorized: `9d285f24f031424aa016313195b25917e189f8aa6cb0e5960c18587cee0cbf8f`
+
+**MANIFEST PRODUCER WORKING-TREE CRLF HASH** (historical M1, **NON-CANONICAL**)  
+→ `4cf1e219a824f5a73739c8eaaa160a81e4caf92a5b0e6fba91a70c690f5c6901`  
+Never use this as the cross-platform transport expectation.
+
+Producer writes manifests via binary LF serialization (`write_bytes`).  
+`.gitattributes` forces `eol=lf` for exploratory manifests.  
+Consumers compute transport identity via LF canonicalization so a CRLF
+checkout cannot diverge from Git/Cloud.
 
 Also recorded: source CSV/meta raw FILE hashes, price payload SHA, sessions,
 acquisition UTC, producer environment, EXPLORATORY / UNQUALIFIED.
 
 Fail-closed on any mismatch.
+
+See M1 erratum: [I03-M1-CANONICAL-SPY.md](I03-M1-CANONICAL-SPY.md) (M2R).
 
 ---
 

@@ -1,0 +1,4 @@
+# Amendment B — text manifests use LF transport identity (Git blob bytes).
+# Prevents Windows autocrlf from making working-tree FILE HASH diverge from Cloud.
+data/exploratory/**/manifest.json text eol=lf
+data/exploratory/**/returns.npy binary

@@ -34,7 +34,8 @@ Classification: EXPLORATORY / UNQUALIFIED
 | PRICE FLOAT64 PAYLOAD | `sha256:bc0d68b080f1f42c56f01da43820c11425ca1fc3a80bfb0ca32647821c2488d1` |
 | RETURNS FLOAT64 PAYLOAD | `sha256:bde9a3045659bcb6ffdde99c52d7b088662456ed5d42737662f7c8384091c02e` |
 | RETURNS.NPY FILE | `sha256:4aee1aaea6886a727b5f322e51af9e2c05132b32aaaa47d0d5c0dc68c795943e` |
-| MANIFEST FILE | `sha256:4cf1e219a824f5a73739c8eaaa160a81e4caf92a5b0e6fba91a70c690f5c6901` |
+| MANIFEST GIT TRANSPORT FILE (canonical) | `sha256:9d285f24f031424aa016313195b25917e189f8aa6cb0e5960c18587cee0cbf8f` |
+| MANIFEST PRODUCER WORKING-TREE CRLF (historical, **NON-CANONICAL**) | `sha256:4cf1e219a824f5a73739c8eaaa160a81e4caf92a5b0e6fba91a70c690f5c6901` |
 
 ## Gates
 
@@ -45,3 +46,29 @@ Classification: EXPLORATORY / UNQUALIFIED
 Producer: CPython 3.12.10 / Windows AMD64 MSC v.1943 / NumPy 2.5.3 / pandas 3.0.6  
 
 Contract: [I03-AMENDMENT-B-CANONICAL-INPUT.md](I03-AMENDMENT-B-CANONICAL-INPUT.md)
+
+---
+
+## Erratum — M2 manifest transport identity (M2R)
+
+**Do not rewrite M1 history.** M1 materialization and numerical gates remain PASS.
+
+During M2 Cloud validation, the consumer compared the **M1-reported**
+manifest FILE hash against Git/Cloud bytes and stopped **fail-closed**
+(correct behavior).
+
+| Fact | Value |
+|------|--------|
+| Hash reported at M1 | `sha256:4cf1e219…c6901` |
+| What it actually hashed | Windows **CRLF** working-tree bytes (`Path.write_text` / autocrlf) |
+| Git blob / Cloud LF bytes | `sha256:9d285f24…bf8f` |
+| Logical JSON | identical (LF↔CRLF only) |
+| `returns.npy` FILE | **unchanged** `sha256:4aee1aae…5943e` |
+| RETURNS FLOAT64 PAYLOAD | **unchanged** `sha256:bde9a304…1c02e` |
+| Scientific / numerical impact | **NONE** |
+
+Canonical transport identity for `manifest.json` is therefore the
+**Git-committed LF** representation. The CRLF hash is retained only as
+producer working-tree provenance and is **NON-CANONICAL FOR GIT TRANSPORT**.
+
+Infrastructure correction: [I03-AMENDMENT-B-CANONICAL-INPUT.md](I03-AMENDMENT-B-CANONICAL-INPUT.md) §4 / M2R.
