@@ -15,6 +15,7 @@
 > **HAT report :** [I03-HAT.md](I03-HAT.md)  
 > **E01 :** [I03-E01.md](I03-E01.md) — EXPLORATORY / UNQUALIFIED  
 > **Amendment B :** [I03-AMENDMENT-B-CANONICAL-INPUT.md](I03-AMENDMENT-B-CANONICAL-INPUT.md) — transport only  
+> **M1 canonical SPY :** [I03-M1-CANONICAL-SPY.md](I03-M1-CANONICAL-SPY.md) — artifact at `data/exploratory/canonical_i03_spy_v1/`  
 > **Code :** `src/quant/i03/`
 
 ```text

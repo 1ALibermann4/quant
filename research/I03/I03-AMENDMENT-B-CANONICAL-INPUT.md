@@ -1,9 +1,10 @@
 # I03 — Amendment B: Canonical Numerical Input (transport)
 
-> **Status :** DOCUMENTED — implementation available; **real SPY artifact NOT produced**  
+> **Status :** CLOSED — implementation + **authorized SPY artifact materialized** (M1)  
 > **Class :** NON-SCIENTIFIC IMPLEMENTATION AMENDMENT  
 > **Prereg :** [I03-PREREG-v0.1.md](I03-PREREG-v0.1.md) @ `0ff457a` — **unchanged**  
 > **E01 auth :** [I03-E01.md](I03-E01.md) — EXPLORATORY / UNQUALIFIED  
+> **M1 record :** [I03-M1-CANONICAL-SPY.md](I03-M1-CANONICAL-SPY.md)  
 > **Does NOT authorize E01 observation**
 
 ```text
@@ -138,8 +139,8 @@ Independently established before this amendment:
 ## 8. Stop rule
 
 ```text
-STOP after implementation + synthetic validation.
+M1 COMPLETE — authorized SPY canonical artifact materialised.
 Await explicit authorization before:
-  - producing the real SPY canonical artifact;
-  - running I03-E01 (CSV or canonical).
+  - running I03-E01 (CSV or canonical);
+  - Cloud market validation.
 ```

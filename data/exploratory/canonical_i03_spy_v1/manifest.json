@@ -1,0 +1,43 @@
+{
+  "acquired_at_utc": "2026-09-24T12:00:16.920799+00:00",
+  "amendment": "I03-AMENDMENT-B",
+  "byte_order": "little",
+  "c_contiguous": true,
+  "classification": "EXPLORATORY",
+  "dtype": "<f8",
+  "first_session": "1993-01-29",
+  "implementation_commit": "ab9fa824e4fb3f094cfe9f86b50d7a08210b88b7",
+  "last_session": "2026-09-23",
+  "n_sessions": 8470,
+  "note": "FLOAT64 PAYLOAD HASH = SHA-256 of float64 little-endian C-order bytes. FILE HASH = SHA-256 of the on-disk .npy container. Amendment B transport only \u2014 not a scientific redesign.",
+  "price_payload_sha256": "sha256:bc0d68b080f1f42c56f01da43820c11425ca1fc3a80bfb0ca32647821c2488d1",
+  "producer_environment": {
+    "architecture": [
+      "64bit",
+      "WindowsPE"
+    ],
+    "compiler": "MSC v.1943 64 bit (AMD64)",
+    "executable": "C:\\Users\\Jean Marie\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+    "implementation": "cpython",
+    "machine": "AMD64",
+    "numpy": "2.5.3",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]"
+  },
+  "producer_note": "Produced via load_cache_by_stem + log_returns on the authorized DR-008 snapshot. Amendment B transport only.",
+  "qualification": "UNQUALIFIED",
+  "r0_is_nan": true,
+  "return_payload_sha256": "sha256:bde9a3045659bcb6ffdde99c52d7b088662456ed5d42737662f7c8384091c02e",
+  "returns_npy": "returns.npy",
+  "returns_npy_file_sha256": "sha256:4aee1aaea6886a727b5f322e51af9e2c05132b32aaaa47d0d5c0dc68c795943e",
+  "schema": "I03-CANONICAL-INPUT-v1",
+  "scientifically_promotable": false,
+  "shape": [
+    8470
+  ],
+  "source_csv_file_sha256": "sha256:ac7c6a7f081e3548d94c6c744a31b3398ccffae5129799015b3331568159b2c2",
+  "source_csv_path": "data\\exploratory\\UNQUALIFIED_SPY_20260924T120016Z.csv",
+  "source_meta_file_sha256": "sha256:c37b7ae0ed24dd6510feef5c753f1dca8201b793e066628e1730b43ebf507caf",
+  "source_meta_path": "data\\exploratory\\UNQUALIFIED_SPY_20260924T120016Z.meta.json",
+  "source_snapshot_stem": "UNQUALIFIED_SPY_20260924T120016Z"
+}
