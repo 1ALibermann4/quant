@@ -266,8 +266,14 @@ def run_n4_battery_parallel(
     blocks: tuple[TemporalBlock, ...] | None = None,
     include_returns: bool = False,
     executor_factory: Callable[..., Any] | None = None,
+    checkpoint_store: Any | None = None,
+    run_id: str | None = None,
 ) -> tuple[list[dict[int, dict[int, float]]], list[tuple[LocalityBlockDiagnostic, ...]]]:
-    """N4 generate+E-MND(+locality) for ``b=1..B`` with canonical reassembly."""
+    """N4 generate+E-MND(+locality) for ``b=1..B`` with canonical reassembly.
+
+    Optional ``checkpoint_store`` (Phase 1C): only missing ``b`` are scheduled;
+    completed valid checkpoints are reused without recomputation.
+    """
 
     r = np.asarray(returns, dtype=np.float64)
     blocks = blocks if blocks is not None else build_blocks(r.shape[0], cfg)
@@ -279,14 +285,55 @@ def run_n4_battery_parallel(
         "do_loc_n4": bool(do_loc_n4),
         "include_returns": bool(include_returns),
     }
-    raw = map_surrogate_b(
-        _n4_worker,
-        range(1, B + 1),
-        workers=workers,
-        initargs=(payload,),
-        executor_factory=executor_factory,
-    )
-    ordered = reassemble_by_b(raw, B=B, family="N4")
+
+    completed: dict[int, dict[str, Any]] = {}
+    if checkpoint_store is not None:
+        if not run_id:
+            raise ParallelSurrogateError("run_id required with checkpoint_store")
+        completed = checkpoint_store.list_completed("N4", run_id=run_id, B=B)
+        # Validate seed metadata on loaded rows
+        for b, row in completed.items():
+            if int(row.get("seed", -1)) != int(cfg.master_seed + b):
+                raise ParallelSurrogateError(
+                    f"checkpoint seed mismatch N4 b={b}"
+                )
+            if row.get("family") != "N4":
+                raise ParallelSurrogateError(f"wrong family in N4 store b={b}")
+        if include_returns:
+            # Deterministic rematerialization (same seed) — not a scientific retry.
+            for b, row in list(completed.items()):
+                if "returns" not in row:
+                    rs = n4_surrogate_returns(r, scale, b, cfg)
+                    row = dict(row)
+                    row["returns"] = np.asarray(rs, dtype=np.float64)
+                    completed[b] = row
+
+    missing = [b for b in range(1, B + 1) if b not in completed]
+    raw_new: list[dict[str, Any]] = []
+    if missing:
+        raw_new = map_surrogate_b(
+            _n4_worker,
+            missing,
+            workers=workers,
+            initargs=(payload,),
+            executor_factory=executor_factory,
+        )
+        if checkpoint_store is not None:
+            assert run_id is not None
+            for row in raw_new:
+                b = int(row["b"])
+                checkpoint_store.save_result(
+                    row, run_id=run_id, expected_seed=int(cfg.master_seed + b)
+                )
+                completed[b] = {
+                    k: v for k, v in row.items() if k != "returns"
+                } if not include_returns else row
+
+    # Merge: prefer freshly computed rows (may include returns) over store
+    by_b = dict(completed)
+    for row in raw_new:
+        by_b[int(row["b"])] = row
+    ordered = reassemble_by_b(list(by_b.values()), B=B, family="N4")
     theta: list[dict[int, dict[int, float]]] = []
     loc_n4: list[tuple[LocalityBlockDiagnostic, ...]] = []
     for row in ordered:
@@ -308,8 +355,14 @@ def run_n3_battery_parallel(
     blocks: tuple[TemporalBlock, ...] | None = None,
     include_returns: bool = False,
     executor_factory: Callable[..., Any] | None = None,
+    checkpoint_store: Any | None = None,
+    run_id: str | None = None,
 ) -> tuple[N3BatteryMeta, list[dict[int, dict[int, float]]], list[dict[str, Any]]]:
-    """N3 IAAFT+E-MND for ``b=1..B`` with canonical reassembly."""
+    """N3 IAAFT+E-MND for ``b=1..B`` with canonical reassembly.
+
+    Non-converged IAAFT results are legitimate completed checkpoints and are
+    never retried on resume.
+    """
 
     r = np.asarray(returns, dtype=np.float64)
     blocks = blocks if blocks is not None else build_blocks(r.shape[0], cfg)
@@ -319,14 +372,65 @@ def run_n3_battery_parallel(
         "cfg": cfg,
         "include_returns": bool(include_returns),
     }
-    raw = map_surrogate_b(
-        _n3_worker,
-        range(1, B + 1),
-        workers=workers,
-        initargs=(payload,),
-        executor_factory=executor_factory,
-    )
-    ordered = reassemble_by_b(raw, B=B, family="N3")
+
+    completed: dict[int, dict[str, Any]] = {}
+    if checkpoint_store is not None:
+        if not run_id:
+            raise ParallelSurrogateError("run_id required with checkpoint_store")
+        completed = checkpoint_store.list_completed("N3", run_id=run_id, B=B)
+        for b, row in completed.items():
+            if int(row.get("seed", -1)) != 10_000 + b:
+                raise ParallelSurrogateError(
+                    f"checkpoint seed mismatch N3 b={b}"
+                )
+            if row.get("family") != "N3":
+                raise ParallelSurrogateError(f"wrong family in N3 store b={b}")
+        if include_returns:
+            # Rematerialize IAAFT series with the same seed (deterministic replay).
+            # Does not alter convergence accounting already stored.
+            for b, row in list(completed.items()):
+                if "returns" not in row:
+                    ia = iaaft(
+                        r,
+                        seed=10_000 + b,
+                        I_max=cfg.iaaft_I_max,
+                        eps=cfg.iaaft_eps,
+                    )
+                    if bool(ia.converged) != bool(row.get("converged")):
+                        raise ParallelSurrogateError(
+                            f"IAAFT rematerialization convergence mismatch b={b}"
+                        )
+                    row = dict(row)
+                    row["returns"] = np.asarray(ia.series, dtype=np.float64)
+                    completed[b] = row
+
+    missing = [b for b in range(1, B + 1) if b not in completed]
+    raw_new: list[dict[str, Any]] = []
+    if missing:
+        raw_new = map_surrogate_b(
+            _n3_worker,
+            missing,
+            workers=workers,
+            initargs=(payload,),
+            executor_factory=executor_factory,
+        )
+        if checkpoint_store is not None:
+            assert run_id is not None
+            for row in raw_new:
+                b = int(row["b"])
+                checkpoint_store.save_result(
+                    row, run_id=run_id, expected_seed=10_000 + b
+                )
+                completed[b] = (
+                    {k: v for k, v in row.items() if k != "returns"}
+                    if not include_returns
+                    else row
+                )
+
+    by_b = dict(completed)
+    for row in raw_new:
+        by_b[int(row["b"])] = row
+    ordered = reassemble_by_b(list(by_b.values()), B=B, family="N3")
     flags = tuple(bool(row["converged"]) for row in ordered)
     n_non = sum(1 for f in flags if not f)
     invalid = n3_nonconv_frac_invalid(n_non, B, cfg.iaaft_nonconv_frac)

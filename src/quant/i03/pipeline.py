@@ -73,6 +73,8 @@ def run_structural_analysis(
     B_n3: int | None = None,
     compute_locality_on_n4: bool = True,
     workers: int = 1,
+    checkpoint_dir: str | os.PathLike[str] | None = None,
+    resume: bool = False,
 ) -> I03RunResult:
     """Run I03 structural pipeline on a return array (no download).
 
@@ -80,10 +82,19 @@ def run_structural_analysis(
     They require ``I03_ALLOW_TEST_OVERRIDES=1``. Production callers must omit
     overrides so frozen ``cfg.B_N4`` / ``cfg.B_N3`` and full locality apply.
 
-    ``workers`` is **operational only** (PERF-01 Phase 1B). It does not change
-    seeds, ``B``, or any scientific constant. ``workers=1`` is the serial
-    reference path.
+    ``workers`` is **operational only** (PERF-01 Phase 1B).
+    ``checkpoint_dir`` / ``resume`` are **operational only** (PERF-01 Phase 1C).
     """
+
+    from pathlib import Path
+
+    from quant.i03.checkpoint import (
+        CheckpointError,
+        CheckpointStore,
+        RunStatus,
+        compute_run_id,
+        returns_input_sha256,
+    )
 
     cfg = cfg or DEFAULT_CONFIG
     using_overrides = (
@@ -112,8 +123,54 @@ def run_structural_analysis(
 
     do_loc_n4 = bool(compute_locality_on_n4 and n4_scale.valid)
 
-    if workers_req == 1:
-        # Phase-1A serial fused path (reference).
+    ckpt_store = None
+    run_id = None
+    use_battery_engine = workers_req > 1 or checkpoint_dir is not None
+    if checkpoint_dir is not None:
+        store = CheckpointStore(Path(checkpoint_dir))
+        input_sha = returns_input_sha256(r)
+        run_id = compute_run_id(
+            input_sha256=input_sha,
+            cfg=cfg,
+            B_n4=Bn4,
+            B_n3=Bn3,
+            do_loc_n4=do_loc_n4,
+        )
+        st = store.status()
+        if resume:
+            if st in (RunStatus.NEW,):
+                raise CheckpointError(
+                    "STOP: --resume requested but checkpoint store is NEW/empty"
+                )
+            if st == RunStatus.INVALID:
+                raise CheckpointError("STOP: checkpoint store INVALID")
+            store.assert_compatible(
+                run_id=run_id,
+                input_sha256=input_sha,
+                cfg=cfg,
+                B_n4=Bn4,
+                B_n3=Bn3,
+                do_loc_n4=do_loc_n4,
+            )
+        else:
+            if st != RunStatus.NEW:
+                raise CheckpointError(
+                    "STOP: checkpoint-dir is not empty/NEW; pass --resume "
+                    "explicitly to continue a compatible run "
+                    f"(status={st.value})"
+                )
+            store.write_new_manifest(
+                run_id=run_id,
+                input_sha256=input_sha,
+                cfg=cfg,
+                B_n4=Bn4,
+                B_n3=Bn3,
+                do_loc_n4=do_loc_n4,
+            )
+        ckpt_store = store
+
+    if not use_battery_engine:
+        # Phase-1A serial fused path (reference; no checkpoint).
         _, n4_sur = generate_n4_battery(r, cfg, B=Bn4)
         n3_meta, n3_sur = generate_n3_battery(r, cfg, B=Bn3)
         theta_n4: list[dict[int, dict[int, float]]] = []
@@ -149,7 +206,8 @@ def run_structural_analysis(
         )
 
         print(
-            f"N4 parallel battery B={Bn4} workers={workers_req}",
+            f"N4 battery B={Bn4} workers={workers_req} "
+            f"checkpoint={'yes' if ckpt_store else 'no'}",
             file=sys.stderr,
             flush=True,
         )
@@ -161,16 +219,29 @@ def run_structural_analysis(
             workers=workers_req,
             do_loc_n4=do_loc_n4,
             blocks=blocks,
+            checkpoint_store=ckpt_store,
+            run_id=run_id,
         )
         print(
-            f"N3 parallel battery B={Bn3} workers={workers_req}",
+            f"N3 battery B={Bn3} workers={workers_req} "
+            f"checkpoint={'yes' if ckpt_store else 'no'}",
             file=sys.stderr,
             flush=True,
         )
         n3_meta, theta_n3, _ordered_n3 = run_n3_battery_parallel(
-            r, cfg, B=Bn3, workers=workers_req, blocks=blocks
+            r,
+            cfg,
+            B=Bn3,
+            workers=workers_req,
+            blocks=blocks,
+            checkpoint_store=ckpt_store,
+            run_id=run_id,
         )
         workers_used = workers_req
+        if ckpt_store is not None and run_id is not None:
+            ckpt_store.mark_complete_if_done(
+                run_id=run_id, B_n4=Bn4, B_n3=Bn3
+            )
 
     survival = build_survival_grid(_theta_map(emnd_obs), theta_n4, theta_n3, cfg)
 

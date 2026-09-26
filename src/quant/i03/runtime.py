@@ -98,6 +98,23 @@ def build_parser() -> argparse.ArgumentParser:
             "Not a scientific parameter. Default 1 = serial reference."
         ),
     )
+    p.add_argument(
+        "--checkpoint-dir",
+        type=Path,
+        default=None,
+        help=(
+            "PERF-01 Phase 1C: directory for deterministic per-b checkpoints. "
+            "Operational only. Empty/NEW required unless --resume."
+        ),
+    )
+    p.add_argument(
+        "--resume",
+        action="store_true",
+        help=(
+            "PERF-01 Phase 1C: resume a compatible incomplete checkpoint run. "
+            "Fail-closed if identity mismatches."
+        ),
+    )
     return p
 
 
@@ -120,9 +137,19 @@ def _run_hat(args: argparse.Namespace) -> int:
     workers = int(getattr(args, "workers", 1) or 1)
     if workers < 1:
         raise SystemExit("--workers must be >= 1")
+    ckpt = getattr(args, "checkpoint_dir", None)
+    resume = bool(getattr(args, "resume", False))
+    if resume and ckpt is None:
+        raise SystemExit("--resume requires --checkpoint-dir")
     t0 = time.perf_counter()
     # Official HAT: full frozen B=999, full locality — no scientific overrides
-    result = run_structural_analysis(returns, cfg, workers=workers)
+    result = run_structural_analysis(
+        returns,
+        cfg,
+        workers=workers,
+        checkpoint_dir=ckpt,
+        resume=resume,
+    )
     elapsed = time.perf_counter() - t0
 
     impl = _git_head() or "unknown"
@@ -131,6 +158,8 @@ def _run_hat(args: argparse.Namespace) -> int:
         "workers_requested": workers,
         "workers_used": result.workers_used,
         "logical_cpus": os.cpu_count(),
+        "checkpoint_dir": str(ckpt) if ckpt else None,
+        "resume": resume,
         "note": "engineering observation only; no scientific performance gate",
     }
     artifact = artifact_dict(
