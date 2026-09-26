@@ -90,14 +90,14 @@ class CalConfig:
     include_hold_geometries: bool = False  # G6 never in CAL-qualified path
     worlds: tuple[str, ...] = tuple(WORLD_INDEX.keys())
     geometries: tuple[str, ...] = (
+        # TIER-A (required for CAL-PASS of the measurement bench)
         "G0",
-        "G1",
-        "G2",
         "G3",
         "G4",
-        "G5",
         "G7",
         "GORD",
+        # TIER-B (extended; Soft-DTW / SW / AIRM) — run separately as run1b
+        # "G1", "G2", "G5",
     )
 
     def to_dict(self) -> dict[str, Any]:

@@ -118,7 +118,19 @@ match this freeze.
 
 ---
 
-## 6. Geometry hyperparameter grids (preregistered BEFORE CAL)
+## 6b. Execution tiers (preregistered before primary observation)
+
+| Tier | Geometries | Role |
+|------|------------|------|
+| **A** | G0, G3, G4, G7, GORD | Required for CAL-PASS of the **measurement bench** |
+| **B** | G1, G2, G5 | Extended numerical families (Soft-DTW / SW / AIRM); same worlds/B/W; separate artifact `run1b` |
+
+Tier-B is **not** optional scientifically — it is a **partitioned execution** of the
+frozen grid for compute tractability. Absence of Tier-B at closure ⇒
+`CAL-INCONCLUSIVE` for those families, **not** a geometry FAIL.
+
+G6 remains HOLD (not in A or B).
+
 
 | Geometry | Grid | Notes |
 |----------|------|-------|
