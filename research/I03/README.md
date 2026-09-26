@@ -1,41 +1,50 @@
 # I03 — Intrinsic recurrence of G0
 
-> **STATUS :** **E01 AUTHORIZED / NOT YET OBSERVED**  
+> **STATUS :** **CLOSED — EXPL-INCONCLUSIVE**  
 > **Authority class :** RESEARCH  
 > **Protocol :** QDP v0.1 · DR-007  
+> **Closure :** [I03-CLOSURE.md](I03-CLOSURE.md)  
+> **Canonical E01 observation :** [e01/run2/I03-E01-RUN2.md](e01/run2/I03-E01-RUN2.md) @ `b4ea158`  
 > **Frame :** Geometry review A @ `547fc57`  
 > **Pre-framing (historical) :** [`research/I03-pre/`](../I03-pre/)  
 > **D1–D8 freeze :** [I03-D1-D8-FREEZE.md](I03-D1-D8-FREEZE.md)  
 > **C1–C10 freeze :** [I03-C1-C10-FREEZE.md](I03-C1-C10-FREEZE.md)  
 > **HD-N4-SCALE :** [I03-HD-N4-SCALE-FREEZE.md](I03-HD-N4-SCALE-FREEZE.md) — \(W_\sigma=20\)  
-> **Prereg :** [I03-PREREG-v0.1.md](I03-PREREG-v0.1.md)  
+> **Prereg :** [I03-PREREG-v0.1.md](I03-PREREG-v0.1.md) @ `0ff457a` — **unchanged**  
 > **Implementation contract :** [I03-IMPLEMENTATION-CONTRACT-v0.1.md](I03-IMPLEMENTATION-CONTRACT-v0.1.md)  
 > **L1 report :** [I03-L1-IMPLEMENTATION.md](I03-L1-IMPLEMENTATION.md)  
 > **L2 report :** [I03-L2-CONTRACT-TEST.md](I03-L2-CONTRACT-TEST.md)  
 > **HAT report :** [I03-HAT.md](I03-HAT.md)  
-> **E01 :** [I03-E01.md](I03-E01.md) — EXPLORATORY / UNQUALIFIED  
-> **Amendment B :** [I03-AMENDMENT-B-CANONICAL-INPUT.md](I03-AMENDMENT-B-CANONICAL-INPUT.md) — transport only  
-> **M1 canonical SPY :** [I03-M1-CANONICAL-SPY.md](I03-M1-CANONICAL-SPY.md) — artifact at `data/exploratory/canonical_i03_spy_v1/`  
+> **E01 auth (historical) :** [I03-E01.md](I03-E01.md) — EXPLORATORY / UNQUALIFIED  
+> **Amendment B :** [I03-AMENDMENT-B-CANONICAL-INPUT.md](I03-AMENDMENT-B-CANONICAL-INPUT.md)  
+> **M1 canonical SPY :** [I03-M1-CANONICAL-SPY.md](I03-M1-CANONICAL-SPY.md)  
+> **PERF-01 :** [perf/](perf/)  
 > **Code :** `src/quant/i03/`
 
 ```text
-I03 STATUS = E01 AUTHORIZED / NOT YET OBSERVED
+I03 = CLOSED
+EXPLORATORY / UNQUALIFIED
+STRUCTURAL = INCONCLUSIVE (NEG_E)
+EXPLORATORY CLASS = EXPL-INCONCLUSIVE
+NO SCI / PRED / ECON PROMOTION
+E02 = NOT AUTHORIZED / NOT EXECUTED
+G0 = BASELINE / NOT PROMOTED
+N3 = INVALID ON RUN2
 PREREG v0.1 = UNCHANGED
-L1 = PASS
-L2 = PASS
-HAT = PASS (synthetic)
-E01 = AUTHORIZED — EXPLORATORY / UNQUALIFIED (not yet run)
-W_sigma = 20 (SCALE-W)
-NO SCI / PRED / ECON CLAIM
+NO RETUNE · NO NEXT INVESTIGATION FROM THIS FILE
 ```
 
-## Lifecycle
+## Lifecycle (complete)
 
 ```text
 I03-PRE → D1–D8 → DESIGN → C1–C10 → PREREG
     → Implementation Contract → L1 → L2 → HAT synthetic
-    → E01 exploratory/unqualified (authorized; not yet observed)
-    → postmortem / human decision (later)
+    → E01 authorization (EXPLORATORY / UNQUALIFIED)
+    → Amendment B / M1 / M2R
+    → Cloud RUN1 ABORT (resource; no science)
+    → PERF-01 Phase 0–1C → Final HAT → CLI wiring
+    → E01 RUN2 COMPLETE → EXPL-INCONCLUSIVE
+    → CLOSURE (this investigation CLOSED)
 ```
 
 ## Object
@@ -44,28 +53,10 @@ Structural test of **current classical geometry G0** — temporal recurrence
 (R3) with cross-period stability (S2), multi-scale neighborhoods, vs N4
 (primary) and N3 (adversarial), no future returns.
 
-## Operator
+## Final outcome (RUN2)
 
-HAT (synthetic):
+See [I03-CLOSURE.md](I03-CLOSURE.md) and
+[e01/run2/I03-E01-RUN2.md](e01/run2/I03-E01-RUN2.md).
 
-```bash
-python -m quant.i03 --mode hat \
-  --fixture-dir research/I03/hat \
-  --out-dir research/I03/hat/run1 \
-  --prepare-fixture
-```
-
-E01 (exploratory SPY / DR-008 cache — Windows `py -3.12` for hash match):
-
-```powershell
-$env:PYTHONPATH = "src"
-py -3.12 -m quant.i03 --mode e01 --cache-dir data/exploratory --out-dir research/I03/e01/run1
-```
-
-Amendment B / M1: authorized SPY canonical artifact at
-`data/exploratory/canonical_i03_spy_v1/` — [I03-M1-CANONICAL-SPY.md](I03-M1-CANONICAL-SPY.md).
-**E01 still not authorized for observation.**
-
-See [I03-E01.md](I03-E01.md).
-
-Do **not** retune from I01/I02 predictive outcomes.
+Do **not** retune from I01/I02/I03 outcomes. Do **not** open E02 or I04
+from this README.

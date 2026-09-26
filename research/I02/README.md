@@ -13,4 +13,4 @@
 | Postmortem | [I02-E01-POSTMORTEM.md](I02-E01-POSTMORTEM.md) |
 | Runtime | `src/quant/i02/` (maintenance / replay only) |
 
-I03 is **not** opened.
+I03 is **CLOSED** — see [I03-CLOSURE.md](../I03/I03-CLOSURE.md).
