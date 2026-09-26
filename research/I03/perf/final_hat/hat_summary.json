@@ -1,0 +1,106 @@
+{
+  "fixture_id": "I03-HAT-FIXTURE-v1",
+  "fixture_sha256": "sha256:0ed3625a7ed4a19e2fb75e04c8b906a92cc01be54446f61eb53c6cde1cf142dc",
+  "B_N4_engineering": 24,
+  "B_N3_engineering": 16,
+  "workers": 4,
+  "uninterrupted_wall_s": 19.098928099992918,
+  "resume_wall_s": 12.181660400005057,
+  "interrupt": {
+    "method": "controlled_partial_checkpoint_stop_after_valid_records",
+    "note": "Stops after valid per-b JSON records exist; resume uses the same operator --resume path as after CTRL-C/crash.",
+    "elapsed_s": 5.551430200008326,
+    "status": "INCOMPLETE",
+    "completed_N4_b": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "completed_N3_b": [
+      1
+    ],
+    "missing_N4": [
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24
+    ],
+    "missing_N3": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ]
+  },
+  "bitwise_artifact_equal": true,
+  "n4_checkpoint_records_uninterrupted": 24,
+  "n3_checkpoint_records_uninterrupted": 16,
+  "checkpoint_bytes_uninterrupted": 43669,
+  "n3_meta_uninterrupted": {
+    "n_converged": 0,
+    "n_nonconverged": 16,
+    "valid": false
+  },
+  "n3_meta_resumed": {
+    "n_converged": 0,
+    "n_nonconverged": 16,
+    "valid": false
+  },
+  "verdict_uninterrupted": "INCONCLUSIVE",
+  "verdict_resumed": "INCONCLUSIVE",
+  "throughput": {
+    "N4": {
+      "elapsed_s": 10.071790100002545,
+      "completed": 24,
+      "seconds_per_surrogate": 0.4196579208334394,
+      "surrogates_per_hour": 8578.415469557707
+    },
+    "N3": {
+      "elapsed_s": 4.436192299996037,
+      "completed": 16,
+      "seconds_per_surrogate": 0.2772620187497523,
+      "surrogates_per_hour": 12984.108015347183,
+      "n_converged": 0,
+      "n_nonconverged": 16
+    }
+  },
+  "estimates_E01_B999": {
+    "label": "ESTIMATED \u2014 NOT SCIENTIFIC RESULT",
+    "note": "Extrapolated from HAT fixture T=2400 engineering throughput at workers=4. SPY E01 uses T=8470; Phase-1B SPYLEN scaling suggests roughly ~10x slower per surrogate for E-MND/locality. Provide both HAT-linear and SPYLEN-adjusted estimates.",
+    "hat_linear_N4_s": 419.23826291260593,
+    "hat_linear_N3_s": 276.98475673100256,
+    "hat_linear_combined_s": 696.2230196436086,
+    "spylen_adjusted_factor_approx": 10.0,
+    "spylen_adjusted_N4_s": 4192.382629126059,
+    "spylen_adjusted_N3_s": 2769.8475673100256,
+    "spylen_adjusted_combined_s": 6962.230196436086
+  }
+}

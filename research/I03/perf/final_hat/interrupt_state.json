@@ -1,0 +1,54 @@
+{
+  "method": "controlled_partial_checkpoint_stop_after_valid_records",
+  "note": "Stops after valid per-b JSON records exist; resume uses the same operator --resume path as after CTRL-C/crash.",
+  "elapsed_s": 5.551430200008326,
+  "status": "INCOMPLETE",
+  "completed_N4_b": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "completed_N3_b": [
+    1
+  ],
+  "missing_N4": [
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+  ],
+  "missing_N3": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ]
+}
