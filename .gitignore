@@ -12,6 +12,14 @@ venv/
 .pytest_cache/
 .coverage
 htmlcov/
+.hypothesis/
+
+# Secrets / credentials (defense in depth)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
 
 # IDE
 .idea/
