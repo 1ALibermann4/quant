@@ -21,6 +21,7 @@ from quant.i04_cal.geometries import iter_geometry_specs
 from quant.i04_cal.params import DEFAULT_CAL_CONFIG, CalConfig, SPEC_ID, world_seed
 from quant.i04_cal.types import ExecStatus, GeometryStatus
 from quant.i04_cal.worlds import generate_world
+from quant.i04_cal.worker import execute_cal_cell
 
 
 # Control numerical library threading to prevent oversubscription
@@ -30,15 +31,14 @@ os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
 
 
-def _worker_init():
-    """Initialize worker process for multiprocessing."""
-    # Ensure src is in path for worker processes
-    src_path = str(Path(__file__).parent.parent.parent)
-    if src_path not in sys.path:
-        sys.path.insert(0, src_path)
-    # Re-import in worker process
-    from quant.i04_cal.pipeline import _compute_cell_gates
-    globals()['_compute_cell_gates'] = _compute_cell_gates
+def _serialize_spec(spec: Any) -> dict[str, Any]:
+    """Serialize GeometrySpec to dict for multiprocessing."""
+    return {
+        "geometry_id": spec.geometry_id,
+        "variant_id": spec.variant_id,
+        "params": spec.params,
+        "status": spec.status.value if hasattr(spec.status, "value") else spec.status,
+    }
 
 
 def _git_head() -> str | None:
@@ -63,46 +63,6 @@ def _git_dirty() -> bool:
 # Module-level world cache for multiprocessing
 # Each process maintains its own cache since processes are isolated
 _process_world_cache: dict[tuple[str, int], Any] = {}
-
-
-def _compute_cell_gates(world: str, b: int, W: int, spec: Any) -> dict[str, Any]:
-    """Compute gates for a single cell. Returns result dict.
-
-    Each process maintains its own internal cache for world reuse.
-    """
-    wb = _process_world_cache.get((world, b))
-    if wb is None:
-        wb = generate_world(world, b)
-        _process_world_cache[(world, b)] = wb
-
-    seed = world_seed(world, b) + 17 * W + hash(spec.variant_id) % 997
-
-    try:
-        gates = compute_gates_for_spec(wb, spec, W, seed=int(seed) & 0x7FFFFFFF)
-        return {
-            "cell_key": cell_key(world, b, W, f"{spec.geometry_id}:{spec.variant_id}"),
-            "config_hash": None,  # Will be filled by caller
-            "world_id": world,
-            "b": b,
-            "seed": wb.seed,
-            "W": W,
-            "world_status": wb.world_status.value,
-            "oracle_status": wb.oracle_status.value,
-            "oracle_meta": wb.oracle_meta,
-            "latent_notes": wb.notes,
-            "gates": gates,
-            "status": "OK",
-        }
-    except Exception as e:  # noqa: BLE001 — capture technical failure per cell
-        return {
-            "cell_key": cell_key(world, b, W, f"{spec.geometry_id}:{spec.variant_id}"),
-            "config_hash": None,  # Will be filled by caller
-            "world_id": world,
-            "b": b,
-            "W": W,
-            "status": "FAILED_TECHNICAL",
-            "error": repr(e),
-        }
 
 
 def config_hash(cfg: CalConfig) -> str:
@@ -214,23 +174,25 @@ def run_calibration(
         # Each worker has its own process-local cache
         results_dict: dict[str, dict[str, Any]] = {}
 
-        # Use Pool with initializer for Windows compatibility
+        # Use ProcessPoolExecutor with spawn context for Windows compatibility
         ctx = get_context('spawn')
-        with ctx.Pool(processes=workers, initializer=_worker_init) as pool:
+        with ProcessPoolExecutor(max_workers=workers, mp_context=ctx) as executor:
             # Submit all tasks
-            async_results = {}
+            future_to_key = {}
             for i, (world, b, W, spec) in enumerate(cells):
                 key = cell_key(world, b, W, f"{spec.geometry_id}:{spec.variant_id}")
-                result = pool.apply_async(
-                    _compute_cell_gates,
-                    args=(world, b, W, spec),
+                # Serialize spec to dict for multiprocessing
+                spec_dict = _serialize_spec(spec)
+                future = executor.submit(
+                    execute_cal_cell, world, b, W, spec_dict
                 )
-                async_results[key] = (i, result)
+                future_to_key[future] = key
 
             # Collect results as they complete
-            for key, (i, result) in async_results.items():
+            for future in as_completed(future_to_key):
+                key = future_to_key[future]
                 try:
-                    row = result.get()
+                    row = future.result()
                     row["config_hash"] = ch
                     results_dict[key] = row
                 except Exception as e:
@@ -260,7 +222,9 @@ def run_calibration(
         # Serial execution (original path)
         with results_path.open("a", encoding="utf-8") as fout:
             for world, b, W, spec in cells:
-                row = _compute_cell_gates(world, b, W, spec)
+                # Use worker function for consistency
+                spec_dict = _serialize_spec(spec)
+                row = execute_cal_cell(world, b, W, spec_dict)
                 row["config_hash"] = ch
                 fout.write(json.dumps(row, default=str) + "\n")
                 fout.flush()
