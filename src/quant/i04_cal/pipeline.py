@@ -10,6 +10,7 @@ import subprocess
 import sys
 import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from multiprocessing import Pool, get_context
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +28,17 @@ os.environ.setdefault("OMP_NUM_THREADS", "1")
 os.environ.setdefault("MKL_NUM_THREADS", "1")
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
+
+
+def _worker_init():
+    """Initialize worker process for multiprocessing."""
+    # Ensure src is in path for worker processes
+    src_path = str(Path(__file__).parent.parent.parent)
+    if src_path not in sys.path:
+        sys.path.insert(0, src_path)
+    # Re-import in worker process
+    from quant.i04_cal.pipeline import _compute_cell_gates
+    globals()['_compute_cell_gates'] = _compute_cell_gates
 
 
 def _git_head() -> str | None:
@@ -48,20 +60,20 @@ def _git_dirty() -> bool:
         return True
 
 
+# Module-level world cache for multiprocessing
+# Each process maintains its own cache since processes are isolated
+_process_world_cache: dict[tuple[str, int], Any] = {}
+
+
 def _compute_cell_gates(world: str, b: int, W: int, spec: Any) -> dict[str, Any]:
     """Compute gates for a single cell. Returns result dict.
 
     Each process maintains its own internal cache for world reuse.
     """
-    # Per-process world cache
-    if not hasattr(_compute_cell_gates, "_world_cache"):
-        _compute_cell_gates._world_cache = {}
-    world_cache = _compute_cell_gates._world_cache
-
-    wb = world_cache.get((world, b))
+    wb = _process_world_cache.get((world, b))
     if wb is None:
         wb = generate_world(world, b)
-        world_cache[(world, b)] = wb
+        _process_world_cache[(world, b)] = wb
 
     seed = world_seed(world, b) + 17 * W + hash(spec.variant_id) % 997
 
@@ -202,20 +214,25 @@ def run_calibration(
         # Each worker has its own process-local cache
         results_dict: dict[str, dict[str, Any]] = {}
 
-        with ProcessPoolExecutor(max_workers=workers) as executor:
+        # Use Pool with initializer for Windows compatibility
+        ctx = get_context('spawn')
+        with ctx.Pool(processes=workers, initializer=_worker_init) as pool:
             # Submit all tasks
-            future_to_cell = {}
+            async_results = {}
             for i, (world, b, W, spec) in enumerate(cells):
-                future = executor.submit(_compute_cell_gates, world, b, W, spec)
-                future_to_cell[future] = (i, cell_key(world, b, W, f"{spec.geometry_id}:{spec.variant_id}"))
+                key = cell_key(world, b, W, f"{spec.geometry_id}:{spec.variant_id}")
+                result = pool.apply_async(
+                    _compute_cell_gates,
+                    args=(world, b, W, spec),
+                )
+                async_results[key] = (i, result)
 
             # Collect results as they complete
-            for future in as_completed(future_to_cell):
-                i, key = future_to_cell[future]
+            for key, (i, result) in async_results.items():
                 try:
-                    result = future.result()
-                    result["config_hash"] = ch
-                    results_dict[key] = result
+                    row = result.get()
+                    row["config_hash"] = ch
+                    results_dict[key] = row
                 except Exception as e:
                     # Worker failure - fail closed
                     results_dict[key] = {
