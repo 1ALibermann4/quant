@@ -33,7 +33,8 @@ def test_s4_oracle_excludes_edges():
 
 def test_s6_oracle_status_is_valid_or_invalid():
     w = generate_world("S6", 0)
-    assert w.oracle_status.value in ("VALID", "INVALID")
+    # GOV-02: Oracle status is VALID pending governance evaluation of diagnostic
+    assert w.oracle_status.value == "VALID"
     assert "observability_spearman" in w.latent
 
 
