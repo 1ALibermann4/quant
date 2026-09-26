@@ -1,0 +1,91 @@
+{
+  "env": {
+    "python": "3.12.10",
+    "numpy": "2.5.3",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "logical_cpus": 8,
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  },
+  "hat_n4_B16_loc": {
+    "1": {
+      "wall_s": 13.19219279999379,
+      "speedup": 1.0,
+      "efficiency": 1.0
+    },
+    "2": {
+      "wall_s": 12.029909499993664,
+      "speedup": 1.0966161299884043,
+      "efficiency": 0.5483080649942021
+    },
+    "4": {
+      "wall_s": 8.94564834999619,
+      "speedup": 1.4747050503052033,
+      "efficiency": 0.3686762625763008
+    }
+  },
+  "hat_n3_B12": {
+    "1": {
+      "wall_s": 4.728094699996291,
+      "speedup": 1.0,
+      "efficiency": 1.0
+    },
+    "2": {
+      "wall_s": 3.1285374499930185,
+      "speedup": 1.511279559721058,
+      "efficiency": 0.755639779860529
+    },
+    "4": {
+      "wall_s": 3.3007452500023646,
+      "speedup": 1.432432478693381,
+      "efficiency": 0.35810811967334527
+    }
+  },
+  "hat_pipeline_B12_B8": {
+    "1": {
+      "wall_s": 14.435191500000656,
+      "speedup": 1.0,
+      "efficiency": 1.0
+    },
+    "2": {
+      "wall_s": 10.945124599995324,
+      "speedup": 1.3188695448936985,
+      "efficiency": 0.6594347724468492
+    },
+    "4": {
+      "wall_s": 8.943227099996875,
+      "speedup": 1.6140920205420815,
+      "efficiency": 0.40352300513552036
+    }
+  },
+  "spylen_n4_B12_loc": {
+    "1": {
+      "wall_s": 202.263898899997,
+      "speedup": 1.0,
+      "efficiency": 1.0
+    },
+    "2": {
+      "wall_s": 83.97348570000031,
+      "speedup": 2.408663844473426,
+      "efficiency": 1.204331922236713
+    },
+    "4": {
+      "wall_s": 61.05205629998818,
+      "speedup": 3.3129743887109036,
+      "efficiency": 0.8282435971777259
+    }
+  },
+  "spylen_memory_peak_MB": {
+    "1": 66.636094,
+    "2": 0.456466,
+    "4": 0.466053
+  },
+  "e01_estimate": {
+    "per_n4_surrogate_emnd_loc_s_w1": 16.855324908333085,
+    "est_N4_B999_w1_s": 16838.46958342475,
+    "est_N4_B999_w2_s": 6990.792684525026,
+    "est_N4_B999_w4_s": 5082.583686974016,
+    "note": "ESTIMATED from SPYLEN B=12 N4+locality only; excludes N3 battery and Cloud slowdown"
+  }
+}
