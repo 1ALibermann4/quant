@@ -1,0 +1,34 @@
+{
+  "env": {
+    "python": "3.12.10",
+    "numpy": "2.5.3",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "hat_emnd_all_blocks": {
+    "T_reference": 0.25351160000718664,
+    "T_optimized": 0.23594519999460317,
+    "speedup": 1.0744511861779145
+  },
+  "hat_locality_all_blocks": {
+    "T_reference": 0.3839101000048686,
+    "T_optimized": 0.3522372000006726,
+    "speedup": 1.0899192362536823
+  },
+  "spylen_states_plus_emnd": {
+    "T_reference_refemnd": 4.678943799997796,
+    "T_optimized": 4.398790999999619,
+    "speedup": 1.0636885907964715
+  },
+  "hat_n4_B8_emnd_plus_locality": {
+    "T_unfused_old_pipeline_shape": 9.769291600008728,
+    "T_fused_phase1a_pipeline": 6.5672365999926114,
+    "speedup_fusion": 1.4875802708280252
+  },
+  "hat_pipeline_B8_B4": {
+    "T_optimized_s": 8.900400700003956
+  },
+  "memory_spylen_emnd_pass_tracemalloc": {
+    "current_MB": 0.114576,
+    "peak_MB": 66.100654
+  }
+}
