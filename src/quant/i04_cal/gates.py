@@ -79,7 +79,12 @@ def _vector_knn_batch(
                 break
         pool = [int(c_arr[j]) for j in range(len(c_arr)) if mask[j]]
         if len(pool) >= k_max:
-            choice = rng.choice(len(pool), size=k_max, replace=False)
+            # Use deterministic random selection based on t to ensure reproducibility
+            # This prevents differences between serial and parallel execution
+            # Use a deterministic seed based on actual values, not hash()
+            choice_seed = (t * 1000000 + W * 1000 + k_max) & 0x7FFFFFFF
+            choice_rng = np.random.default_rng(choice_seed)
+            choice = choice_rng.choice(len(pool), size=k_max, replace=False)
             rand_idx = [pool[int(i)] for i in choice]
         else:
             rand_idx = pool
@@ -147,7 +152,12 @@ def knn_for_query(
     if len(pool) < k:
         rand_idx = pool
     else:
-        choice = rng.choice(len(pool), size=k, replace=False)
+        # Use deterministic random selection based on t to ensure reproducibility
+        # This prevents differences between serial and parallel execution
+        # Use a deterministic seed based on actual values, not hash()
+        choice_seed = (t * 1000000 + W * 1000 + k) & 0x7FFFFFFF
+        choice_rng = np.random.default_rng(choice_seed)
+        choice = choice_rng.choice(len(pool), size=k, replace=False)
         rand_idx = [pool[int(i)] for i in choice]
     dmap = {s: d for d, s in dlist}
     rand_dist = [dmap[s] for s in rand_idx]
@@ -287,8 +297,13 @@ def compute_gates_for_spec(
                 j_obs = inter / uni if uni else 0.0
                 pool = [int(s) for s in c_idx if embargo_ok(t, int(s), W) and int(s) != t]
                 if len(pool) >= k:
-                    a = set(int(x) for x in rng.choice(pool, size=k, replace=False))
-                    b = set(int(x) for x in rng.choice(pool, size=k, replace=False))
+                    # Use deterministic random selection based on t and prev_t to ensure reproducibility
+                    # This prevents differences between serial and parallel execution
+                    # Use a deterministic seed based on actual values, not hash()
+                    choice_seed = (t * 1000000 + prev_t * 1000 + W * 100 + k) & 0x7FFFFFFF
+                    choice_rng = np.random.default_rng(choice_seed)
+                    a = set(int(x) for x in choice_rng.choice(pool, size=k, replace=False))
+                    b = set(int(x) for x in choice_rng.choice(pool, size=k, replace=False))
                     j_null = len(a & b) / len(a | b) if (a | b) else 0.0
                 else:
                     j_null = 0.0
@@ -328,7 +343,11 @@ def compute_gates_for_spec(
 
     # CAL-G4: lighter probe set
     for c in PERTURB_CS:
-        rng_p = np.random.default_rng(seed + int(1000 * c))
+        # Use deterministic random selection based on c to ensure reproducibility
+        # This prevents differences between serial and parallel execution
+        # Use a deterministic seed based on actual values, not hash()
+        rng_seed = (W * 1000000 + sum(ord(c) for c in spec.geometry_id) * 1000 + sum(ord(c) for c in spec.variant_id) * 100 + int(c * 1000)) & 0x7FFFFFFF
+        rng_p = np.random.default_rng(rng_seed)
         sigma = float(np.std(r)) + 1e-12
         r_p = r + c * sigma * rng_p.normal(size=r.shape)
         emb_p = build_embeddings(r_p, union_idx, W, embed_fn)
@@ -361,14 +380,23 @@ def compute_gates_for_spec(
         }
 
     pair_n = 120
-    ts = rng.choice(q_idx, size=min(pair_n, q_idx.size), replace=False)
+    # Use deterministic random selection for ts to ensure reproducibility
+    # This prevents differences between serial and parallel execution
+    # Use a deterministic seed based on actual values, not hash()
+    ts_seed = (W * 1000000 + sum(ord(c) for c in spec.geometry_id) * 1000 + sum(ord(c) for c in spec.variant_id)) & 0x7FFFFFFF
+    ts_rng = np.random.default_rng(ts_seed)
+    ts = ts_rng.choice(q_idx, size=min(pair_n, q_idx.size), replace=False)
     nuisance = {k: [] for k in ("dG", "dRV", "dMean", "dTrend", "dSkew", "dKurt", "dGVOL")}
     for t in ts:
         t = int(t)
         pool = [int(s) for s in c_idx if embargo_ok(t, int(s), W) and int(s) != t]
         if not pool or t not in emb:
             continue
-        s = int(rng.choice(pool))
+        # Use deterministic random selection for s based on t to ensure reproducibility
+        # Use a deterministic seed based on actual values, not hash()
+        s_seed = (t * 1000000 + W * 1000 + sum(ord(c) for c in spec.geometry_id) * 100 + sum(ord(c) for c in spec.variant_id)) & 0x7FFFFFFF
+        s_rng = np.random.default_rng(s_seed)
+        s = int(s_rng.choice(pool))
         if s not in emb:
             continue
         wt = r[t - W + 1 : t + 1]

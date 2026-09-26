@@ -53,25 +53,25 @@ def test_checkpoint_resume_with_multiprocessing():
     with tempfile.TemporaryDirectory() as tmpdir:
         out_dir = Path(tmpdir) / "resume_test"
 
+        # Use a configuration that produces at least 4 cells
         cfg = CalConfig(
-            B=1, windows=(20,), workers=4, worlds=("S0a",), geometries=("G0",)
+            B=2, windows=(20, 40), workers=4, worlds=("S0a",), geometries=("G0",)
         )
 
         # Run with 4 workers, interrupt after 3 cells
-        # Simulate by running first 3 cells
         cfg1 = CalConfig(
-            B=1, windows=(20,), workers=4, worlds=("S0a",), geometries=("G0",)
+            B=2, windows=(20, 40), workers=4, worlds=("S0a",), geometries=("G0",)
         )
         run_calibration(out_dir, cfg1, max_cells=3, use_cache=True)
 
         # Resume with 1 worker (should complete remaining cells)
         cfg2 = CalConfig(
-            B=1, windows=(20,), workers=1, worlds=("S0a",), geometries=("G0",)
+            B=2, windows=(20, 40), workers=1, worlds=("S0a",), geometries=("G0",)
         )
         man = run_calibration(out_dir, cfg2, resume=True, use_cache=True)
 
         assert man["status"] == "COMPLETE"
-        assert man["n_rows"] > 3
+        assert man["n_rows"] == 4  # 1 world * 2 B * 2 windows * 1 geometry
 
 
 def test_worker_failure_fails_closed():
@@ -79,11 +79,12 @@ def test_worker_failure_fails_closed():
     with tempfile.TemporaryDirectory() as tmpdir:
         out_dir = Path(tmpdir) / "failure_test"
 
+        # Use a configuration that produces at least 3 cells
         cfg = CalConfig(
             B=1,
-            windows=(20,),
+            windows=(20, 40),  # 2 windows
             workers=2,
-            worlds=("S0a",),
+            worlds=("S0a", "S0b"),  # 2 worlds
             geometries=("G0",),
         )
 

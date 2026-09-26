@@ -112,6 +112,7 @@ class CalConfig:
     )
 
     def to_dict(self) -> dict[str, Any]:
+        """Return scientific configuration for hashing (excludes operational params)."""
         return {
             "spec_id": self.spec_id,
             "B": self.B,
@@ -119,7 +120,7 @@ class CalConfig:
             "query_stride": self.query_stride,
             "candidate_stride": self.candidate_stride,
             "k_neighbors": list(self.k_neighbors),
-            "workers": self.workers,
+            # workers excluded: operational parameter, not scientific
             "worlds": list(self.worlds),
             "geometries": list(self.geometries),
         }
