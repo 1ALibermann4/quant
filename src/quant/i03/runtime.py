@@ -53,15 +53,21 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument(
         "--mode",
-        choices=("hat",),
+        choices=("hat", "e01"),
         required=True,
-        help="Operational mode. Only 'hat' is exposed in this milestone.",
+        help="Operational mode: 'hat' (synthetic) or 'e01' (exploratory market).",
     )
     p.add_argument(
         "--fixture-dir",
         type=Path,
-        required=True,
-        help="Directory containing fixture_v1.npy + fixture_v1.meta.json",
+        default=None,
+        help="HAT: directory containing fixture_v1.npy + fixture_v1.meta.json",
+    )
+    p.add_argument(
+        "--cache-dir",
+        type=Path,
+        default=Path("data/exploratory"),
+        help="E01: directory containing UNQUALIFIED_SPY_*.meta.json cache",
     )
     p.add_argument(
         "--out-dir",
@@ -72,21 +78,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--prepare-fixture",
         action="store_true",
-        help="Write/overwrite the synthetic HAT fixture into --fixture-dir",
+        help="HAT: write/overwrite the synthetic HAT fixture into --fixture-dir",
     )
     return p
 
 
-def main(argv: list[str] | None = None) -> int:
-    # Production path must not inherit test overrides
-    if os.environ.get("I03_ALLOW_TEST_OVERRIDES") == "1":
-        print(
-            "WARNING: I03_ALLOW_TEST_OVERRIDES=1 is set; HAT clears it for production path.",
-            file=sys.stderr,
-        )
-        del os.environ["I03_ALLOW_TEST_OVERRIDES"]
-
-    args = build_parser().parse_args(argv)
+def _run_hat(args: argparse.Namespace) -> int:
+    if args.fixture_dir is None:
+        raise SystemExit("--fixture-dir is required for --mode hat")
     fixture_dir: Path = args.fixture_dir
     out_dir: Path = args.out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -159,6 +158,23 @@ def main(argv: list[str] | None = None) -> int:
         f"elapsed={elapsed:.1f}s out={out_dir}"
     )
     return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    # Production path must not inherit test overrides
+    if os.environ.get("I03_ALLOW_TEST_OVERRIDES") == "1":
+        print(
+            "WARNING: I03_ALLOW_TEST_OVERRIDES=1 is set; production path clears it.",
+            file=sys.stderr,
+        )
+        del os.environ["I03_ALLOW_TEST_OVERRIDES"]
+
+    args = build_parser().parse_args(argv)
+    if args.mode == "e01":
+        from quant.i03.e01 import run_e01
+
+        return run_e01(cache_dir=args.cache_dir, out_dir=args.out_dir)
+    return _run_hat(args)
 
 
 if __name__ == "__main__":
