@@ -53,9 +53,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument(
         "--mode",
-        choices=("hat", "e01"),
+        choices=("hat", "e01", "produce-canonical"),
         required=True,
-        help="Operational mode: 'hat' (synthetic) or 'e01' (exploratory market).",
+        help=(
+            "hat=synthetic HAT; e01=exploratory market; "
+            "produce-canonical=Amendment B local producer (no science)."
+        ),
     )
     p.add_argument(
         "--fixture-dir",
@@ -67,13 +70,19 @@ def build_parser() -> argparse.ArgumentParser:
         "--cache-dir",
         type=Path,
         default=Path("data/exploratory"),
-        help="E01: directory containing UNQUALIFIED_SPY_*.meta.json cache",
+        help="E01 CSV path / produce-canonical: authorized snapshot directory",
+    )
+    p.add_argument(
+        "--canonical-dir",
+        type=Path,
+        default=None,
+        help="E01 Amendment B: directory with returns.npy + manifest.json",
     )
     p.add_argument(
         "--out-dir",
         type=Path,
         required=True,
-        help="Output directory for artifact.json and report.md",
+        help="Output directory for artifact.json / report.md / canonical artifact",
     )
     p.add_argument(
         "--prepare-fixture",
@@ -170,9 +179,33 @@ def main(argv: list[str] | None = None) -> int:
         del os.environ["I03_ALLOW_TEST_OVERRIDES"]
 
     args = build_parser().parse_args(argv)
+    if args.mode == "produce-canonical":
+        from quant.i03.canonical_input import (
+            CanonicalInputError,
+            produce_authorized_canonical,
+        )
+
+        try:
+            man = produce_authorized_canonical(
+                cache_dir=args.cache_dir, out_dir=args.out_dir
+            )
+        except CanonicalInputError as e:
+            print(f"STOP: canonical produce failed: {e}", file=sys.stderr)
+            return 2
+        print(
+            f"I03 canonical input written: payload={man['return_payload_sha256']} "
+            f"out={args.out_dir}"
+        )
+        return 0
     if args.mode == "e01":
         from quant.i03.e01 import run_e01
 
+        if args.canonical_dir is not None:
+            return run_e01(
+                canonical_dir=args.canonical_dir,
+                out_dir=args.out_dir,
+                cache_dir=None,
+            )
         return run_e01(cache_dir=args.cache_dir, out_dir=args.out_dir)
     return _run_hat(args)
 

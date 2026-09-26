@@ -9,8 +9,18 @@ import pytest
 
 from quant.i03.params import DEFAULT_CONFIG, I03Config
 
-# Allow B_n4/B_n3 overrides in synthetic tests only (not production default).
-os.environ.setdefault("I03_ALLOW_TEST_OVERRIDES", "1")
+
+@pytest.fixture(autouse=True)
+def _i03_test_overrides_enabled() -> None:
+    """Ensure test-only B overrides remain available across the i03 suite."""
+
+    prev = os.environ.get("I03_ALLOW_TEST_OVERRIDES")
+    os.environ["I03_ALLOW_TEST_OVERRIDES"] = "1"
+    yield
+    if prev is None:
+        os.environ.pop("I03_ALLOW_TEST_OVERRIDES", None)
+    else:
+        os.environ["I03_ALLOW_TEST_OVERRIDES"] = prev
 
 
 @pytest.fixture

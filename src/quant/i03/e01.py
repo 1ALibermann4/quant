@@ -4,6 +4,9 @@ Operational wiring only. Scientific constants remain frozen (I03-PREREG-v0.1).
 Does not import yfinance into the I03 mathematical core; loads the
 existing DR-008 exploratory cache via quant.exploratory.adapter.
 
+Amendment B: optional ``--canonical-dir`` consumes a pre-materialized
+returns.npy + manifest (same scientific payload SHA) without CSV/pandas.
+
 Allowed E01 labels (mapped from structural verdict):
   EXPL-SUPPORT / EXPL-ABSENT / EXPL-INCONCLUSIVE
 Never SCI-PASS / SCI-FAIL / PRED / ECON.
@@ -131,8 +134,17 @@ def _dataset_record(acq, returns: np.ndarray, cache_dir: Path) -> dict[str, Any]
     }
 
 
-def run_e01(*, cache_dir: Path, out_dir: Path) -> int:
-    """Execute one I03-E01 exploratory market run. Returns process exit code."""
+def run_e01(
+    *,
+    cache_dir: Path | None = None,
+    out_dir: Path,
+    canonical_dir: Path | None = None,
+) -> int:
+    """Execute one I03-E01 exploratory market run. Returns process exit code.
+
+    Provide exactly one of ``cache_dir`` (CSV) or ``canonical_dir`` (Amendment B).
+    Scientific pipeline ``run_structural_analysis`` is unchanged.
+    """
 
     if os.environ.get("I03_ALLOW_TEST_OVERRIDES") == "1":
         print(
@@ -141,25 +153,92 @@ def run_e01(*, cache_dir: Path, out_dir: Path) -> int:
         )
         del os.environ["I03_ALLOW_TEST_OVERRIDES"]
 
-    print(BANNER)
-    acq = load_latest_cache(cache_dir, ticker="SPY")
-    returns = log_returns(acq.series)
-    dataset = _dataset_record(acq, returns, cache_dir)
-
-    checks = dataset["authorized_snapshot_check"]
-    if not all(checks.values()):
-        print("STOP: exploratory dataset does not match authorized I02-E01 snapshot.", file=sys.stderr)
-        print(json.dumps(checks, indent=2), file=sys.stderr)
+    has_cache = cache_dir is not None
+    has_canon = canonical_dir is not None
+    if has_cache == has_canon:
         print(
-            f"got price={dataset['adjusted_price_sha256']} returns={dataset['log_returns_sha256']}",
-            file=sys.stderr,
-        )
-        print(
-            "Note: log-returns SHA-256 is platform-sensitive (Win MSC vs Linux GCC numpy). "
-            "Use the same platform as I02-E01 (Windows py -3.12) for bit-identical returns.",
+            "STOP: provide exactly one of --cache-dir or --canonical-dir",
             file=sys.stderr,
         )
         return 2
+
+    print(BANNER)
+
+    if has_canon:
+        from quant.i03.canonical_input import load_canonical_artifact
+
+        assert canonical_dir is not None
+        returns, canon_man = load_canonical_artifact(
+            canonical_dir, require_authorized_spy=True
+        )
+        dataset = {
+            "data_class": "EXPLORATORY",
+            "qualification": "UNQUALIFIED",
+            "scientifically_promotable": False,
+            "banner": BANNER,
+            "source": "canonical_input_amendment_B",
+            "ticker": "SPY",
+            "yfinance_version": "1.6.0",
+            "price_field": "Adj Close",
+            "acquired_at_utc": canon_man["acquired_at_utc"],
+            "n_sessions": canon_man["n_sessions"],
+            "first_session": canon_man["first_session"],
+            "last_session": canon_man["last_session"],
+            "calendar_authority": False,
+            "cache_stem": canon_man["source_snapshot_stem"],
+            "adjusted_price_sha256": canon_man["price_payload_sha256"],
+            "log_returns_sha256": canon_man["return_payload_sha256"],
+            "canonical_input": {
+                "schema": canon_man["schema"],
+                "directory": str(canonical_dir),
+                "returns_npy_file_sha256": canon_man["returns_npy_file_sha256"],
+                "source_csv_file_sha256": canon_man["source_csv_file_sha256"],
+                "source_meta_file_sha256": canon_man["source_meta_file_sha256"],
+            },
+            "qc_returns": _qc_returns(returns),
+            "authorized_snapshot_check": {
+                "price_sha256_match": True,
+                "returns_sha256_match": True,
+                "n_sessions_match": True,
+                "first_match": True,
+                "last_match": True,
+                "acquired_match": True,
+            },
+            "note": (
+                "Amendment B canonical numerical input. Same authorized SPY "
+                "returns payload as DR-008 / I02-E01. Not C02. Not confirmatory."
+            ),
+        }
+        input_mode = "canonical"
+        fixture_id = f"EXPLORATORY-SPY-{AUTHORIZED_CACHE_STEM}"
+    else:
+        assert cache_dir is not None
+        acq = load_latest_cache(cache_dir, ticker="SPY")
+        returns = log_returns(acq.series)
+        dataset = _dataset_record(acq, returns, cache_dir)
+        checks = dataset["authorized_snapshot_check"]
+        if not all(checks.values()):
+            print(
+                "STOP: exploratory dataset does not match authorized I02-E01 snapshot.",
+                file=sys.stderr,
+            )
+            print(json.dumps(checks, indent=2), file=sys.stderr)
+            print(
+                f"got price={dataset['adjusted_price_sha256']} "
+                f"returns={dataset['log_returns_sha256']}",
+                file=sys.stderr,
+            )
+            print(
+                "Note: log-returns SHA-256 is platform-sensitive "
+                "(Win MSC vs Linux GCC numpy). "
+                "Use Windows py -3.12 or Amendment B canonical input.",
+                file=sys.stderr,
+            )
+            return 2
+        input_mode = "csv_cache"
+        fixture_id = (
+            f"EXPLORATORY-SPY-{acq.acquired_at_utc.strftime('%Y%m%dT%H%M%SZ')}"
+        )
 
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "dataset.json").write_text(
@@ -184,9 +263,10 @@ def run_e01(*, cache_dir: Path, out_dir: Path) -> int:
             "total_seconds": round(elapsed, 3),
             "note": "engineering observation only; no scientific performance gate",
         },
-        fixture_id=f"EXPLORATORY-SPY-{acq.acquired_at_utc.strftime('%Y%m%dT%H%M%SZ')}",
+        fixture_id=fixture_id,
     )
     artifact["dataset"] = dataset
+    artifact["input_mode"] = input_mode
     artifact["environment"] = {
         "python": sys.version.replace("\n", " "),
         "platform": platform.platform(),
@@ -194,7 +274,11 @@ def run_e01(*, cache_dir: Path, out_dir: Path) -> int:
         "numpy": np.__version__,
     }
     artifact["operator"] = {
-        "command": "python -m quant.i03 --mode e01 ...",
+        "command": (
+            "python -m quant.i03 --mode e01 --canonical-dir ..."
+            if input_mode == "canonical"
+            else "python -m quant.i03 --mode e01 --cache-dir ..."
+        ),
         "prereg_id": PREREG_ID,
         "B_N4": cfg.B_N4,
         "B_N3": cfg.B_N3,
@@ -227,8 +311,9 @@ def run_e01(*, cache_dir: Path, out_dir: Path) -> int:
             {
                 **artifact["environment"],
                 "elapsed_seconds": elapsed,
+                "input_mode": input_mode,
                 "dataset": {
-                    "cache_stem": dataset["cache_stem"],
+                    "cache_stem": dataset.get("cache_stem"),
                     "log_returns_sha256": dataset["log_returns_sha256"],
                     "adjusted_price_sha256": dataset["adjusted_price_sha256"],
                 },
@@ -244,6 +329,6 @@ def run_e01(*, cache_dir: Path, out_dir: Path) -> int:
 
     print(
         f"I03 E01 complete: structural={structural} exploratory={expl} "
-        f"elapsed={elapsed:.1f}s out={out_dir}"
+        f"input_mode={input_mode} elapsed={elapsed:.1f}s out={out_dir}"
     )
     return 0

@@ -153,22 +153,19 @@ def write_cache(cache_dir: Path, acquisition: ExploratoryAcquisition, frame: Any
     return csv_path
 
 
-def load_latest_cache(cache_dir: Path, ticker: str = DEFAULT_TICKER) -> ExploratoryAcquisition:
-    """Reload the newest UNQUALIFIED CSV so E02 diagnoses the same bars as E01."""
+def load_cache_by_stem(cache_dir: Path, stem: str) -> ExploratoryAcquisition:
+    """Reload a specific UNQUALIFIED cache stem (no download, no 'latest' choice)."""
 
     cache_dir = Path(cache_dir)
-    metas = sorted(cache_dir.glob(f"UNQUALIFIED_{ticker}_*.meta.json"))
-    if not metas:
-        raise FileNotFoundError(
-            f"no UNQUALIFIED {ticker} cache in {cache_dir}; run I01-E01 first"
-        )
-    meta_path = metas[-1]
+    meta_path = cache_dir / f"{stem}.meta.json"
+    if not meta_path.is_file():
+        raise FileNotFoundError(f"cache meta missing: {meta_path}")
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
     csv_path = Path(meta["csv"])
     if not csv_path.is_file():
-        csv_path = meta_path.with_suffix("").with_suffix(".csv")
+        csv_path = cache_dir / f"{stem}.csv"
         if not csv_path.is_file():
-            raise FileNotFoundError(f"cache csv missing for {meta_path}")
+            raise FileNotFoundError(f"cache csv missing for stem {stem}")
     import pandas as pd
 
     frame = pd.read_csv(csv_path, index_col=0, parse_dates=True)
@@ -188,3 +185,17 @@ def load_latest_cache(cache_dir: Path, ticker: str = DEFAULT_TICKER) -> Explorat
         ),
         raw_close=tuple(float(v) for v in frame["Close"].tolist()),
     )
+
+
+def load_latest_cache(cache_dir: Path, ticker: str = DEFAULT_TICKER) -> ExploratoryAcquisition:
+    """Reload the newest UNQUALIFIED CSV so E02 diagnoses the same bars as E01."""
+
+    cache_dir = Path(cache_dir)
+    metas = sorted(cache_dir.glob(f"UNQUALIFIED_{ticker}_*.meta.json"))
+    if not metas:
+        raise FileNotFoundError(
+            f"no UNQUALIFIED {ticker} cache in {cache_dir}; run I01-E01 first"
+        )
+    meta_path = metas[-1]
+    stem = meta_path.name[: -len(".meta.json")]
+    return load_cache_by_stem(cache_dir, stem)
