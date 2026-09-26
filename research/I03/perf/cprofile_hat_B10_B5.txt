@@ -1,0 +1,48 @@
+         1927530 function calls (1927528 primitive calls) in 6.134 seconds
+
+   Ordered by: cumulative time
+   List reduced from 134 to 40 due to restriction <40>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.001    0.001    6.135    6.135 C:\Users\Jean Marie\dev0\quant\src\quant\i03\pipeline.py:66(run_structural_analysis)
+       16    0.000    0.000    5.507    0.344 C:\Users\Jean Marie\dev0\quant\src\quant\i03\pipeline.py:57(_emnd_on_returns)
+       16    0.000    0.000    3.851    0.241 C:\Users\Jean Marie\dev0\quant\src\quant\i03\emnd.py:109(compute_emnd_all)
+       64    0.001    0.000    3.850    0.060 C:\Users\Jean Marie\dev0\quant\src\quant\i03\emnd.py:117(<genexpr>)
+       48    2.692    0.056    3.850    0.080 C:\Users\Jean Marie\dev0\quant\src\quant\i03\emnd.py:62(compute_emnd_block)
+       16    0.000    0.000    1.656    0.104 C:\Users\Jean Marie\dev0\quant\src\quant\i03\g0.py:32(build_states_x)
+       16    0.046    0.003    1.656    0.104 C:\Users\Jean Marie\dev0\quant\src\quant\i02\states_x.py:85(all_state_vectors_x)
+    34368    0.192    0.000    1.609    0.000 C:\Users\Jean Marie\dev0\quant\src\quant\i02\states_x.py:52(state_vector_x)
+    34368    0.175    0.000    1.333    0.000 C:\Users\Jean Marie\dev0\quant\src\quant\i02\states_x.py:30(causal_mu_sigma)
+   223091    0.825    0.000    0.825    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+    36743    0.051    0.000    0.808    0.000 C:\Users\Jean Marie\AppData\Local\Programs\Python\Python312\Lib\site-packages\numpy\_core\fromnumeric.py:3871(std)
+    36743    0.072    0.000    0.757    0.000 C:\Users\Jean Marie\AppData\Local\Programs\Python\Python312\Lib\site-packages\numpy\_core\_methods.py:217(_std)
+    38677    0.054    0.000    0.724    0.000 C:\Users\Jean Marie\AppData\Local\Programs\Python\Python312\Lib\site-packages\numpy\_core\fromnumeric.py:2342(sum)
+    41825    0.082    0.000    0.677    0.000 C:\Users\Jean Marie\AppData\Local\Programs\Python\Python312\Lib\site-packages\numpy\_core\fromnumeric.py:66(_wrapreduction)
+    36744    0.423    0.000    0.670    0.000 C:\Users\Jean Marie\AppData\Local\Programs\Python\Python312\Lib\site-packages\numpy\_core\_methods.py:148(_var)
+    38659    0.437    0.000    0.495    0.000 C:\Users\Jean Marie\dev0\quant\src\quant\i03\emnd.py:25(admissible_pool)
+        4    0.000    0.000    0.425    0.106 C:\Users\Jean Marie\dev0\quant\src\quant\i03\pipeline.py:118(<genexpr>)
+        3    0.249    0.083    0.424    0.141 C:\Users\Jean Marie\dev0\quant\src\quant\i03\locality.py:44(locality_for_block)
+    36661    0.049    0.000    0.333    0.000 C:\Users\Jean Marie\AppData\Local\Programs\Python\Python312\Lib\site-packages\numpy\_core\fromnumeric.py:3737(mean)
+    36661    0.111    0.000    0.284    0.000 C:\Users\Jean Marie\AppData\Local\Programs\Python\Python312\Lib\site-packages\numpy\_core\_methods.py:115(_mean)
+    73405    0.142    0.000    0.160    0.000 C:\Users\Jean Marie\AppData\Local\Programs\Python\Python312\Lib\site-packages\numpy\_core\_methods.py:73(_count_reduce_items)
+    71111    0.045    0.000    0.141    0.000 {method 'any' of 'numpy.ndarray' objects}
+        1    0.000    0.000    0.112    0.112 C:\Users\Jean Marie\dev0\quant\src\quant\i03\n3.py:33(generate_n3_battery)
+        5    0.027    0.005    0.112    0.022 C:\Users\Jean Marie\dev0\quant\src\quant\i03\iaaft.py:29(iaaft)
+    71117    0.025    0.000    0.096    0.000 C:\Users\Jean Marie\AppData\Local\Programs\Python\Python312\Lib\site-packages\numpy\_core\_methods.py:55(_any)
+        1    0.000    0.000    0.079    0.079 C:\Users\Jean Marie\dev0\quant\src\quant\i03\n4.py:120(generate_n4_battery)
+        1    0.003    0.003    0.070    0.070 C:\Users\Jean Marie\dev0\quant\src\quant\i03\n4.py:53(build_n4_scale_path)
+     2400    0.009    0.000    0.066    0.000 C:\Users\Jean Marie\dev0\quant\src\quant\i03\n4.py:35(n4_sigma_at)
+    38659    0.058    0.000    0.058    0.000 {method 'astype' of 'numpy.ndarray' objects}
+     1510    0.048    0.000    0.049    0.000 C:\Users\Jean Marie\AppData\Local\Programs\Python\Python312\Lib\site-packages\numpy\fft\_pocketfft.py:58(_raw_fft)
+   222093    0.046    0.000    0.046    0.000 {built-in method builtins.isinstance}
+     1010    0.001    0.000    0.034    0.000 C:\Users\Jean Marie\AppData\Local\Programs\Python\Python312\Lib\site-packages\numpy\fft\_pocketfft.py:324(rfft)
+    72814    0.031    0.000    0.031    0.000 {built-in method numpy.asarray}
+   146828    0.029    0.000    0.029    0.000 {built-in method builtins.issubclass}
+        3    0.004    0.001    0.027    0.009 C:\Users\Jean Marie\dev0\quant\src\quant\i03\locality.py:29(_query_list)
+   110148    0.027    0.000    0.027    0.000 {built-in method builtins.hasattr}
+   111957    0.023    0.000    0.023    0.000 {method 'append' of 'list' objects}
+      510    0.003    0.000    0.021    0.000 C:\Users\Jean Marie\dev0\quant\src\quant\i03\iaaft.py:23(_power_spectrum)
+    74915    0.018    0.000    0.018    0.000 {built-in method numpy.lib.array_utils.normalize_axis_index}
+      500    0.000    0.000    0.018    0.000 C:\Users\Jean Marie\AppData\Local\Programs\Python\Python312\Lib\site-packages\numpy\fft\_pocketfft.py:421(irfft)
+
+
