@@ -62,9 +62,9 @@ $env:PYTHONPATH = "src"
 py -3.12 -m quant.i03 --mode e01 --cache-dir data/exploratory --out-dir research/I03/e01/run1
 ```
 
-Amendment B (canonical returns artifact — produce on Windows; consume on Cloud):
-see [I03-AMENDMENT-B-CANONICAL-INPUT.md](I03-AMENDMENT-B-CANONICAL-INPUT.md).
-**Real SPY canonical artifact and E01 not authorized in the Amendment B milestone.**
+Amendment B / M1: authorized SPY canonical artifact at
+`data/exploratory/canonical_i03_spy_v1/` — [I03-M1-CANONICAL-SPY.md](I03-M1-CANONICAL-SPY.md).
+**E01 still not authorized for observation.**
 
 See [I03-E01.md](I03-E01.md).
 
