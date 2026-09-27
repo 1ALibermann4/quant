@@ -1,0 +1,1 @@
+EXEC-03 incident. This test-only concurrent execution was terminated 2026-09-27 09:57:11 +02:00. Not canonical scientific output; do not resume or use for assessment. See research/I04/perf/EXEC-03-INCIDENT.md. Original artifacts preserved in place.
