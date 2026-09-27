@@ -14,6 +14,7 @@ from quant.i04_cal.params import (
     QUERY_STRIDE,
     WINDOWS,
 )
+from quant.i04_cal.geometries import iter_geometry_specs
 from quant.i04_cal.pipeline import run_calibration
 
 
@@ -22,6 +23,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--out-dir", type=Path, required=True)
     p.add_argument("--workers", type=int, default=1)
     p.add_argument("--resume", action="store_true")
+    p.add_argument("--canonical", action="store_true")
     p.add_argument(
         "--max-cells",
         type=int,
@@ -36,8 +38,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.canonical and (args.worlds or args.geometries or args.B is not None or args.max_cells is not None):
+        raise SystemExit("--canonical forbids test/subset overrides")
+    if (args.worlds or args.geometries or args.max_cells is not None) and os.environ.get("I04_CAL_ALLOW_TEST_OVERRIDES") != "1" and not args.canonical:
+        raise SystemExit("subset overrides require I04_CAL_ALLOW_TEST_OVERRIDES=1")
+    if args.canonical and os.environ.get("I04_CAL_ALLOW_TEST_OVERRIDES") == "1":
+        raise SystemExit("--canonical forbids test-only overrides")
     worlds = DEFAULT_CAL_CONFIG.worlds
-    geos = DEFAULT_CAL_CONFIG.geometries
+    geos = tuple(dict.fromkeys(spec.geometry_id for spec in iter_geometry_specs())) if args.canonical else DEFAULT_CAL_CONFIG.geometries
     B = DEFAULT_CAL_CONFIG.B
     if args.worlds:
         worlds = tuple(x.strip() for x in args.worlds.split(",") if x.strip())

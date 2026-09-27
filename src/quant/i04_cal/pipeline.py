@@ -9,8 +9,11 @@ import platform
 import subprocess
 import sys
 import time
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from multiprocessing import Pool, get_context
+import traceback
+import uuid
+from datetime import datetime, timezone
+from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, wait
+from multiprocessing import get_context
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +21,7 @@ import numpy as np
 
 from quant.i04_cal.gates import compute_gates_for_spec
 from quant.i04_cal.geometries import iter_geometry_specs
-from quant.i04_cal.params import DEFAULT_CAL_CONFIG, CalConfig, SPEC_ID, world_seed
+from quant.i04_cal.params import DEFAULT_CAL_CONFIG, CalConfig, SEED_CONTRACT_VERSION, SPEC_ID
 from quant.i04_cal.types import ExecStatus, GeometryStatus
 from quant.i04_cal.worlds import generate_world
 from quant.i04_cal.worker import execute_cal_cell
@@ -65,13 +68,95 @@ def _git_dirty() -> bool:
 _process_world_cache: dict[tuple[str, int], Any] = {}
 
 
+def geometry_specs(cfg: CalConfig) -> list[Any]:
+    return [
+        spec for spec in iter_geometry_specs(include_hold=cfg.include_hold_geometries)
+        if spec.geometry_id in cfg.geometries and spec.status != GeometryStatus.HOLD
+    ]
+
+
+def expected_cells(cfg: CalConfig) -> list[tuple[str, int, int, Any]]:
+    specs = geometry_specs(cfg)
+    return [
+        (world, b, W, spec)
+        for world in cfg.worlds for b in range(cfg.B)
+        for W in cfg.windows for spec in specs
+    ]
+
+
+def expected_cell_ids(cfg: CalConfig) -> list[str]:
+    return [cell_key(world, b, W, f"{spec.geometry_id}:{spec.variant_id}")
+            for world, b, W, spec in expected_cells(cfg)]
+
+
 def config_hash(cfg: CalConfig) -> str:
-    blob = json.dumps(cfg.to_dict(), sort_keys=True).encode()
+    identity = {
+        "config": cfg.to_dict(),
+        "geometry_specs": [_serialize_spec(spec) for spec in geometry_specs(cfg)],
+        "seed_contract": SEED_CONTRACT_VERSION,
+        "generator_oracle_version": SPEC_ID,
+    }
+    blob = json.dumps(identity, sort_keys=True).encode()
     return hashlib.sha256(blob).hexdigest()
 
 
 def cell_key(world: str, b: int, W: int, geo_variant: str) -> str:
     return f"{world}|b={b}|W={W}|{geo_variant}"
+
+
+def _fsync_dir(path: Path) -> None:
+    if os.name != "nt":
+        fd = os.open(path, os.O_RDONLY)
+        try:
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+
+
+def _atomic_json(path: Path, data: dict[str, Any]) -> None:
+    temp = path.with_suffix(path.suffix + ".tmp")
+    with temp.open("w", encoding="utf-8") as f:
+        json.dump(data, f, sort_keys=True, default=str)
+        f.write("\n")
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(temp, path)
+    _fsync_dir(path.parent)
+
+
+def _checkpoint_path(ckpt: Path, key: str) -> Path:
+    return ckpt / (hashlib.sha256(key.encode("utf-8")).hexdigest() + ".json")
+
+
+def _record_hash(row: dict[str, Any]) -> str:
+    payload = {k: v for k, v in row.items() if k != "record_hash"}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()
+
+
+def _load_completed(ckpt: Path, expected: set[str], ch: str) -> dict[str, dict[str, Any]]:
+    rows: dict[str, dict[str, Any]] = {}
+    for path in ckpt.glob("*.json"):
+        row = json.loads(path.read_text(encoding="utf-8"))
+        key = row.get("cell_key")
+        if key not in expected or path != _checkpoint_path(ckpt, key):
+            raise RuntimeError(f"STOP: unexpected checkpoint {path}")
+        if (row.get("config_hash") != ch or row.get("status") != "OK" or key in rows
+                or row.get("record_hash") != _record_hash(row)):
+            raise RuntimeError(f"STOP: invalid/duplicate checkpoint {path}")
+        rows[key] = row
+    return rows
+
+
+def _rebuild_results(path: Path, keys: list[str], rows: dict[str, dict[str, Any]]) -> None:
+    temp = path.with_suffix(".jsonl.tmp")
+    with temp.open("w", encoding="utf-8") as fout:
+        for key in keys:
+            if key in rows:
+                fout.write(json.dumps(rows[key], default=str) + "\n")
+        fout.flush()
+        os.fsync(fout.fileno())
+    os.replace(temp, path)
+    _fsync_dir(path.parent)
 
 
 def run_calibration(
@@ -89,174 +174,181 @@ def run_calibration(
     """
 
     cfg = cfg or DEFAULT_CAL_CONFIG
-    out_dir = Path(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    ckpt = out_dir / "ckpt"
-    ckpt.mkdir(exist_ok=True)
-    results_path = out_dir / "results.jsonl"
-    manifest_path = out_dir / "manifest.json"
-
     if max_cells is not None and os.environ.get("I04_CAL_ALLOW_TEST_OVERRIDES") != "1":
         raise RuntimeError("max_cells requires I04_CAL_ALLOW_TEST_OVERRIDES=1")
+    if cfg.workers < 1:
+        raise ValueError("workers must be positive")
 
     # Clear caches if caching is disabled
     if not use_cache:
         from quant.i04_cal.cache import clear_caches
         clear_caches()
 
+    all_cells = expected_cells(cfg)
+    keys = expected_cell_ids(cfg)
+    if len(keys) != len(set(keys)):
+        raise RuntimeError("STOP: duplicate expected cell IDs")
+    expected = set(keys)
     ch = config_hash(cfg)
     head = _git_head() or "unknown"
-    workers = cfg.workers if hasattr(cfg, "workers") else 1
-    manifest = {
-        "schema": "I04-CAL-MANIFEST-v1",
-        "spec_id": SPEC_ID,
-        "git_commit": head,
-        "git_dirty": _git_dirty(),
-        "config": cfg.to_dict(),
-        "config_hash": ch,
-        "environment": {
-            "python": sys.version.replace("\n", " "),
-            "platform": platform.platform(),
-            "executable": sys.executable,
-            "numpy": np.__version__,
-        },
-        "use_cache": use_cache,
-        "workers": workers,
-        "status": ExecStatus.INCOMPLETE.value,
-        "note": "SYNTHETIC ONLY — NO MARKET DATA — NO GEOMETRY WINNER",
-    }
+    out_dir = Path(out_dir)
+    if (out_dir / "ABORTED_NONCANONICAL.txt").exists():
+        raise RuntimeError("STOP: aborted noncanonical run cannot be resumed")
+    manifest_path = out_dir / "manifest.json"
+    results_path = out_dir / "results.jsonl"
+    ckpt = out_dir / "ckpt"
+    if resume:
+        if not manifest_path.is_file() or not ckpt.is_dir():
+            raise RuntimeError("STOP: missing checkpoint manifest")
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if (manifest.get("config_hash") != ch or manifest.get("git_commit") != head
+                or manifest.get("seed_contract") != SEED_CONTRACT_VERSION
+                or manifest.get("generator_oracle_version") != SPEC_ID
+                or manifest.get("geometry_specs") != [_serialize_spec(s) for s in geometry_specs(cfg)]
+                or manifest.get("expected_cells") != len(keys)):
+            raise RuntimeError("STOP: checkpoint scientific identity mismatch")
+        rows = _load_completed(ckpt, expected, ch)
+        _rebuild_results(results_path, keys, rows)
+    else:
+        if manifest_path.exists() or results_path.exists() or ckpt.exists():
+            raise RuntimeError("STOP: run exists; pass resume=True or use fresh out_dir")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        ckpt.mkdir()
+        rows = {}
+        manifest = {
+            "schema": "I04-CAL-MANIFEST-v1",
+            "run_id": str(uuid.uuid4()),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "spec_id": SPEC_ID,
+            "git_commit": head,
+            "git_dirty": _git_dirty(),
+            "config": cfg.to_dict(),
+            "config_hash": ch,
+            "seed_contract": SEED_CONTRACT_VERSION,
+            "generator_oracle_version": SPEC_ID,
+            "geometry_specs": [_serialize_spec(s) for s in geometry_specs(cfg)],
+            "environment": {
+                "python": sys.version.replace("\n", " "),
+                "platform": platform.platform(),
+                "executable": sys.executable,
+                "numpy": np.__version__,
+            },
+            "use_cache": use_cache,
+            "workers": cfg.workers,
+            "status": ExecStatus.INCOMPLETE.value,
+            "note": "SYNTHETIC ONLY — NO MARKET DATA — NO GEOMETRY WINNER",
+            "expected_cells": len(keys),
+            "n_rows": 0,
+        }
+        _atomic_json(manifest_path, manifest)
+        _rebuild_results(results_path, keys, rows)
 
-    existing: set[str] = set()
-    if resume and results_path.is_file():
-        with results_path.open(encoding="utf-8") as f:
-            for line in f:
-                if not line.strip():
-                    continue
-                row = json.loads(line)
-                if row.get("config_hash") != ch:
-                    raise RuntimeError("STOP: checkpoint config_hash mismatch")
-                existing.add(row["cell_key"])
-    elif results_path.is_file() and not resume:
-        raise RuntimeError("STOP: results exist; pass resume=True or use fresh out_dir")
-
-    if not resume:
-        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-        results_path.write_text("", encoding="utf-8")
-
-    specs = [
-        s
-        for s in iter_geometry_specs(include_hold=cfg.include_hold_geometries)
-        if s.geometry_id in cfg.geometries and s.status != GeometryStatus.HOLD
-    ]
-
-    cells: list[tuple[str, int, int, Any]] = []
-    for world in cfg.worlds:
-        for b in range(cfg.B):
-            for W in cfg.windows:
-                for spec in specs:
-                    key = cell_key(world, b, W, f"{spec.geometry_id}:{spec.variant_id}")
-                    if key in existing:
-                        continue
-                    cells.append((world, b, W, spec))
-
+    _atomic_json(out_dir / "progress.json", {
+        "completed_cells": len(rows), "expected_cells": len(keys), "failed_cells": 0,
+        "elapsed_seconds": 0,
+    })
+    cells = [c for c, key in zip(all_cells, keys) if key not in rows]
     if max_cells is not None:
-        cells = cells[: int(max_cells)]
-
+        cells = cells[:int(max_cells)]
     t0 = time.perf_counter()
-    n_done = 0
+    failures: list[dict[str, Any]] = []
+
+    def receive(key: str, row: dict[str, Any]) -> None:
+        if row.get("cell_key") != key or key not in expected or key in rows:
+            raise RuntimeError(f"STOP: worker returned invalid/duplicate cell {key}")
+        row["config_hash"] = ch
+        if row.get("status") != "OK":
+            failures.append({"cell_key": key, "error": row.get("error"),
+                             "traceback": row.get("traceback"), "status": row.get("status")})
+            return
+        row["record_hash"] = _record_hash(row)
+        _atomic_json(_checkpoint_path(ckpt, key), row)
+        with results_path.open("a", encoding="utf-8") as fout:
+            fout.write(json.dumps(row, default=str) + "\n")
+            fout.flush()
+            os.fsync(fout.fileno())
+        rows[key] = row
+        manifest["n_rows"] = len(rows)
+        _atomic_json(out_dir / "progress.json", {
+            "completed_cells": len(rows), "expected_cells": len(keys),
+            "failed_cells": len(failures), "elapsed_seconds": round(time.perf_counter() - t0, 3),
+        })
+        print(f"I04-CAL cells {len(rows)}/{len(keys)} last={key} status=OK", flush=True)
 
     # Phase 5: Deterministic multiprocessing
-    workers = cfg.workers if hasattr(cfg, "workers") else 1
-    use_multiprocessing = workers > 1
-
-    if use_multiprocessing:
+    if cfg.workers > 1 and cells:
         # Parallel execution with deterministic ordering
         # Each worker has its own process-local cache
-        results_dict: dict[str, dict[str, Any]] = {}
-
         # Use ProcessPoolExecutor with spawn context for Windows compatibility
-        ctx = get_context('spawn')
-        with ProcessPoolExecutor(max_workers=workers, mp_context=ctx) as executor:
-            # Submit all tasks
-            future_to_key = {}
-            for i, (world, b, W, spec) in enumerate(cells):
+        ctx = get_context("spawn")
+        with ProcessPoolExecutor(max_workers=cfg.workers, mp_context=ctx) as executor:
+            pending: dict[Any, str] = {}
+            iterator = iter(cells)
+
+            def submit() -> bool:
+                try:
+                    world, b, W, spec = next(iterator)
+                except StopIteration:
+                    return False
                 key = cell_key(world, b, W, f"{spec.geometry_id}:{spec.variant_id}")
                 # Serialize spec to dict for multiprocessing
-                spec_dict = _serialize_spec(spec)
-                future = executor.submit(
-                    execute_cal_cell, world, b, W, spec_dict
-                )
-                future_to_key[future] = key
+                pending[executor.submit(execute_cal_cell, world, b, W, _serialize_spec(spec))] = key
+                return True
 
+            for _ in range(min(len(cells), cfg.workers * 2)):
+                submit()
             # Collect results as they complete
-            for future in as_completed(future_to_key):
-                key = future_to_key[future]
-                try:
-                    row = future.result()
-                    row["config_hash"] = ch
-                    results_dict[key] = row
-                except Exception as e:
-                    # Worker failure - fail closed
-                    results_dict[key] = {
-                        "cell_key": key,
-                        "config_hash": ch,
-                        "status": "FAILED_TECHNICAL",
-                        "error": f"Worker exception: {repr(e)}",
-                    }
-
-        # Write results in deterministic order (original cell order)
-        with results_path.open("a", encoding="utf-8") as fout:
-            for world, b, W, spec in cells:
-                key = cell_key(world, b, W, f"{spec.geometry_id}:{spec.variant_id}")
-                row = results_dict[key]
-                fout.write(json.dumps(row, default=str) + "\n")
-                fout.flush()
-                n_done += 1
-                if n_done % 1 == 0:
-                    print(
-                        f"I04-CAL cells {n_done}/{len(cells)} last={row['cell_key']} "
-                        f"status={row.get('status')}",
-                        flush=True,
-                    )
+            while pending:
+                done, _ = wait(pending, return_when=FIRST_COMPLETED)
+                for future in done:
+                    key = pending.pop(future)
+                    try:
+                        receive(key, future.result())
+                    except Exception as e:
+                        # Worker failure - fail closed
+                        failures.append({"cell_key": key, "error": repr(e),
+                                         "traceback": traceback.format_exc(), "status": "FAILED_TECHNICAL"})
+                if not failures:
+                    while len(pending) < cfg.workers * 2 and submit():
+                        pass
     else:
         # Serial execution (original path)
-        with results_path.open("a", encoding="utf-8") as fout:
-            for world, b, W, spec in cells:
-                # Use worker function for consistency
-                spec_dict = _serialize_spec(spec)
-                row = execute_cal_cell(world, b, W, spec_dict)
-                row["config_hash"] = ch
-                fout.write(json.dumps(row, default=str) + "\n")
-                fout.flush()
-                n_done += 1
-                if n_done % 1 == 0:
-                    print(
-                        f"I04-CAL cells {n_done}/{len(cells)} last={row['cell_key']} "
-                        f"status={row.get('status')}",
-                        flush=True,
-                    )
+        for world, b, W, spec in cells:
+            # Use worker function for consistency
+            key = cell_key(world, b, W, f"{spec.geometry_id}:{spec.variant_id}")
+            try:
+                receive(key, execute_cal_cell(world, b, W, _serialize_spec(spec)))
+            except Exception as e:
+                failures.append({"cell_key": key, "error": repr(e),
+                                 "traceback": traceback.format_exc(), "status": "FAILED_TECHNICAL"})
+            if failures:
+                break
 
+    if failures:
+        _atomic_json(out_dir / "technical_failures.json", {"failures": failures})
+        _atomic_json(out_dir / "progress.json", {
+            "completed_cells": len(rows), "expected_cells": len(keys),
+            "failed_cells": len(failures), "elapsed_seconds": round(time.perf_counter() - t0, 3),
+        })
+    durable = _load_completed(ckpt, expected, ch)
+    if set(durable) != set(rows):
+        raise RuntimeError("STOP: checkpoint/result disagreement")
+    _rebuild_results(results_path, keys, durable)
     elapsed = time.perf_counter() - t0
     # Determine completeness: count expected without max_cells
-    expected = (
-        len(cfg.worlds) * cfg.B * len(cfg.windows) * len(specs)
-        if max_cells is None
-        else n_done
-    )
-    # recount file
-    n_rows = sum(1 for _ in results_path.open(encoding="utf-8") if _.strip())
-    complete = max_cells is None and n_rows >= expected
-    manifest["status"] = (
-        ExecStatus.COMPLETE.value if complete else ExecStatus.INCOMPLETE.value
-    )
-    manifest["n_rows"] = n_rows
-    manifest["expected_cells"] = expected
+    complete = max_cells is None and set(durable) == expected and not failures
+    manifest["status"] = (ExecStatus.FAILED_TECHNICAL.value if failures else
+                          ExecStatus.COMPLETE.value if complete else ExecStatus.INCOMPLETE.value)
+    manifest["n_rows"] = len(durable)
+    manifest["expected_cells"] = len(keys)
     manifest["elapsed_seconds"] = round(elapsed, 3)
+    manifest["workers"] = cfg.workers
+    manifest["technical_failures"] = len(failures)
 
     # Add cache statistics if caching was used
     if use_cache:
         from quant.i04_cal.cache import get_cache_stats
         manifest["cache_stats"] = get_cache_stats()
 
-    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    _atomic_json(manifest_path, manifest)
     return manifest

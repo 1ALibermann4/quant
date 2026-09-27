@@ -7,6 +7,7 @@ and importable in spawned context.
 
 import os
 import sys
+import traceback
 from pathlib import Path
 from typing import Any, Dict, Tuple
 
@@ -57,7 +58,7 @@ def execute_cal_cell(
     """
     from quant.i04_cal.gates import compute_gates_for_spec
     from quant.i04_cal.geometries import GeometrySpec
-    from quant.i04_cal.params import world_seed
+    from quant.i04_cal.params import gate_seed
     from quant.i04_cal.worlds import generate_world
 
     # Reconstruct spec from dict
@@ -75,7 +76,7 @@ def execute_cal_cell(
         _process_world_cache[(world, b)] = wb
 
     # Compute seed
-    seed = world_seed(world, b) + 17 * W + hash(spec.variant_id) % 997
+    seed = gate_seed(world, b, W, spec.geometry_id, spec.variant_id)
 
     # Compute gates
     try:
@@ -85,6 +86,7 @@ def execute_cal_cell(
             "world_id": world,
             "b": b,
             "seed": wb.seed,
+            "gate_seed": seed,
             "W": W,
             "world_status": wb.world_status.value,
             "oracle_status": wb.oracle_status.value,
@@ -101,4 +103,5 @@ def execute_cal_cell(
             "W": W,
             "status": "FAILED_TECHNICAL",
             "error": repr(e),
+            "traceback": traceback.format_exc(),
         }

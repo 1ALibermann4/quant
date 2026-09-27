@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass, field
 from typing import Any
 
 
 SPEC_ID = "I04-CAL-SPEC-v0.2"
+SEED_CONTRACT_VERSION = "I04-CAL-SEED-v1"
 B_WORLD = 32
 WINDOWS: tuple[int, ...] = (20, 40, 60)
 # GOV-01 RESTORED: Original frozen contract (8/4)
@@ -66,6 +69,15 @@ def world_seed(world: str, b: int) -> int:
     if not (0 <= int(b) < B_WORLD):
         raise ValueError("b out of range")
     return 100_000 * WORLD_INDEX[world] + int(b)
+
+
+def gate_seed(world: str, b: int, W: int, geometry_id: str, variant_id: str, gate: str = "CAL") -> int:
+    payload = json.dumps(
+        [SEED_CONTRACT_VERSION, world_seed(world, b), W, geometry_id, variant_id, gate],
+        separators=(",", ":"),
+        ensure_ascii=True,
+    ).encode("ascii")
+    return int.from_bytes(hashlib.sha256(payload).digest()[:8], "big") & 0x7FFFFFFF
 
 
 def variant_seed(tag: str, b: int) -> int:
