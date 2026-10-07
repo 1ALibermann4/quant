@@ -71,8 +71,10 @@ D02-I8 partial != complete · D02-I9 full CAL complete only at 69 + 12 027 =
 ## Runner
 
 `run-batch --plan-dir P --batch BATCH-0037 --out-dir OUT` resolves the batch,
-verifies plan identity + plan_hash + batch pin + cell_ids_hash, checks code
-HEAD when git is available, enforces BLAS env = 1 and exactly 2 workers, then
+verifies plan identity + plan_hash + batch pin + cell_ids_hash, checks that the
+`src/` tree is identical to the recorded `distribution_code_head` when git is
+available (data/doc commits on the branch are allowed), enforces BLAS env = 1
+and exactly 2 workers, then
 delegates to DIST-01 `run_shard`. Existing `OUT` -> verified resume; completed
 checkpoints are never recomputed. `status` classifies repatriated outputs
 COMPLETE / INCOMPLETE / NOT_STARTED / INVALID and lists next available batches.

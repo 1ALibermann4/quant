@@ -18,6 +18,7 @@ import json
 import math
 import os
 import statistics
+import subprocess
 import tarfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -291,6 +292,26 @@ def _check_blas_env() -> None:
         raise RuntimeError(f"STOP: BLAS thread env must be 1: {bad}")
 
 
+def _code_matches(expected_head: str) -> bool:
+    """True if HEAD == expected, or HEAD is a descendant with src/ unchanged.
+
+    Plan data/doc commits may advance the branch tip without changing code;
+    code identity means the src/ tree is identical to the recorded head.
+    Unverifiable only when git metadata is absent (documented in the DR).
+    """
+    head = _git_head()
+    if head is None or head == expected_head:
+        return True
+    try:
+        subprocess.run(["git", "merge-base", "--is-ancestor", expected_head, "HEAD"],
+                       check=True, stderr=subprocess.DEVNULL)
+        subprocess.run(["git", "diff", "--quiet", expected_head, "HEAD", "--", "src/"],
+                       check=True, stderr=subprocess.DEVNULL)
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        return False
+
+
 def run_batch(plan_dir: Path, batch_ref: str | int, out_dir: Path, *,
               workers: int = KAGGLE_WORKERS, cfg: CalConfig | None = None) -> dict[str, Any]:
     """Run one batch on this notebook via the qualified DIST-01 engine."""
@@ -299,10 +320,10 @@ def run_batch(plan_dir: Path, batch_ref: str | int, out_dir: Path, *,
         raise RuntimeError("STOP: Kaggle production requires exactly 2 workers")
     _check_blas_env()
     shard, shard_path = load_batch(plan_dir, batch_ref, cfg)
-    head = _git_head()
     expected_head = shard.get("distribution_code_head")
-    if head is not None and expected_head is not None and head != expected_head:
-        raise RuntimeError(f"STOP: code identity mismatch HEAD={head} expected={expected_head}")
+    if expected_head and not _code_matches(expected_head):
+        raise RuntimeError("STOP: code identity mismatch "
+                           f"HEAD={_git_head()} expected={expected_head}")
     out_dir = Path(out_dir)
     manifest = run_shard(shard_path, out_dir, workers, resume=out_dir.exists(), cfg=cfg)
     manifest = {**manifest, "batch_id": shard["batch_id"]}
