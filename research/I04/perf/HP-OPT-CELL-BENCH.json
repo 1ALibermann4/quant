@@ -1,0 +1,40 @@
+{
+  "has_numba": true,
+  "cells": {
+    "G0": {
+      "elapsed_s": 10.313,
+      "status": "OK"
+    },
+    "G1": {
+      "elapsed_s": 1.164,
+      "status": "OK"
+    },
+    "G3": {
+      "elapsed_s": 11.603,
+      "status": "OK"
+    },
+    "G2": {
+      "elapsed_s": null,
+      "status": "DEFERRED",
+      "note": "pairwise SW under 8/4 dominates wall time under CPU contention"
+    },
+    "G5": {
+      "elapsed_s": null,
+      "status": "DEFERRED",
+      "note": "AIRM pairwise"
+    },
+    "G4": {
+      "elapsed_s": null,
+      "status": "DEFERRED"
+    },
+    "G7": {
+      "elapsed_s": null,
+      "status": "DEFERRED"
+    },
+    "GORD": {
+      "elapsed_s": null,
+      "status": "DEFERRED"
+    }
+  },
+  "note": "Partial under host contention; G1 Numba validated"
+}

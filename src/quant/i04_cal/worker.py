@@ -57,16 +57,21 @@ def execute_cal_cell(
         Result dict with cell_key, status, gates, etc.
     """
     from quant.i04_cal.gates import compute_gates_for_spec
-    from quant.i04_cal.geometries import GeometrySpec
     from quant.i04_cal.params import gate_seed
+    from quant.i04_cal.types import GeometrySpec, GeometryStatus
     from quant.i04_cal.worlds import generate_world
 
-    # Reconstruct spec from dict
+    # Reconstruct spec from dict (status may be enum value string)
+    raw_status = spec_dict.get("status", GeometryStatus.EXECUTABLE)
+    if isinstance(raw_status, str):
+        status = GeometryStatus(raw_status)
+    else:
+        status = raw_status
     spec = GeometrySpec(
         geometry_id=spec_dict["geometry_id"],
         variant_id=spec_dict["variant_id"],
         params=spec_dict["params"],
-        status=spec_dict["status"],
+        status=status,
     )
 
     # Get or create world (process-local cache)

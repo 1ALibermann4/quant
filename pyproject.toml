@@ -26,6 +26,10 @@ exploratory = [
     "pandas>=2.0",
     "matplotlib>=3.8",
 ]
+# I04-CAL optional acceleration (CPU Soft-DTW). Falls back to pure Python if absent.
+i04_cal = [
+    "numba>=0.59,<0.62",
+]
 
 [project.scripts]
 i01-e01 = "quant.exploratory.runner:main"

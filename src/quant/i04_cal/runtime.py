@@ -33,6 +33,24 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--worlds", type=str, default=None)
     p.add_argument("--geometries", type=str, default=None)
     p.add_argument("--B", type=int, default=None, help="Override B (TEST ONLY)")
+    p.add_argument(
+        "--max-runtime-hours",
+        type=float,
+        default=None,
+        help="Operational wall-clock limit (hours). Stops assigning new cells before limit.",
+    )
+    p.add_argument(
+        "--shutdown-margin-minutes",
+        type=float,
+        default=20.0,
+        help="Minutes reserved before max-runtime for clean drain (default 20).",
+    )
+    p.add_argument(
+        "--cell-list",
+        type=Path,
+        default=None,
+        help="Path to newline-separated cell_key allowlist (bi-machine disjoint split).",
+    )
     return p
 
 
@@ -65,16 +83,34 @@ def main(argv: list[str] | None = None) -> int:
         worlds=worlds,
         geometries=geos,
     )
+    allowlist = None
+    if args.cell_list is not None:
+        raw = Path(args.cell_list).read_bytes()
+        if raw.startswith(b"\xef\xbb\xbf"):
+            raw = raw[3:]
+        text = raw.decode("utf-8")
+        allowlist = {
+            ln.strip().strip("\ufeff")
+            for ln in text.splitlines()
+            if ln.strip().strip("\ufeff") and not ln.strip().strip("\ufeff").startswith("#")
+        }
+    max_runtime_seconds = None
+    if args.max_runtime_hours is not None:
+        max_runtime_seconds = float(args.max_runtime_hours) * 3600.0
     man = run_calibration(
         args.out_dir,
         cfg,
         resume=bool(args.resume),
         max_cells=args.max_cells,
         use_cache=True,  # PERF-02: enable deterministic caching
+        max_runtime_seconds=max_runtime_seconds,
+        shutdown_margin_seconds=float(args.shutdown_margin_minutes) * 60.0,
+        cell_allowlist=allowlist,
     )
     print(
         f"I04-CAL done status={man['status']} rows={man.get('n_rows')} "
-        f"elapsed={man.get('elapsed_seconds')}s out={args.out_dir}"
+        f"elapsed={man.get('elapsed_seconds')}s stopped_for_time={man.get('stopped_for_time')} "
+        f"out={args.out_dir}"
     )
     return 0
 

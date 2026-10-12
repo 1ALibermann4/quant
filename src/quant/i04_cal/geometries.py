@@ -46,61 +46,9 @@ def g0_distance(a: np.ndarray, b: np.ndarray) -> float:
 
 
 # ----- Soft-DTW divergence (Cuturi-style softmin) -----
+# Implementation + optional Numba JIT live in sdtw.py (reference preserved).
 
-
-def _softmin(x: np.ndarray, gamma: float) -> float:
-    # numerically stable softmin
-    m = float(np.min(x))
-    return float(-gamma * math.log(np.sum(np.exp(-(x - m) / gamma))) - m)
-
-
-def soft_dtw(x: np.ndarray, y: np.ndarray, gamma: float, band: int | None = None) -> float:
-    """Soft-DTW with optional Sakoe-Chiba band (preregistered for I04-CAL G1)."""
-    x = np.asarray(x, dtype=np.float64)
-    y = np.asarray(y, dtype=np.float64)
-    n, m = x.size, y.size
-    if band is None:
-        band = max(2, max(n, m) // 4)
-    R = np.full((n + 2, m + 2), np.inf, dtype=np.float64)
-    R[0, 0] = 0.0
-    for i in range(1, n + 1):
-        j0 = max(1, i - band)
-        j1 = min(m, i + band)
-        xi = x[i - 1]
-        for j in range(j0, j1 + 1):
-            cost = (xi - y[j - 1]) ** 2
-            r0, r1, r2 = R[i - 1, j], R[i, j - 1], R[i - 1, j - 1]
-            # softmin of three
-            vals = np.array([r0, r1, r2], dtype=np.float64)
-            R[i, j] = cost + _softmin(vals, gamma)
-    return float(R[n, m])
-
-
-# Cache for Soft-DTW self-terms (SDTW(x,x), SDTW(y,y))
-# These depend only on the representation and geometry parameters,
-# not on the specific pair being evaluated.
-_SDTW_SELF_CACHE: dict[tuple[bytes, float], float] = {}
-
-
-def _sdtw_self_term(x: np.ndarray, gamma: float) -> float:
-    """Compute or retrieve cached SDTW(x,x) self-term."""
-    key = (x.tobytes(), float(gamma))
-    if key not in _SDTW_SELF_CACHE:
-        _SDTW_SELF_CACHE[key] = soft_dtw(x, x, gamma)
-    return _SDTW_SELF_CACHE[key]
-
-
-def soft_dtw_divergence(x: np.ndarray, y: np.ndarray, gamma: float) -> float:
-    """Soft-DTW divergence: SDTW(x,y) - 0.5*SDTW(x,x) - 0.5*SDTW(y,y).
-
-    Optimization: Reuses cached self-terms SDTW(x,x) and SDTW(y,y)
-    which depend only on the representation, not the pair.
-    """
-    return (
-        soft_dtw(x, y, gamma)
-        - 0.5 * _sdtw_self_term(x, gamma)
-        - 0.5 * _sdtw_self_term(y, gamma)
-    )
+from quant.i04_cal.sdtw import soft_dtw_divergence  # noqa: E402
 
 
 def g1_embed(r: np.ndarray, t: int, W: int) -> np.ndarray:

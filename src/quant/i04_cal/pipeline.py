@@ -45,6 +45,20 @@ def _serialize_spec(spec: Any) -> dict[str, Any]:
 
 
 def _git_head() -> str | None:
+    """Resolve code tip for provenance.
+
+    Order: QUANT_I04_CAL_GIT_COMMIT env (portable runner pin) →
+    CODE_COMMIT.txt beside package → git rev-parse HEAD.
+    """
+    pinned = os.environ.get("QUANT_I04_CAL_GIT_COMMIT", "").strip()
+    if pinned:
+        return pinned
+    try:
+        pin_file = Path(__file__).resolve().parents[3] / "CODE_COMMIT.txt"
+        if pin_file.is_file():
+            return pin_file.read_text(encoding="utf-8").strip().splitlines()[0].strip()
+    except OSError:
+        pass
     try:
         return subprocess.check_output(
             ["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL, text=True
@@ -166,11 +180,19 @@ def run_calibration(
     resume: bool = False,
     max_cells: int | None = None,
     use_cache: bool = True,
+    max_runtime_seconds: float | None = None,
+    shutdown_margin_seconds: float = 0.0,
+    cell_allowlist: set[str] | None = None,
 ) -> dict[str, Any]:
     """Execute I04-CAL. max_cells is TEST-ONLY (requires I04_CAL_ALLOW_TEST_OVERRIDES=1).
 
     use_cache: Enable deterministic caching of embeddings and distances
     across cells sharing (world, b, W, geometry) configuration.
+
+    max_runtime_seconds / shutdown_margin_seconds: operational wall-clock stop
+    (no new cells after deadline - margin). Not a scientific parameter.
+
+    cell_allowlist: if set, only these cell_key values are executed (bi-machine split).
     """
 
     cfg = cfg or DEFAULT_CAL_CONFIG
@@ -178,6 +200,10 @@ def run_calibration(
         raise RuntimeError("max_cells requires I04_CAL_ALLOW_TEST_OVERRIDES=1")
     if cfg.workers < 1:
         raise ValueError("workers must be positive")
+    if max_runtime_seconds is not None and max_runtime_seconds <= 0:
+        raise ValueError("max_runtime_seconds must be positive when set")
+    if shutdown_margin_seconds < 0:
+        raise ValueError("shutdown_margin_seconds must be >= 0")
 
     # Clear caches if caching is disabled
     if not use_cache:
@@ -248,10 +274,28 @@ def run_calibration(
         "elapsed_seconds": 0,
     })
     cells = [c for c, key in zip(all_cells, keys) if key not in rows]
+    if cell_allowlist is not None:
+        cells = [
+            c
+            for c, key in zip(all_cells, keys)
+            if key not in rows and key in cell_allowlist
+        ]
+        unknown = cell_allowlist - expected
+        if unknown:
+            raise RuntimeError(
+                f"STOP: cell_allowlist contains {len(unknown)} keys outside universe"
+            )
     if max_cells is not None:
-        cells = cells[:int(max_cells)]
+        cells = cells[: int(max_cells)]
     t0 = time.perf_counter()
+    deadline: float | None = None
+    if max_runtime_seconds is not None:
+        deadline = t0 + float(max_runtime_seconds) - float(shutdown_margin_seconds)
+    stopped_for_time = False
     failures: list[dict[str, Any]] = []
+
+    def time_exhausted() -> bool:
+        return deadline is not None and time.perf_counter() >= deadline
 
     def receive(key: str, row: dict[str, Any]) -> None:
         if row.get("cell_key") != key or key not in expected or key in rows:
@@ -296,6 +340,9 @@ def run_calibration(
                 return True
 
             for _ in range(min(len(cells), cfg.workers * 2)):
+                if time_exhausted():
+                    stopped_for_time = True
+                    break
                 submit()
             # Collect results as they complete
             while pending:
@@ -308,12 +355,20 @@ def run_calibration(
                         # Worker failure - fail closed
                         failures.append({"cell_key": key, "error": repr(e),
                                          "traceback": traceback.format_exc(), "status": "FAILED_TECHNICAL"})
-                if not failures:
-                    while len(pending) < cfg.workers * 2 and submit():
-                        pass
+                if failures:
+                    continue
+                if time_exhausted():
+                    stopped_for_time = True
+                    # do not submit new work; drain pending
+                    continue
+                while len(pending) < cfg.workers * 2 and submit():
+                    pass
     else:
         # Serial execution (original path)
         for world, b, W, spec in cells:
+            if time_exhausted():
+                stopped_for_time = True
+                break
             # Use worker function for consistency
             key = cell_key(world, b, W, f"{spec.geometry_id}:{spec.variant_id}")
             try:
@@ -336,7 +391,13 @@ def run_calibration(
     _rebuild_results(results_path, keys, durable)
     elapsed = time.perf_counter() - t0
     # Determine completeness: count expected without max_cells
-    complete = max_cells is None and set(durable) == expected and not failures
+    complete = (
+        max_cells is None
+        and cell_allowlist is None
+        and not stopped_for_time
+        and set(durable) == expected
+        and not failures
+    )
     manifest["status"] = (ExecStatus.FAILED_TECHNICAL.value if failures else
                           ExecStatus.COMPLETE.value if complete else ExecStatus.INCOMPLETE.value)
     manifest["n_rows"] = len(durable)
@@ -344,6 +405,12 @@ def run_calibration(
     manifest["elapsed_seconds"] = round(elapsed, 3)
     manifest["workers"] = cfg.workers
     manifest["technical_failures"] = len(failures)
+    manifest["stopped_for_time"] = bool(stopped_for_time)
+    if max_runtime_seconds is not None:
+        manifest["max_runtime_seconds"] = float(max_runtime_seconds)
+        manifest["shutdown_margin_seconds"] = float(shutdown_margin_seconds)
+    if cell_allowlist is not None:
+        manifest["cell_allowlist_size"] = len(cell_allowlist)
 
     # Add cache statistics if caching was used
     if use_cache:
