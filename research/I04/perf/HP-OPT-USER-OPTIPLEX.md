@@ -2,7 +2,8 @@
 
 ## Pour l’ami qui prête la machine
 
-1. Copier `quant-I04-CAL-runner.zip` sur le PC (clé USB OK).
+1. Récupérer `quant-I04-CAL-runner.zip` (clé USB, ou depuis le dépôt GitHub :
+   `research/I04/perf/artifacts/quant-I04-CAL-runner.zip` sur la branche `perf/I04-CAL-hp-opt`).
 2. Décompresser dans un dossier local (ex. `Desktop\quant-I04-CAL-runner`).
 3. Double-cliquer **`START_WINDOWS.cmd`**.
 4. Accepter l’installation **locale** (venv `.venv` — pas besoin d’admin).
